@@ -77,15 +77,60 @@ PRESETS = {
 }
 
 
+SETUP_HELP = """키를 넣어 주세요. PowerShell 창에서 아래 두 줄을 실행하시면 됩니다.
+
+  [Environment]::SetEnvironmentVariable('AZURE_SPEECH_KEY','여기에붙여넣기','User')
+  [Environment]::SetEnvironmentVariable('AZURE_SPEECH_REGION','koreacentral','User')
+
+키는 윈도우가 보관하고, 이 스크립트가 쓸 때만 꺼내 씁니다.
+화면에 찍히지 않고, 저장소에도 들어가지 않습니다.
+다 쓰신 뒤에는 이렇게 지우세요:
+
+  python tools/regen_audio_azure.py --forget-key
+"""
+
+
+def _win_user_env(name):
+    """윈도우 사용자 환경변수를 레지스트리에서 바로 읽는다.
+
+    이미 떠 있는 프로그램은 나중에 설정한 환경변수를 물려받지 못합니다.
+    그래서 프로그램 환경에 없으면 여기서 직접 읽습니다.
+    """
+    if os.name != "nt":
+        return ""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+            return str(winreg.QueryValueEx(k, name)[0]).strip()
+    except Exception:
+        return ""
+
+
+def forget_key():
+    if os.name != "nt":
+        sys.exit("윈도우에서만 쓸 수 있습니다. 직접 지워 주세요.")
+    import winreg
+    gone = []
+    for name in ("AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                                winreg.KEY_SET_VALUE) as k:
+                winreg.DeleteValue(k, name)
+            gone.append(name)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"{name} 을 지우지 못했습니다: {e}")
+    print("지웠습니다:", ", ".join(gone) if gone else "(지울 것이 없었습니다)")
+    print("이미 열려 있는 터미널 창에는 남아 있을 수 있으니, 창을 닫아 주세요.")
+
+
 def creds():
-    key = os.environ.get("AZURE_SPEECH_KEY", "").strip()
-    region = os.environ.get("AZURE_SPEECH_REGION", "").strip()
+    key = os.environ.get("AZURE_SPEECH_KEY", "").strip() or _win_user_env("AZURE_SPEECH_KEY")
+    region = (os.environ.get("AZURE_SPEECH_REGION", "").strip()
+              or _win_user_env("AZURE_SPEECH_REGION"))
     if not key or not region:
-        sys.exit(
-            "AZURE_SPEECH_KEY 와 AZURE_SPEECH_REGION 을 환경변수로 넣어 주세요.\n"
-            '  PowerShell:  $env:AZURE_SPEECH_KEY = "..."; $env:AZURE_SPEECH_REGION = "koreacentral"\n'
-            "이 값은 화면에 찍히지도, 파일에 적히지도 않습니다."
-        )
+        sys.exit(SETUP_HELP)
     return key, region
 
 
@@ -327,6 +372,34 @@ def do_all(voice, preset, yes, workers, per_minute):
     total = sum(len(v) for v in got.values())
     print(f"\n{len(amap):,}개 · {total/1048576:.2f}MB")
 
+    # 말 속도가 지켜졌는지 확인한다.
+    # 같은 bitrate 로 담으면 파일 크기가 곧 길이라, 새 소리가 눈에 띄게 짧아졌다면
+    # <prosody rate> 가 무시됐다는 뜻입니다. (HD·MAI 계열에서 일어납니다)
+    # 어르신용으로 느리게 읽는 것이 이 앱의 핵심이라, 그대로 배포하면 안 됩니다.
+    if bitrate:
+        old_map = json.loads(re.search(r'window\.AUDIO = (\{.*?\});</script>',
+                                       open(IDX, encoding="utf-8").read(), re.S).group(1))
+        pairs = []
+        for k in keys:
+            src = os.path.join(HERE, old_map.get(k, ""))
+            if k in got and old_map.get(k) and os.path.exists(src):
+                pairs.append((os.path.getsize(src), len(got[k])))
+        if pairs:
+            was = sum(a for a, _b in pairs)
+            now = sum(b for _a, b in pairs)
+            diff = (now - was) / was * 100
+            print(f"길이 견주기   예전 {was/1048576:.2f}MB → 지금 {now/1048576:.2f}MB ({diff:+.1f}%)")
+            if diff < -15:
+                shutil.rmtree(tmp, ignore_errors=True)
+                sys.exit(
+                    f"\n중단했습니다. 새 소리가 {-diff:.0f}% 짧습니다.\n"
+                    f"말 속도 지정(-10~-25%)이 무시된 것으로 보입니다. "
+                    f"'{voice}' 목소리가 <prosody rate> 를 안 받는 듯합니다.\n"
+                    f"audio/ 는 건드리지 않았습니다. --voice ko-KR-SunHiNeural 로 다시 해 보세요."
+                )
+            if diff > 25:
+                print("  (주의: 예전보다 25% 이상 길어졌습니다. 시험 음성으로 한 번 들어 보세요)")
+
     # 여기까지 온 뒤에야 바꿔치기한다 (중간에 실패해도 audio/ 는 멀쩡)
     old = os.path.join(HERE, "tools", "_oldaudio")
     shutil.rmtree(old, ignore_errors=True)
@@ -357,6 +430,8 @@ def main():
     ap.add_argument("--presets", default="hifi-keep,hifi-plus",
                     help="--sample 에서 견줄 설정들 (쉼표로)")
     ap.add_argument("--yes", action="store_true", help="--all 을 정말 실행")
+    ap.add_argument("--forget-key", action="store_true",
+                    help="보관해 둔 키를 윈도우에서 지운다 (작업 끝난 뒤)")
     ap.add_argument("--free", action="store_true",
                     help="무료(F0) 등급. 60초에 20건으로 늦춘다. 1,226개면 약 1시간")
     ap.add_argument("--workers", type=int, default=0, help="동시 요청 수 (기본: 유료 6, 무료 2)")
@@ -365,7 +440,9 @@ def main():
     per_minute = 20 if a.free else 0            # 무료 등급: 60초에 20건
     workers = a.workers or (2 if a.free else 6)
 
-    if a.voices:
+    if a.forget_key:
+        forget_key()
+    elif a.voices:
         list_voices()
     elif a.sample:
         ps = [p.strip() for p in a.presets.split(",") if p.strip()]
