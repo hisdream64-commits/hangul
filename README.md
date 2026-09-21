@@ -4,6 +4,8 @@
 
 **바로가기: https://urihangul.vercel.app/**
 
+현재 판 **1.1** · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
+
 ## 배우는 내용
 - **기초 학습** — 1단계 자음, 2단계 모음, 3단계 소리 합치기(그+아=가), 4단계 받침 읽기
 - **글씨 쓰기 연습** — 자음·모음 24자의 쓰는 순서를 움직이는 그림으로
@@ -120,3 +122,42 @@ python tools/stamp_sw.py
 
 안내서 4절의 스크립트를 쓰면 됩니다. 공짜지만 비공식 경로라 예고 없이 막힐 수
 있습니다. 지금 배포된 소리가 이 방식으로 만들어졌습니다.
+
+## 판 되돌리기
+
+판마다 git 태그가 붙어 있습니다. 첫 화면 맨 아래에 나오는 번호가 지금 그 휴대폰에
+깔린 판입니다. "고쳤는데 그대로인데요" 할 때 먼저 볼 곳입니다.
+
+```bash
+git tag -n1                      # 어떤 판들이 있나
+git show v1.1                    # 그 판에 무엇이 들어갔나
+git checkout v1.1                # 들여다보기만 (작업하려면 아래로)
+git switch -c fix-1.1 v1.1       # 1.1 에서 가지 쳐서 작업
+```
+
+`main` 을 되돌려야 한다면 **`git reset --hard` 대신 `git revert`** 를 쓰세요.
+이미 푸시된 이력을 지우면 Vercel 배포 기록과 어긋납니다.
+
+```bash
+git revert <되돌릴커밋>
+git push
+```
+
+운영 주소만 급히 이전 판으로 돌리려면, Vercel → 프로젝트 `hangul` → **Deployments**
+에서 그 판의 배포를 찾아 **Promote to Production** 하면 됩니다. 저장소는 그대로 둔 채
+주소만 바뀌므로, 원인을 찾는 동안 어르신은 멀쩡한 앱을 쓸 수 있습니다.
+
+### 판을 새로 낼 때
+
+```bash
+# 1) index.html 의 APP_VERSION 을 올린다
+# 2) 캐시 지문을 새로 찍는다
+python tools/stamp_sw.py
+git add -A && git commit -m "..." && git push
+# 3) 태그를 붙인다
+git tag -a v1.2 -m "무엇이 바뀌었는지"
+git push origin v1.2
+```
+
+`APP_VERSION` 만 올리고 `stamp_sw.py` 를 빠뜨리면, 휴대폰이 옛 화면을 계속 써서
+판 번호도 옛것으로 보입니다. 꼭 같이 하세요.
