@@ -1,5 +1,5 @@
 /* 우리 한글 교실 — 오프라인 서비스 워커
-   빌드 때 5835c99e53 이 실제 값으로 바뀝니다.
+   빌드 때 311228a4e3 이 실제 값으로 바뀝니다.
 
    - 화면(index.html 등)은 인터넷이 되면 새것을 먼저 받고, 안 되면 저장해 둔 것을 씁니다.
    - 소리는 audio/audio.bin 한 덩어리로 저장합니다. 한 번 저장하면 그대로 씁니다.
@@ -10,7 +10,7 @@
 */
 'use strict';
 
-var SHELL = 'hangul-shell-5835c99e53';
+var SHELL = 'hangul-shell-311228a4e3';
 var AUDIO = 'hangul-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 

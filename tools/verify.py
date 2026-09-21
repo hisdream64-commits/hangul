@@ -27,6 +27,12 @@ mbin = re.search(r'window\.AUDIO_BIN = (\{.*?\});</script>', html, re.S)
 BIN = json.loads(mbin.group(1)) if mbin else None
 
 ok = True
+
+mver = re.search(r"const APP_VERSION = '([^']+)'", html)
+print(f"판 번호 {mver.group(1) if mver else '없음 ⚠️'}")
+if not mver:
+    ok = False
+
 print(f"소리 키 {len(AUDIO)}개 (1226이어야 정상)")
 if len(AUDIO) != 1226:
     ok = False
