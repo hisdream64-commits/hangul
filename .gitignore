@@ -1,0 +1,5 @@
+
+# 시험 음성은 저장소에 넣지 않습니다 (들어 보고 지우는 용도)
+tools/samples/
+tools/_newaudio/
+tools/_oldaudio/

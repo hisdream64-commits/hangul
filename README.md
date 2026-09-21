@@ -55,11 +55,61 @@ tools/                   관리용 스크립트
 ## 관리용 스크립트
 
 ```bash
-python tools/build_audio_bundle.py          # audio/*.mp3 -> audio/audio.bin (+ index.html 색인)
-python tools/stamp_sw.py                    # index.html 을 고친 뒤 sw.js 캐시 이름 갱신
-python tools/regen_qr_poster.py https://주소/ # 주소가 바뀌면 QR·안내문 재발급
-python tools/verify.py https://주소/          # 배포된 소리 1,226개 전수 확인
+python tools/clips.py                        # 대본 1,226개 확인 (index.html 이 원본)
+python tools/regen_audio_azure.py --sample   # 음성을 바꾸기 전에 시험 음성부터 들어 보기
+python tools/build_audio_bundle.py           # audio/*.mp3 -> audio/audio.bin (+ index.html 색인)
+python tools/stamp_sw.py                     # index.html 을 고친 뒤 sw.js 캐시 이름 갱신
+python tools/regen_qr_poster.py https://주소/  # 주소가 바뀌면 QR·안내문 재발급
+python tools/verify.py https://주소/           # 배포된 소리 1,226개 전수 확인
 ```
 
 `index.html` 을 고쳤다면 **`stamp_sw.py` 를 꼭 돌려 주세요.** 캐시 이름이 그대로면
 휴대폰이 옛 화면을 계속 씁니다.
+
+## 음성을 다시 만들 때
+
+대본은 `index.html` 안의 자료(`JAUM`/`MOUM`/`BATCHIM`/`WORDS_DATA`)가 원본이고,
+`tools/clips.py` 가 그것을 읽어 조각 1,226개(**3,872자**)를 만듭니다. 낱말을
+추가하려면 `index.html` 의 자료를 고치세요. 대본 파일은 따로 없습니다.
+
+**말하기 속도는 교육 설계의 일부입니다.** 어르신 배려로 조각마다 다릅니다.
+
+| 속도 | 쓰는 곳 |
+|---|---|
+| -10% | 퀴즈 칭찬·점수 (문장이라 너무 느리면 답답합니다) |
+| -15% | 낱말, 글자 설명 |
+| -20% | 한 글자 또렷이 읽기 |
+| -25% | 소리를 이어 붙여 읽기 (귀로 합쳐지는 과정을 들려주는 대목) |
+
+### Azure Speech (정식)
+
+```bash
+$env:AZURE_SPEECH_KEY = "..."          # PowerShell. 창을 닫으면 사라집니다
+$env:AZURE_SPEECH_REGION = "koreacentral"
+
+python tools/regen_audio_azure.py --voices   # 쓸 수 있는 한국어 목소리 보기
+python tools/regen_audio_azure.py --sample   # 12조각을 설정별로 만들어 비교
+python tools/regen_audio_azure.py --all --preset hifi-keep --yes
+python tools/build_audio_bundle.py
+python tools/stamp_sw.py
+```
+
+> 🔑 키는 **환경변수로만** 넘깁니다. 저장소에도, 웹앱에도 절대 넣지 마세요.
+> `index.html` 은 공개된 정적 파일이라, 키를 넣으면 누구나 꺼내 씁니다.
+
+설정별 용량입니다. 48kHz 로 요청하면 Azure가 **48kHz 고음질 모델**을 부르므로,
+받아서 줄이더라도 처음부터 24kHz 로 받는 것보다 또렷합니다.
+
+| 설정 | 전체 용량 | 비고 |
+|---|---|---|
+| `hifi-keep` | 10.2MB | 지금과 같은 용량, 원본만 고음질 |
+| `hifi-plus` | 15.3MB | 뚜렷하게 좋아짐. 기기 저장공간 16MB 이상 |
+| `hifi-raw` | 26MB | 다시 담지 않아 손실 0. 어르신 휴대폰엔 부담 |
+
+> ⚠️ HD(`:DragonHDLatestNeural`)·MAI 계열 목소리는 말 속도 지정을 무시하는
+> 경우가 있습니다. 바꾸기 전에 `--sample` 로 **느리게 읽히는지 꼭 확인하세요.**
+
+### edge-tts (예전 방식, 무료·비공식)
+
+안내서 4절의 스크립트를 쓰면 됩니다. 공짜지만 비공식 경로라 예고 없이 막힐 수
+있습니다. 지금 배포된 소리가 이 방식으로 만들어졌습니다.
