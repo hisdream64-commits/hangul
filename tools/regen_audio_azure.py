@@ -14,6 +14,13 @@
 #   python tools/regen_audio_azure.py --voices        # 쓸 수 있는 한국어 목소리 보기
 #   python tools/regen_audio_azure.py --sample        # 시험 음성 만들어 듣기 (12조각 x 설정들)
 #   python tools/regen_audio_azure.py --all --preset hifi-keep --yes
+#   python tools/regen_audio_azure.py --all --free --yes      # 무료(F0) 등급이면
+#
+# ── 요금과 속도 제한 (Azure 문서 기준) ──────────────────────────────────
+#   단가        100만 자당 $15  ->  이 앱 전체 3,872자 = 약 $0.06 (80원쯤)
+#   무료(F0)    60초에 20건. 1,226개면 최소 1시간. --free 를 붙이세요.
+#   유료(S0)    초당 30건. 5~15분이면 끝납니다.
+#   한 번 만들어 두면 끝이라, 어르신이 아무리 많이 눌러도 더 나가지 않습니다.
 #
 # --all 뒤에는 반드시 이어서:
 #   python tools/build_audio_bundle.py
@@ -33,6 +40,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -102,7 +110,7 @@ def ssml(text, voice, rate):
             f"<voice name='{voice}'>{body}</voice></speak>")
 
 
-def synth(key, region, text, voice, rate, fmt, tries=4):
+def synth(key, region, text, voice, rate, fmt, tries=4, pace=None):
     url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1"
     body = ssml(text, voice, rate).encode("utf-8")
     headers = {
@@ -113,6 +121,8 @@ def synth(key, region, text, voice, rate, fmt, tries=4):
     }
     for n in range(tries):
         try:
+            if pace:
+                pace.wait()
             req = urllib.request.Request(url, data=body, headers=headers, method="POST")
             raw = urllib.request.urlopen(req, timeout=60).read()
             if raw:
@@ -130,6 +140,31 @@ def synth(key, region, text, voice, rate, fmt, tries=4):
         except Exception:
             time.sleep(1.5 * (n + 1))
     return None
+
+
+class Pace:
+    """요청 속도를 묶어 둔다.
+
+    무료(F0) 등급은 텍스트 음성 변환이 **60초에 20건**으로 제한됩니다.
+    1,226개를 만들려면 최소 1시간이 걸리고, 동시에 여러 건 보내면 계속 429가 납니다.
+    유료(S0)는 초당 30건이라 넉넉합니다.
+    """
+
+    def __init__(self, per_minute):
+        self.gap = 60.0 / per_minute if per_minute else 0.0
+        self.next = 0.0
+        self.lock = threading.Lock()
+
+    def wait(self):
+        if not self.gap:
+            return
+        with self.lock:
+            now = time.monotonic()
+            due = max(now, self.next)
+            self.next = due + self.gap
+        d = due - time.monotonic()
+        if d > 0:
+            time.sleep(d)
 
 
 FF = None
@@ -160,15 +195,16 @@ def shrink(raw, bitrate, rate_hz):
     return p.stdout
 
 
-def make(items, voice, fmt, bitrate, rate_hz, workers=6):
+def make(items, voice, fmt, bitrate, rate_hz, workers=6, per_minute=0):
     """items: [(이름, 문장, 속도)] -> {이름: mp3 바이트}"""
     key, region = creds()
+    pace = Pace(per_minute)
     out, failed = {}, []
     done = [0]
 
     def one(it):
         name, text, rate = it
-        raw = synth(key, region, text, voice, rate, fmt)
+        raw = synth(key, region, text, voice, rate, fmt, pace=pace)
         done[0] += 1
         if done[0] % 50 == 0 or done[0] == len(items):
             print(f"  {done[0]:,}/{len(items):,}", end="\r", flush=True)
@@ -189,7 +225,7 @@ def make(items, voice, fmt, bitrate, rate_hz, workers=6):
     return out, failed
 
 
-def do_sample(voice, presets):
+def do_sample(voice, presets, workers, per_minute):
     c = clips.build()
     os.makedirs(SAMPLE_DIR, exist_ok=True)
     rows = []
@@ -199,7 +235,7 @@ def do_sample(voice, presets):
         os.makedirs(d, exist_ok=True)
         items = [(k, c[k][0], c[k][1]) for k in clips.SAMPLE_KEYS]
         print(f"[{label}] {note}")
-        got, failed = make(items, voice, fmt, bitrate, rate_hz)
+        got, failed = make(items, voice, fmt, bitrate, rate_hz, workers, per_minute)
         for k, data in got.items():
             open(os.path.join(d, k + ".mp3"), "wb").write(data)
         total = sum(len(v) for v in got.values())
@@ -261,7 +297,7 @@ def _write_compare_page(labels, c):
     open(os.path.join(SAMPLE_DIR, "비교.html"), "w", encoding="utf-8").write(html)
 
 
-def do_all(voice, preset, yes):
+def do_all(voice, preset, yes, workers, per_minute):
     fmt, bitrate, rate_hz, note = PRESETS[preset]
     c = clips.build()
     print(f"목소리 {voice}")
@@ -277,7 +313,7 @@ def do_all(voice, preset, yes):
     keys = list(c)
     items = [(k, c[k][0], c[k][1]) for k in keys]
     print("\n만드는 중… (5~15분)")
-    got, failed = make(items, voice, fmt, bitrate, rate_hz)
+    got, failed = make(items, voice, fmt, bitrate, rate_hz, workers, per_minute)
     if failed:
         shutil.rmtree(tmp, ignore_errors=True)
         sys.exit(f"{len(failed)}개를 만들지 못했습니다: {failed[:10]}\naudio/ 는 건드리지 않았습니다.")
@@ -321,7 +357,13 @@ def main():
     ap.add_argument("--presets", default="hifi-keep,hifi-plus",
                     help="--sample 에서 견줄 설정들 (쉼표로)")
     ap.add_argument("--yes", action="store_true", help="--all 을 정말 실행")
+    ap.add_argument("--free", action="store_true",
+                    help="무료(F0) 등급. 60초에 20건으로 늦춘다. 1,226개면 약 1시간")
+    ap.add_argument("--workers", type=int, default=0, help="동시 요청 수 (기본: 유료 6, 무료 2)")
     a = ap.parse_args()
+
+    per_minute = 20 if a.free else 0            # 무료 등급: 60초에 20건
+    workers = a.workers or (2 if a.free else 6)
 
     if a.voices:
         list_voices()
@@ -330,9 +372,9 @@ def main():
         bad = [p for p in ps if p not in PRESETS]
         if bad:
             sys.exit(f"모르는 설정: {bad}. 쓸 수 있는 것: {list(PRESETS)}")
-        do_sample(a.voice, ps)
+        do_sample(a.voice, ps, workers, per_minute)
     elif a.all:
-        do_all(a.voice, a.preset, a.yes)
+        do_all(a.voice, a.preset, a.yes, workers, per_minute)
     else:
         ap.print_help()
 
