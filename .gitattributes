@@ -1,0 +1,9 @@
+# 이 저장소는 파일 그대로가 배포본입니다. 줄바꿈을 손대면 안 됩니다.
+# 특히 audio/audio.bin 은 소리 1,226개를 이어 붙인 덩어리라
+# 한 바이트만 바뀌어도 재생이 깨집니다.
+* -text
+
+*.mp3 binary
+*.bin binary
+*.png binary
+*.pdf binary
