@@ -85,6 +85,13 @@ def build(html=None):
             c["s2_" + made] = (made, "-20%")
             c["s_" + base] = (base, "-20%")
 
+    # 화면 안내 말 (첫 화면 안내, 메뉴 설명, 받기 상태). index.html 의 window.UI_SAY 가 원본.
+    # 글을 못 읽는 분을 위해 보이는 글은 모두 소리로도 나와야 한다. 문장이라 -10%.
+    ui = re.search(r'window\.UI_SAY = (\{.*?\});</script>', html, re.S)
+    if ui:
+        for k, t in json.loads(ui.group(1)).items():
+            c[k] = (t, "-10%")
+
     c["p_praise"] = ("딩동댕! 참 잘하셨어요!", "-10%")
     c["p_wrong"] = ("괜찮아요. 정답은,", "-10%")
     for n in range(11):
