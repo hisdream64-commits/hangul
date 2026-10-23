@@ -1,0 +1,8 @@
+# tools/ 스크립트가 쓰는 파이썬 패키지.  pip install -r tools/requirements.txt
+# 웹앱 자체는 아무것도 필요 없습니다. 이건 관리용 도구 전용입니다.
+
+edge-tts>=7.0            # regen_audio_edge.py, sample_edge.py — 무료 음성 (비공식)
+imageio-ffmpeg>=0.5      # mp3 다시 담기 (ffmpeg 내장)
+qrcode[pil]>=8.0         # regen_qr_poster.py — QR 만들기
+opencv-python-headless   # regen_qr_poster.py — 만든 QR 을 실제로 읽어 검증
+PyMuPDF>=1.24            # (선택) 안내문 PDF 를 그림으로 확인할 때

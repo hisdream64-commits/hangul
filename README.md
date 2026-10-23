@@ -6,6 +6,9 @@
 
 현재 판 **1.1** · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
 
+처음 맡으시거나 다른 PC에서 이어서 하시려면 **[docs/MIGRATION.md](docs/MIGRATION.md)** 부터 읽어 주세요.
+새 PC 설정 5단계, 전체 구성, 소리 다시 만들기, 판 되돌리기, 다음 작업 후보가 들어 있습니다.
+
 ## 배우는 내용
 - **기초 학습** — 1단계 자음, 2단계 모음, 3단계 소리 합치기(그+아=가), 4단계 받침 읽기
 - **글씨 쓰기 연습** — 자음·모음 24자의 쓰는 순서를 움직이는 그림으로
@@ -58,7 +61,10 @@ tools/                   관리용 스크립트
 
 ```bash
 python tools/clips.py                        # 대본 1,226개 확인 (index.html 이 원본)
-python tools/regen_audio_azure.py --sample   # 음성을 바꾸기 전에 시험 음성부터 들어 보기
+pip install -r tools/requirements.txt         # 도구가 쓰는 패키지 (한 번만)
+python tools/sample_edge.py                   # 음질 비교용 시험 음성 (무료)
+python tools/regen_audio_edge.py --all --yes  # edge-tts 로 전체 재생성 (무료)
+python tools/regen_audio_azure.py --sample    # 같은 것을 Azure 로 (키 필요)
 python tools/build_audio_bundle.py           # audio/*.mp3 -> audio/audio.bin (+ index.html 색인)
 python tools/stamp_sw.py                     # index.html 을 고친 뒤 sw.js 캐시 이름 갱신
 python tools/regen_qr_poster.py https://주소/  # 주소가 바뀌면 QR·안내문 재발급
@@ -118,10 +124,11 @@ python tools/stamp_sw.py
 > ⚠️ HD(`:DragonHDLatestNeural`)·MAI 계열 목소리는 말 속도 지정을 무시하는
 > 경우가 있습니다. 바꾸기 전에 `--sample` 로 **느리게 읽히는지 꼭 확인하세요.**
 
-### edge-tts (예전 방식, 무료·비공식)
+### edge-tts (지금 쓰는 방식, 무료·비공식)
 
-안내서 4절의 스크립트를 쓰면 됩니다. 공짜지만 비공식 경로라 예고 없이 막힐 수
-있습니다. 지금 배포된 소리가 이 방식으로 만들어졌습니다.
+`python tools/regen_audio_edge.py --all --yes` (지금과 같은 32kbps) 또는 `--raw` (재압축 없이,
+15.1MB). 공짜지만 비공식 경로라 예고 없이 막힐 수 있습니다. 지금 배포된 소리가 이 방식으로
+만들어졌습니다. 자세한 것은 `docs/MIGRATION.md` 4절.
 
 ## 판 되돌리기
 
