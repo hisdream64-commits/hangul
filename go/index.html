@@ -4,6 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="한글 중급을 마친 어르신을 위한 고급 과정 - 헷갈리는 낱말, 문장 잇기, 관공서 말, 서식 채워 쓰기, 돈과 계약 글, 병원과 약, 스마트폰 글쓰기, 편지 쓰기, 경조사 봉투, 긴 글 읽기, 사자성어, 소리 내어 읽기 녹음">
 <meta name="theme-color" content="#2E5B9A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>한글 교실 고급반</title>
 <style>
   :root {
@@ -83,6 +86,31 @@
   .greeting p { margin: 0; font-size: 1.05rem; line-height: 1.6; }
   .greeting strong { color: var(--accent); }
   .greeting a { color: var(--accent); font-weight: 800; }
+
+  /* 인터넷 없이 쓰기 안내 칸 (기초반과 같은 모양) */
+  .offline-card {
+    margin-bottom: 1.1rem; padding: 1rem 1.1rem;
+    background: var(--card); border: 3px solid var(--accent);
+    border-radius: 18px; box-shadow: var(--shadow);
+  }
+  /* 다 받고 나면 조용한 확인 칸으로 */
+  .offline-card.oc-done {
+    border: 1px solid var(--line); padding: 0.75rem 1rem;
+  }
+  .oc-done .oc-desc { margin-bottom: 0; }
+  .oc-done .oc-title { color: var(--good); }
+  .oc-title { font-size: 1.15rem; font-weight: 800; margin: 0 0 0.35rem; }
+  .oc-desc { font-size: 0.95rem; color: var(--sub); margin: 0 0 0.85rem; line-height: 1.5; }
+  .oc-bar {
+    height: 14px; background: var(--accent-soft);
+    border-radius: 999px; overflow: hidden; margin-bottom: 0.85rem;
+  }
+  .oc-fill {
+    display: block; height: 100%; width: 0%;
+    background: var(--accent); border-radius: 999px; transition: width 0.25s ease;
+  }
+  .offline-card .nav-btn { width: 100%; margin-bottom: 0.5rem; }
+  .offline-card .nav-btn:last-child { margin-bottom: 0; }
 
   .overall {
     display: flex; align-items: center; gap: 0.8rem;
@@ -323,6 +351,13 @@
       편지와 문자 쓰기, 긴 글 읽기를 배웁니다. 단추를 누르면 <strong>성우 목소리로 읽어</strong> 드리고,
       마지막 과에서는 <strong>내가 읽은 소리를 녹음해</strong> 바르게 읽었는지 확인해 드립니다. 🎙️</p>
       <p style="margin-top:0.6rem"><a href="../index.html">← 기초반으로 돌아가기</a></p>
+    </div>
+    <div class="offline-card" id="offlineCard" hidden>
+      <p class="oc-title" id="ocTitle">📥 인터넷 없이 쓰기</p>
+      <p class="oc-desc" id="ocDesc">소리를 미리 받아 두면 인터넷이 없는 곳에서도 쓸 수 있습니다.<br>약 8MB · 와이파이에서 받으시길 권합니다.</p>
+      <div class="oc-bar" id="ocBar" hidden><span class="oc-fill" id="ocFill"></span></div>
+      <button class="nav-btn primary" id="ocBtn">소리 모두 받기</button>
+      <button class="nav-btn" id="ocInstall" hidden>📱 앱으로 설치하기</button>
     </div>
     <div class="overall">
       <span class="ov-num" id="ovNum">0/13</span>
@@ -1220,6 +1255,68 @@ const player = new Audio();
 player.preload = 'auto';
 let sayQ = [], sayOn = false;
 
+/* ---------- 소리 묶음 (audio/audio.bin) ----------
+   소리 375개를 낱개로 저장하면 파일마다 붙는 관리 정보만 0.5MB 가까이 더 들고,
+   받을 때 요청도 375번이다. 그래서 받을 때는 한 덩어리로 받아 두고
+   재생할 때만 필요한 자리를 잘라 쓴다. 묶음이 없으면 예전처럼 낱개 주소로 재생한다. */
+const AUDIO_CACHE_NAME = 'hangul3-audio';
+let bundle = { blob: null, off: null };
+
+function bundleIndex() {
+  const B = window.AUDIO_BIN;
+  if (!B || !B.names || !B.lens) return null;
+  if (bundle.off) return bundle.off;
+  const off = {};
+  let at = 0;
+  for (let i = 0; i < B.names.length; i++) {
+    off['audio/' + B.names[i]] = [at, B.lens[i]];
+    at += B.lens[i];
+  }
+  bundle.off = off;
+  return off;
+}
+
+function sliceFor(path) {
+  if (!bundle.blob) return null;
+  const idx = bundleIndex();
+  const at = idx && idx[path];
+  if (!at) return null;
+  try { return bundle.blob.slice(at[0], at[0] + at[1], 'audio/mpeg'); }
+  catch (e) { return null; }
+}
+
+/* 저장해 둔 묶음이 있으면 조용히 불러 둔다. 없으면 낱개 재생 그대로. */
+function loadBundle() {
+  const B = window.AUDIO_BIN;
+  if (bundle.blob) return Promise.resolve(true);
+  if (!B || !window.caches) return Promise.resolve(false);
+  return caches.open(AUDIO_CACHE_NAME)
+    .then(function (c) { return c.match(B.file); })
+    .then(function (res) { return res ? res.blob() : null; })
+    .then(function (b) {
+      if (!b || b.size !== B.total) return false;
+      bundle.blob = b;
+      return true;
+    })
+    .catch(function () { return false; });
+}
+
+/* 묶음에서 잘라낸 조각은 임시 주소를 만들어 쓰므로, 다음 소리로 넘어갈 때 치워 준다. */
+let lastObjUrl = null;
+function setSrc(path) {
+  if (lastObjUrl) {
+    try { URL.revokeObjectURL(lastObjUrl); } catch (e) {}
+    lastObjUrl = null;
+  }
+  const part = sliceFor(path);
+  if (part) {
+    lastObjUrl = URL.createObjectURL(part);
+    player.src = lastObjUrl;
+  } else {
+    player.src = path;
+  }
+}
+
 /* 미리 만들어 둔 소리를 찾을 때 쓰는 이름 - 만들 때와 똑같이 다듬습니다 */
 function sayKey(t) {
   return String(t == null ? '' : t)
@@ -1268,7 +1365,7 @@ function sayNext() {
     player.onended = function () { sayNext(); };
     player.onerror = function () { ttsSay(it.t, it.rate); };
     try {
-      player.src = src;
+      setSrc(src);
       player.playbackRate = (it.rate && it.rate < 0.8) ? 0.72 : 1;
       const pr = player.play();
       if (pr && pr.catch) pr.catch(function () { ttsSay(it.t, it.rate); });
@@ -2145,6 +2242,178 @@ $('vcNext').addEventListener('click', function () {
 $('vcAgain').addEventListener('click', function () { startVoice(VC.m); });
 $('vcHome').addEventListener('click', function () { go('home'); renderHome(); });
 
+/* ===================== 인터넷 없이 쓰기 (홈 화면 앱) ===================== */
+(function () {
+  const card = $('offlineCard');
+  const canApp = ('serviceWorker' in navigator) && location.protocol.indexOf('http') === 0;
+  // 파일로 열었을 때는 이미 인터넷이 필요 없으므로 칸을 감춥니다.
+  if (!card || !canApp) return;
+  card.hidden = false;
+
+  navigator.serviceWorker.register('sw.js').catch(function () {});
+
+  const btn = $('ocBtn'), bar = $('ocBar'), fill = $('ocFill');
+  const desc = $('ocDesc'), title = $('ocTitle');
+
+  // 홈 화면 앱으로 열었는지
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                     || window.navigator.standalone === true;
+
+  function soundCount() { return Object.keys(window.AUDIO || {}).length; }
+  function bin() {
+    const B = window.AUDIO_BIN;
+    return (B && B.file && B.total) ? B : null;
+  }
+  function mb(bytes) { return Math.ceil(bytes / 1048576); }
+
+  function setDone(n, withSound) {
+    card.classList.add('oc-done');
+    title.textContent = '✅ 인터넷 없이 쓸 수 있습니다' + (n ? ' (소리 ' + n + '개)' : '');
+    desc.innerHTML = standalone
+      ? '소리를 모두 받아 두었습니다. 이제 인터넷이 없어도 쓸 수 있습니다.'
+      : '소리를 모두 받아 두었습니다.<br>홈 화면에 추가하신 뒤에는, <b>앱에서 한 번 더</b> 받아 주세요.';
+    bar.hidden = true;
+    btn.hidden = true;
+    if (withSound) speak('소리를 모두 받았습니다');
+  }
+
+  function progress(pct) {
+    fill.style.width = pct + '%';
+    btn.textContent = '받는 중… ' + pct + '%';
+  }
+
+  function needDownload() {
+    if (!standalone) return;
+    // 아이폰은 앱과 사파리의 저장 공간이 달라서 앱에서 다시 받아야 합니다.
+    title.textContent = '📥 먼저 소리를 받아 주세요';
+    desc.innerHTML = '이 앱에는 소리가 아직 저장되지 않았습니다.<br>' +
+      '아래 단추를 한 번 눌러 두시면 <b>인터넷이 없어도</b> 쓸 수 있습니다. (약 ' +
+      (bin() ? mb(bin().total) : 8) + 'MB)';
+  }
+
+  function checkAlreadyDone() {
+    if (!window.caches || !bin()) { needDownload(); return; }
+    loadBundle().then(function (ok) {
+      if (ok) setDone(soundCount(), false); else needDownload();
+    });
+  }
+  // window.AUDIO_BIN 자리표는 이 코드보다 뒤(파일 맨 끝)에 실립니다.
+  // 그래서 바로 부르면 아직 없어서 「이미 받아 두었다」를 못 알아봅니다.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAlreadyDone);
+  } else {
+    checkAlreadyDone();
+  }
+
+  function isQuotaError(err) {
+    if (!err) return false;
+    return err.name === 'QuotaExceededError'
+        || err.code === 22 || err.code === 1014
+        || /quota|exceeded|저장공간/i.test(String(err.message || err));
+  }
+
+  // 받기 전에 남은 공간을 미리 봅니다. 모자라면 받기 전에 알려 줍니다.
+  function checkRoom(need) {
+    if (!navigator.storage || !navigator.storage.estimate) return Promise.resolve();
+    return navigator.storage.estimate().then(function (est) {
+      if (!est || !est.quota) return;
+      const free = est.quota - (est.usage || 0);
+      if (free < need * 1.15) {                 // 여유 15%는 두고 판단합니다
+        const e = new Error('room'); e.name = 'QuotaExceededError'; throw e;
+      }
+    }, function () { /* 알 수 없으면 그냥 받아 봅니다 */ });
+  }
+
+  // 저장한 소리가 나중에 기기에 의해 지워지지 않도록 자리를 잡아 둡니다.
+  function askPersist() {
+    if (!navigator.storage || !navigator.storage.persist) return Promise.resolve(false);
+    return navigator.storage.persist().catch(function () { return false; });
+  }
+
+  // 묶음 한 덩어리를 받아 캐시에 넣습니다. 요청 1번.
+  function downloadBundle(B) {
+    return fetch(B.file, { cache: 'reload' }).then(function (res) {
+      if (!res || !res.ok) throw new Error('network');
+      if (!res.body || !res.body.getReader) return res.blob();
+      const reader = res.body.getReader(), chunks = [];
+      let got = 0;
+      return (function pump() {
+        return reader.read().then(function (r) {
+          if (r.done) return new Blob(chunks, { type: 'application/octet-stream' });
+          chunks.push(r.value);
+          got += r.value.length;
+          progress(Math.min(99, Math.round(got / B.total * 100)));
+          return pump();
+        });
+      })();
+    }).then(function (blob) {
+      if (!blob || blob.size !== B.total) throw new Error('network');
+      return caches.open(AUDIO_CACHE_NAME).then(function (c) {
+        return c.put(B.file, new Response(blob, {
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': String(blob.size)
+          }
+        }));
+      }).then(function () { bundle.blob = blob; });
+    });
+  }
+
+  btn.addEventListener('click', function () {
+    const B = bin();
+    if (!window.caches || !B) {
+      desc.textContent = '이 휴대폰에서는 미리 받기를 쓸 수 없습니다. 와이파이에서 그대로 쓰셔도 됩니다.';
+      speak('이 휴대폰에서는 미리 받기를 쓸 수 없습니다');
+      return;
+    }
+    btn.disabled = true;
+    bar.hidden = false;
+    progress(0);
+    title.textContent = '소리를 받고 있습니다';
+    desc.innerHTML = '화면을 끄지 마시고 잠시만 기다려 주세요. (약 ' + mb(B.total) + 'MB)';
+    speak('소리를 받고 있습니다. 잠시만 기다려 주세요');
+
+    askPersist()
+      .then(function () { return checkRoom(B.total); })
+      .then(function () { return downloadBundle(B); })
+      .then(function () { setDone(soundCount(), true); })
+      .catch(function (err) {
+        bar.hidden = true;
+        btn.disabled = false;
+        btn.hidden = false;
+        if (isQuotaError(err)) {
+          btn.textContent = '정리한 뒤 다시 받기';
+          title.textContent = '⚠️ 저장공간이 부족합니다';
+          desc.innerHTML = '이 휴대폰에 남은 공간이 모자라 소리를 저장하지 못했습니다.<br>' +
+            '사진이나 쓰지 않는 앱을 정리하신 뒤 다시 눌러 주세요. ' +
+            '(<b>' + (mb(B.total) + 1) + 'MB</b>쯤 필요합니다)';
+          speak('저장공간이 부족합니다');
+        } else {
+          btn.textContent = '다시 받기';
+          title.textContent = '⚠️ 아직 받지 못했습니다';
+          desc.innerHTML = '소리를 받는 중에 인터넷이 끊겼습니다.<br>' +
+            '와이파이를 확인하신 뒤 위 단추를 한 번 더 눌러 주세요.';
+          speak('아직 받지 못했습니다. 다시 눌러 주세요');
+        }
+      });
+  });
+
+  // 안드로이드: 설치 단추를 띄웁니다
+  let deferred = null;
+  const install = $('ocInstall');
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    install.hidden = false;
+  });
+  install.addEventListener('click', function () {
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function () { deferred = null; install.hidden = true; });
+  });
+})();
+
 /* ===================== 시작 ===================== */
 renderHome();
 </script>
+<script>window.AUDIO_BIN = {"file":"audio/audio.bin","total":7582176,"names":["v02276ec5dd.mp3","v03bfc66b54.mp3","v042f77183b.mp3","v043b7448bd.mp3","v0442efbcf5.mp3","v048d69b404.mp3","v05f4b33c89.mp3","v0649e72aab.mp3","v07805ad328.mp3","v07e1cd7dca.mp3","v07ee644647.mp3","v07f91c2a0c.mp3","v0a034a59ac.mp3","v0a202dd53d.mp3","v0ab659d856.mp3","v0b74470372.mp3","v0ba8995aba.mp3","v0c620da17f.mp3","v0d5591bbf0.mp3","v0d8ae6c8b4.mp3","v0db0a4d818.mp3","v0e44089b47.mp3","v0f3fdb28e6.mp3","v0f5f388b3a.mp3","v0f9a5af2bd.mp3","v1084de09ec.mp3","v10bdbe28df.mp3","v10edad3523.mp3","v110314f337.mp3","v1108061bb3.mp3","v11b2a6d847.mp3","v11be9752ac.mp3","v160c38c3ff.mp3","v19f9361cb3.mp3","v1ae76b0092.mp3","v1d4ce51a56.mp3","v1da6c7b9ac.mp3","v1e2aa02b2e.mp3","v1e38bb85e5.mp3","v1fa2c4c0b7.mp3","v2020638ca3.mp3","v2064083358.mp3","v2139c7ce30.mp3","v22161be902.mp3","v225a0c5834.mp3","v22aaacfaa6.mp3","v22cee9569f.mp3","v2384cfb3fd.mp3","v24a89a50d4.mp3","v24fe5841ed.mp3","v26a51f9b84.mp3","v28880933b1.mp3","v289efd2199.mp3","v28db8a4486.mp3","v28e209b61a.mp3","v2a47826fcd.mp3","v2b8d5c8c25.mp3","v2bf76f8911.mp3","v2c420c0294.mp3","v2c71873140.mp3","v2ed151e6ea.mp3","v2ee3082b92.mp3","v2f22c7a606.mp3","v2f7c6772b6.mp3","v303c1ca15e.mp3","v3130fde948.mp3","v31d0e59241.mp3","v32798d0f73.mp3","v33c0dcf460.mp3","v344afc7611.mp3","v344ca639cd.mp3","v3491f15242.mp3","v3497359be3.mp3","v34bca23b0c.mp3","v3637195259.mp3","v3844334e01.mp3","v39af7e3bb8.mp3","v39d154e06e.mp3","v39dea4438d.mp3","v3a16406a63.mp3","v3a967d1df3.mp3","v3aabaec242.mp3","v3b962eac9d.mp3","v3c53b84aea.mp3","v3d3f3fcfd7.mp3","v3dd866363f.mp3","v3eb573e02e.mp3","v3f3d57b31c.mp3","v400cbc0f50.mp3","v4183c6d80c.mp3","v41d2f279e8.mp3","v4320e65674.mp3","v43627f38d1.mp3","v43bda7ddfd.mp3","v43f6086456.mp3","v44b8fa52b2.mp3","v4536ff78a8.mp3","v4653b3420f.mp3","v4780dfb14d.mp3","v47fc155cdf.mp3","v48b5175009.mp3","v49f261122b.mp3","v4a721045af.mp3","v4aa1fab370.mp3","v4aa7340105.mp3","v4adf5d2274.mp3","v4c4b271f2c.mp3","v4d4c0bb737.mp3","v4e070fedb7.mp3","v4e6f4a2266.mp3","v4e8f6995dd.mp3","v4ebfabffc5.mp3","v4f101e23a1.mp3","v4fa069591e.mp3","v5090d199ca.mp3","v5235f020f6.mp3","v5454191fb0.mp3","v54ace24108.mp3","v5570dbf795.mp3","v55cba02c2c.mp3","v57c3b5bcb5.mp3","v57d1d2d5b9.mp3","v5897bac201.mp3","v5915b74253.mp3","v59620e5a53.mp3","v5a63423dc7.mp3","v5b4579f191.mp3","v5bada6199c.mp3","v5c4f16bbfc.mp3","v5c8110e469.mp3","v5dd9f093d6.mp3","v6241d725f7.mp3","v627856005d.mp3","v63586aa6f9.mp3","v640e8bc7ee.mp3","v64b96e1adb.mp3","v654043ffbe.mp3","v65760b8135.mp3","v66043bca8d.mp3","v663179812b.mp3","v67bc9d35ac.mp3","v67f7c82958.mp3","v69169e23a8.mp3","v6a9760391e.mp3","v6b31817f20.mp3","v6ba92d3aa8.mp3","v6c038344d4.mp3","v6c525f05d3.mp3","v6ca742469f.mp3","v6db0892a78.mp3","v6e07a7abf9.mp3","v6e45e7b5c7.mp3","v6f7edd5c8f.mp3","v708438bca8.mp3","v70a60cb9b1.mp3","v70ed1ad5bd.mp3","v72daa10cf3.mp3","v7324e62f3f.mp3","v736ca920b0.mp3","v738058efbc.mp3","v73fb3cc9e6.mp3","v74e857aa8a.mp3","v76699df343.mp3","v7718a6e191.mp3","v77b39ed388.mp3","v79658d8806.mp3","v79f2e05b6c.mp3","v7a4bbfc2a0.mp3","v7a80eeeb36.mp3","v7aa34d573a.mp3","v7bf618e4b9.mp3","v7bfb3a78d3.mp3","v7c3daee2f5.mp3","v7d4e74fbf5.mp3","v7dc648b9a2.mp3","v7dc9d20d08.mp3","v7e1587cc6e.mp3","v7e52b6e386.mp3","v7eb1178cc0.mp3","v7ebba2cfe3.mp3","v7f1473c217.mp3","v7f6ffaa6bb.mp3","v7f813adccf.mp3","v7fa6af02a7.mp3","v80abe4d86a.mp3","v80bf3db2e6.mp3","v80c3e39921.mp3","v80ce3201c4.mp3","v81eccaa12e.mp3","v831b125953.mp3","v831cf87a72.mp3","v8445a34aad.mp3","v847c7b3188.mp3","v84f33a7dc1.mp3","v85e1f7ae21.mp3","v87e7eeef28.mp3","v89606c49aa.mp3","v8a4a1bcd3f.mp3","v8b793fa2fc.mp3","v8be58c0a7f.mp3","v8cb85fb3a9.mp3","v8d6e96f5a4.mp3","v8dca4e2d8c.mp3","v8f65f70238.mp3","v8f76802e43.mp3","v8fe7d9dcc6.mp3","v901c6cafd0.mp3","v903f5eb310.mp3","v908ac189da.mp3","v91ba725873.mp3","v9309fbcdbf.mp3","v93dc3229a8.mp3","v94699fd265.mp3","v953dda1582.mp3","v95841ad0ca.mp3","v96239e889b.mp3","v966b948009.mp3","v96b2b86407.mp3","v9703cbe60d.mp3","v974748d517.mp3","v97565b1d19.mp3","v97b3390ba3.mp3","v97f7bd3071.mp3","v99e2f0ffda.mp3","v9a00f7adca.mp3","v9a5833b95f.mp3","v9acc55681b.mp3","v9ad87acd6c.mp3","v9cad651a13.mp3","v9caff83b4d.mp3","v9cf7571b6c.mp3","v9d3fc12a27.mp3","v9d7b69b87c.mp3","v9db4ba4c93.mp3","v9dfb6113b8.mp3","v9f7ff65dcc.mp3","va0535155a2.mp3","va10437551e.mp3","va105b7842b.mp3","va1cdc35783.mp3","va1ec0daad1.mp3","va27842cbaf.mp3","va37039dd80.mp3","va3f53474f1.mp3","va440554de7.mp3","va557f44773.mp3","va6ca1b32e1.mp3","va6d2aca27b.mp3","va73513abc3.mp3","va7af261796.mp3","va80b86a8b7.mp3","va8f5de6fd5.mp3","va9728789dc.mp3","vaa4b5d2996.mp3","vab1cfc1892.mp3","vab2218a89b.mp3","vab6093b764.mp3","vad381ee6d6.mp3","vae85d87afd.mp3","vaeb454e04c.mp3","vaedfee0b16.mp3","vb1669fa871.mp3","vb192b66d5e.mp3","vb4db1989fe.mp3","vb4e9b3a37e.mp3","vb50207e1c9.mp3","vb51b098fb0.mp3","vb59d2dbde3.mp3","vb6237460b2.mp3","vb797c499bf.mp3","vb79f61a166.mp3","vb8f33b39cb.mp3","vb9ce91282b.mp3","vbb1cc06c4a.mp3","vbb9528c06b.mp3","vbbbed53c4d.mp3","vbc5248698b.mp3","vbca93e492b.mp3","vbcf6e82538.mp3","vbcf733ef9a.mp3","vbd963f436f.mp3","vbd9671ada3.mp3","vbeed862594.mp3","vc0e3c6712c.mp3","vc104b8e167.mp3","vc19070fb23.mp3","vc247944c69.mp3","vc29e19f72c.mp3","vc3e59c7ac1.mp3","vc481bc85fe.mp3","vc5ccef315c.mp3","vc68d3efd4d.mp3","vc6b19fb306.mp3","vc76a89f022.mp3","vc8030ba8ef.mp3","vc8140d146e.mp3","vc88d31b785.mp3","vcb34f76787.mp3","vccdf6bceef.mp3","vcd9e510db4.mp3","vce28c6ef39.mp3","vce6610b6a7.mp3","vce7d4d6576.mp3","vcfcebbc72b.mp3","vd05ec0f1a1.mp3","vd07b34bb4e.mp3","vd1265d4f32.mp3","vd17e5e7ae1.mp3","vd368918b92.mp3","vd3da501621.mp3","vd4438d751f.mp3","vd4c6f596ce.mp3","vd4fa9d6742.mp3","vd54ab12031.mp3","vd5967fb68f.mp3","vd73d6b80a0.mp3","vd74089d152.mp3","vd7615317d5.mp3","vd77c729264.mp3","vd798c88f43.mp3","vd8bcae1052.mp3","vd91f6093df.mp3","vda39d672e2.mp3","vda7d154722.mp3","vdae47ea67b.mp3","vdb468b7b8f.mp3","vdb57763275.mp3","vdb92621d8e.mp3","vdc0728093c.mp3","vdc65aa25ee.mp3","vdcbb202d5b.mp3","vddf123884a.mp3","vde5dbffc52.mp3","vdea7f4e69a.mp3","vdff1800e03.mp3","ve2e256b65e.mp3","ve2e7b700b3.mp3","ve3ee01d756.mp3","ve4d1e216e8.mp3","ve5bc436830.mp3","ve614686c37.mp3","ve6ab952c43.mp3","ve719058688.mp3","ve91cd929a5.mp3","ve952957708.mp3","ve988a60f50.mp3","veaa4ed4e23.mp3","veb118ae9a1.mp3","veb67e7e066.mp3","vecb6778ab9.mp3","ved81b11300.mp3","vede3966c4e.mp3","vee4901cda8.mp3","vef81d0eb60.mp3","vef8bd11848.mp3","vefe49db8ef.mp3","vf058df3954.mp3","vf16efc4c83.mp3","vf237c8d208.mp3","vf55eb3cd4b.mp3","vf6153d86fb.mp3","vf6318d556f.mp3","vf6adb139be.mp3","vf6c37ab80b.mp3","vf8469164d5.mp3","vf8e1c3dc77.mp3","vf97150a5b4.mp3","vf9acfe9a7e.mp3","vfc42ba6d7e.mp3","vfc5bb731db.mp3","vfdc059abea.mp3","vfe9c81dace.mp3","vfed9aae29c.mp3","vfee3ea7237.mp3","vff1525dea9.mp3"],"lens":[14544,20880,29952,18576,12096,22896,12096,18720,16272,11808,17856,19152,17136,18000,22464,24624,30528,41328,22176,21600,19584,21744,20736,23760,18144,22896,27072,19008,20160,27072,14256,23040,34128,17712,11808,23328,30096,26496,19728,11232,15552,20160,27216,13680,23904,12960,24768,15984,15984,17136,13680,20016,13392,17424,15696,26208,19152,19008,25920,17712,16128,27072,15264,20880,14256,15120,20880,20160,22896,23760,17280,13536,27648,15408,18000,42480,15408,27504,15840,24768,15264,13824,17424,12816,27216,35712,12096,18864,15696,17856,15696,13248,19296,14256,22032,11376,18432,18720,19152,11520,11232,31248,13968,24048,26496,29520,32832,20736,12672,11808,19584,35136,12672,17856,48096,19152,16560,15408,37872,16272,21168,15696,23328,13680,12096,13680,23472,21168,24048,27648,23040,23328,15984,15552,20448,35424,16848,16992,21744,19872,11232,11664,21168,19008,15840,16560,27648,29088,33984,17568,19584,25344,12240,28224,24624,12960,14400,26784,41760,11232,18288,24912,18288,24912,21600,23904,34416,21312,12960,30960,16992,13968,22464,18288,16416,25488,20304,18864,27072,15552,26640,11664,13248,17712,23040,20880,19152,17568,25488,17856,12096,16128,25920,14544,31248,15840,17136,22176,16416,22896,28512,13392,29952,11376,23328,12672,17856,27072,13104,18144,24048,15552,22896,19008,11808,25344,21600,20592,16416,18864,17136,19872,28080,13392,29664,14256,12528,14688,40176,16560,17280,17568,19152,15408,20160,12816,25344,19152,11232,12384,13968,21600,18144,20736,28080,57744,23904,12528,20736,13248,34848,25056,21168,28080,27792,18720,12528,11232,21168,20016,20592,22608,12960,19872,22608,15408,28224,17136,14112,16416,13680,15408,22896,11232,12672,15984,20736,20448,13248,21744,18288,26352,12960,27504,20880,15552,22464,21888,16416,16848,20592,22752,23040,21024,13392,14832,17424,28080,13680,35424,12960,13392,13680,34416,22032,44496,14832,15264,11808,35712,14256,16848,14832,26640,16560,12672,20592,13824,15840,11232,19728,20016,24048,18288,20592,29088,19008,13536,26064,19008,34416,21888,25632,23904,17568,29376,18000,26928,15408,23904,15552,22032,12960,41328,23328,13824,12816,11232,25344,16128,18864,15408,24048,12384,28224,13248,20448,15984,18000,11232,19008,14976,16416,16992,23616,16704,18576,26496,24336,23184,17136,27360,20160,28944,21600]};</script>
