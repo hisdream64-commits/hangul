@@ -7,9 +7,9 @@
 - 갱신일: 2026-10-23
 - 함께 받는 것: `hangul-go.zip` (앱 + 음성 375개 + 도구 + 이 문서)
 
-> ⚠️ **지금 고급반은 어느 저장소에도 올라가 있지 않습니다.** 챗에 올린 `hangul-go.zip` 이
-> 유일한 사본입니다. 새 노트북에서 가장 먼저 할 일은 이것을 **저장소에 넣고 푸시**하는
-> 것입니다(5절). 기초반 `hisdream64-commits/hangul` 은 이미 올라가 있어 안전합니다.
+> ✅ **2026-10-23: 고급반을 저장소에 올렸습니다.** `hisdream64-commits/hangul` 의 `go/` 폴더에
+> 앱·음성 375개·도구가 모두 들어 있습니다. 새 노트북에서는 `git clone` 한 번이면 그대로
+> 이어서 작업하실 수 있습니다(5절).
 
 ---
 
@@ -33,16 +33,16 @@ pip install edge-tts
 
 # 5) 저장소
 mkdir -p ~/projects && cd ~/projects
-git clone https://github.com/hisdream64-commits/hangul.git      # 기초반
+git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + 고급반(go/)
 ```
 
 그다음 Claude Code 안에서 `/setup-gbrain` 을 실행해 gbrain(기억)을 연결하고,
 `~/.claude/settings.json` 을 3절 내용으로 맞추면 끝입니다.
 
-고급반 파일은 `hangul-go.zip` 을 풀어 쓰시면 되고, 바로 열어 보려면:
+고급반은 받은 저장소의 `go/` 안에 있습니다. 바로 열어 보려면:
 
 ```bash
-cd hangul-go && npx -y http-server -p 8777 -c-1
+cd ~/projects/hangul/go && npx -y http-server -p 8777 -c-1
 # 브라우저에서 http://localhost:8777/hangul-go.html
 ```
 
@@ -146,22 +146,25 @@ gbrain migrate --to postgres
 
 ---
 
-## 5. 고급반 앱 — 저장소에 넣기
+## 5. 고급반 앱 — 받아서 이어 하기
 
-아직 올라가 있지 않습니다. 기초반과 같은 저장소에 두는 것을 권합니다.
+기초반과 같은 저장소 `hisdream64-commits/hangul` 의 **`go/`** 폴더에 들어 있습니다
+(2026-10-23 푸시, 커밋 `한글 교실 고급반 추가`). 음성 375개까지 저장소에 함께 있어
+따로 만들 필요가 없습니다.
 
 ```bash
-cd ~/projects/hangul
-mkdir -p go
-# hangul-go.zip 을 풀어 hangul-go.html, audio/, tools/, MIGRATION.md 를 go/ 로 옮긴 뒤
-git add go
-git commit -m "한글 교실 고급반 추가"
-git push
+git clone https://github.com/hisdream64-commits/hangul.git ~/projects/hangul
+cd ~/projects/hangul/go
+ls audio | wc -l          # 375 가 나와야 합니다
+npx -y http-server -p 8777 -c-1
 ```
 
-음성 7.2MB 가 함께 올라갑니다. 기초반도 `audio/` 1,226개(10MB)를 같은 방식으로
-담고 있으니 전례는 있습니다. 배포는 기초반처럼 Vercel 을 쓰면 되고,
-`https://<주소>/go/hangul-go.html` 로 열립니다.
+고친 뒤에는 `go/` 안에서 평소처럼 커밋·푸시하면, 다른 컴퓨터에서는 `git pull` 로 받습니다.
+**두 컴퓨터에서 같이 고치지 마세요.** 음성 mp3 는 합쳐지지 않으므로, 한쪽에서 끝내고
+푸시한 다음 다른 쪽에서 받는 순서를 지키는 편이 안전합니다.
+
+배포는 기초반처럼 Vercel 을 쓰며 `https://<주소>/go/hangul-go.html` 로 열립니다.
+(아직 `vercel.json` 에 `go/` 용 캐시 설정은 넣지 않았습니다.)
 
 > **마이크는 https 에서만 열립니다.** 「소리 내어 읽기」 과정이 동작하려면 반드시
 > https 주소(또는 localhost)여야 합니다. 파일을 더블클릭해 `file://` 로 열면 녹음이
@@ -319,7 +322,7 @@ python tools/inject_map.py                                   # 3) 지도를 html
 - [ ] `~/.claude/settings.json` 훅 경로가 새 사용자 이름에 맞는지
 - [ ] `pip install edge-tts` 후 `python tools/make_audio.py --dry-run` 이 **「받아야 할 것 0개」**
 - [ ] 로컬 서버로 고급반을 열어 **🔊 다시 듣기가 성우 목소리로** 나오는지
-- [ ] 고급반을 저장소에 넣고 푸시 (5절)
+- [x] ~~고급반을 저장소에 넣고 푸시~~ (2026-10-23 완료)
 - [ ] **배포 후 휴대폰에서 제 12 과 녹음 한 번** (9-1)
 
-마지막 두 항목이 남아 있습니다. 특히 녹음은 실기기에서만 확인할 수 있습니다.
+남은 것은 **실기기 녹음 확인** 하나입니다. 이것만은 휴대폰에서만 해 볼 수 있습니다.
