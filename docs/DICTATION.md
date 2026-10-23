@@ -29,11 +29,40 @@
 - 받아쓰기 교실 — https://claude.ai/artifact/LskW33gytt1gqGRQkbPwKt
 - 겹받침 쓰기 연습 — https://claude.ai/artifact/1Ds7L6UR7yTd358pkU1KFi
 
-### 새 PC에서 시작하신다면
+### 내 PC에서 이어가기
+
+이미 `~/projects/hangul` 이 있으시면 **세 줄**이면 됩니다.
+
+```bash
+cd ~/projects/hangul
+git fetch origin
+git switch wip/dictation-offline        # 중급반 작업이 있는 가지
+```
+
+그 뒤 Claude 앱 → Code 탭 → 그 폴더를 고르고, 첫마디로
+**"`wip/dictation-offline` 가지에서 받아쓰기 중급반을 이어서 해줘."** 하시면 됩니다.
+저장소 맨 위에 **`CLAUDE.md`** 가 있어 규칙(소리를 가공하지 말 것 · 고친 뒤
+`stamp_sw.py` · 커밋은 경로 지정)과 읽을 문서는 Claude 가 알아서 봅니다.
+
+제대로 왔는지 보려면:
+
+```bash
+cd tools/dictation && node build.js ../../index.html   # 「녹음이 필요한 낱말 0 개」
+cd ../.. && python tools/dictation/check_offline.py    # 비행기 모드 소리까지 확인
+python -m http.server 8000                             # http://localhost:8000/
+```
+
+첫 화면 메뉴 맨 아래에 **📝 받아쓰기 교실 · 🧩 겹받침 쓰기 연습** 두 줄이 보이면 맞습니다.
+
+> `main` 에는 아직 없습니다. `git switch main` 하시면 메뉴 두 줄과 오프라인 소리가
+> 없는 옛 화면이 나옵니다. 합치는 것은 **5-3** 을 보세요.
+
+### 처음 쓰는 PC라면
 
 `tools/setup-newpc.ps1` 한 번이면 끝납니다. 필요한 프로그램(Node 포함)을 깔고,
-저장소를 받고, **중급반이 제대로 왔는지 다시 만들어 확인까지** 합니다.
-자세한 것은 [MIGRATION.md 0절](MIGRATION.md#0-새-pc에서-이어서-작업하기).
+저장소를 받고, **중급반이 제대로 왔는지 다시 만들어 확인까지** 합니다. 중급반 가지가
+따로 있으면 그것도 알려 줍니다. 자세한 것은
+[MIGRATION.md 0절](MIGRATION.md#0-새-pc에서-이어서-작업하기).
 
 ```powershell
 irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
@@ -69,8 +98,10 @@ gyeopbatchim.html                     겹받침 쓰기 연습 (만들어진 결�
 tools/dictation/build.js              위 둘을 만드는 스크립트 ← 고칠 곳은 여기
 tools/dictation/jung.template.html         화면·동작 원본
 tools/dictation/gyeopbatchim.template.html 화면·동작 원본
+tools/dictation/check_offline.py      비행기 모드에서 소리가 나는지 확인 (브라우저로)
 tools/dictation/녹음이-필요한-말.txt       아직 녹음이 없는 문장 12개 (build.js 가 씁니다)
 tools/dictation/문장목록.json              3단계 문장 목록 (build.js 가 씁니다 · clips.py 가 읽습니다)
+CLAUDE.md                            작업 규칙 (Claude 가 세션 시작 때 읽습니다)
 ```
 
 > 뒤의 두 파일은 **손으로 고치지 마세요.** `build.js` 를 돌릴 때마다 다시 쓰입니다.
@@ -98,6 +129,19 @@ tools/dictation/문장목록.json              3단계 문장 목록 (build.js �
 
 자리표는 `build.js` 가 `window.AUDIO_BIN` 을 읽어 쓰는 소리 127개만큼만 심습니다.
 묶음이 없으면(아직 안 받았거나 인터넷이 있으면) 예전처럼 낱개 주소로 재생합니다.
+
+**인터넷이 있는 PC에서 🔊 를 눌러 보는 것으로는 이게 멀쩡한지 알 수 없습니다.**
+그 상태를 실제로 만들어 보는 확인 도구를 넣어 두었습니다.
+
+```bash
+pip install playwright && python -m playwright install chromium   # 처음 한 번
+python tools/dictation/check_offline.py
+```
+
+네 가지를 봅니다 — 묶음에서 잘라낸 127조각이 낱개 mp3 와 **바이트 단위로** 같은가 ·
+인터넷이 있으면 낱개 주소로 재생하는가 · 묶음을 받아 둔 뒤 비행기 모드에서 `blob:` 로
+소리가 읽히는가 · 묶음이 없는 비행기 모드에서는 안 나는가(그게 정상).
+`playwright` 가 없으면 바이트 비교만 하고 넘어갑니다.
 
 ---
 
@@ -340,4 +384,5 @@ gbrain serve --http
 - [ ] 「녹음이 필요한 낱말 0 개」가 나온다
 - [ ] 「오프라인 소리 묶음 자리표 …개」가 나온다 (0개나 안내문이면 묶음이 없는 것)
 - [ ] 기초반 첫 화면 맨 아래 메뉴에 받아쓰기·겹받침 두 줄이 보인다
-- [ ] 휴대폰에서 「소리 모두 받기」 → 비행기 모드 → 받아쓰기에서 **소리가 난다**
+- [ ] `python tools/dictation/check_offline.py` 가 「모두 통과했습니다」로 끝난다
+- [ ] (마지막으로 휴대폰에서) 「소리 모두 받기」 → 비행기 모드 → 받아쓰기에서 **소리가 난다**
