@@ -20,6 +20,10 @@
 | 오프라인(묶음) 연동 | — | 됩니다 · 브라우저로 확인함 |
 | 3단계 생활 문장 음성 12개 | — | **아직 안 만듦** · 만들 준비는 끝 (5-1) |
 
+> 📍 메뉴 연결과 오프라인 소리는 가지 **`wip/dictation-offline`** 에 있습니다 (`main` 아님).
+> Vercel 은 가지에 미리보기만 만들고 운영 주소(`urihangul.vercel.app`)는 그대로 둡니다.
+> 보시고 괜찮으면 `main` 에 합쳐 주세요. 기초반 가지와 겹치는 곳은 **5-3** 에 적어 두었습니다.
+
 소리를 파일 안에 넣어 둔 미리보기입니다. 저장소를 받지 않아도 열립니다. (계정 로그인 필요)
 
 - 받아쓰기 교실 — https://claude.ai/artifact/LskW33gytt1gqGRQkbPwKt
@@ -217,12 +221,16 @@ cd tools/dictation && node build.js ../../index.html && mv -f jung.html gyeopbat
 ### 5-3. 다른 가지와 겹치는 곳 (합치실 때 보세요)
 
 같은 저장소에서 기초반(`wip/voice-guide`)과 고급반(`go/`)이 함께 돌아갑니다.
-중급반이 **공용 파일**을 건드린 곳은 이 두 군데뿐입니다.
+고급반은 `go/` 안에만 있어 겹치지 않습니다. 기초반 가지와는 겹칩니다.
 
-| 파일 | 중급반이 한 일 | 합칠 때 |
+미리 합쳐 보았습니다(`git merge wip/voice-guide`). 부딪히는 곳은 **두 파일, 네 군데**입니다.
+
+| 파일 | 결과 | 어떻게 |
 |---|---|---|
-| `tools/clips.py` | `build()` 끝에 생활 문장 12개를 더함 (`dictation_sentences()`) | `wip/voice-guide` 는 `window.UI_SAY` 14개를 더합니다. **둘 다 끝부분에 더하는 것**이라 함께 들어가면 됩니다 (조각 1,226 + 14 + 12 = 1,252개) |
-| `index.html` | 첫 화면 메뉴에 두 줄, `.menu-btn` 선택자 한 줄 | `wip/voice-guide` 도 같은 메뉴를 고칩니다. 메뉴 쪽은 **손으로 합치셔야** 합니다 |
+| `tools/clips.py` | 저절로 합쳐집니다 | 둘 다 `build()` 끝쪽에 더하는데 자리가 달라 안 부딪힙니다. 합친 뒤 `python tools/clips.py` 가 **1,252개**(1,226 + 안내 14 + 문장 12)를 보여 주면 맞습니다 |
+| `sw.js` | 부딪힘 (지문 한 줄) | 아무 쪽이나 고르고 **`python tools/stamp_sw.py` 를 다시 돌리면** 올바른 지문이 찍힙니다 |
+| `index.html` 메뉴 | 부딪힘 | `wip/voice-guide` 쪽(`<div class="menu-item">` 으로 감싸고 🔊 를 나란히 둔 것)을 **살리고**, 그 아래에 중급반 두 줄(`<a class="menu-btn" href="jung.html">`, `…gyeopbatchim.html`)을 그대로 붙이세요 |
+| `index.html` 메뉴 선택자 | 부딪힘 | `wip/voice-guide` 쪽(`go()` 에 `history.pushState` 를 넣은 것)을 **살리고**, 그 안의 `querySelectorAll('.menu-btn')` 만 **`'.menu-btn[data-go]'`** 로 바꾸세요. 안 바꾸면 중급반 줄을 눌렀을 때 `go(undefined)` 가 불려 화면이 하나도 안 보입니다 |
 
 - **`APP_VERSION` 은 올리지 않았습니다** (`1.1` 그대로). `wip/voice-guide` 가 `1.2` 와
   `v1.2` 태그를 쓰기로 해 두었기 때문입니다. 중급반 메뉴는 그 판에 같이 실리면 됩니다.
