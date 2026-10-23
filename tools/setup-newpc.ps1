@@ -46,6 +46,9 @@ Say "1/6  필요한 프로그램"
 Need git    'Git.Git'            'git'
 Need gh     'GitHub.cli'         'GitHub CLI (gh)'
 Need python 'Python.Python.3.13' 'Python'
+# Node 는 받아쓰기 중급반(jung.html / gyeopbatchim.html)을 다시 만들 때만 씁니다.
+# 기초반만 손보실 거면 없어도 됩니다.
+Need node   'OpenJS.NodeJS.LTS'  'Node.js (받아쓰기 중급반 빌드용)'
 if (Test-Path "$env:ProgramFiles\Google\Chrome\Application\chrome.exe") { Ok "Chrome 있음" }
 else { Warn "Chrome 없음 — 안내문 PDF(regen_qr_poster.py)를 만들 때만 필요합니다. 나머지는 됩니다." }
 
@@ -94,15 +97,39 @@ if ($active -match "account $GitUser" -and $active -match "(?s)$GitUser.*?Active
 }
 
 Say "6/6  인수인계 문서 복사"
-$doc = Join-Path $Dest 'docs\MIGRATION.md'
-foreach ($d in @([Environment]::GetFolderPath('Desktop'), (Join-Path $HOME 'Downloads'))) {
-    if (Test-Path $d) { Copy-Item $doc (Join-Path $d 'MIGRATION.md') -Force; Ok (Join-Path $d 'MIGRATION.md') }
+foreach ($name in @('MIGRATION.md', 'DICTATION.md')) {
+    $doc = Join-Path $Dest "docs\$name"
+    if (-not (Test-Path $doc)) { continue }
+    foreach ($d in @([Environment]::GetFolderPath('Desktop'), (Join-Path $HOME 'Downloads'))) {
+        if (Test-Path $d) { Copy-Item $doc (Join-Path $d $name) -Force; Ok (Join-Path $d $name) }
+    }
 }
 
 Say "확인"
 Push-Location $Dest
 python tools\clips.py | Select-Object -First 1
 $branches = git branch -r --format='%(refname:short)' | Where-Object { $_ -ne 'origin/HEAD' }
+
+# 받아쓰기 중급반 — 파일이 다 왔는지, 다시 만들 수 있는 상태인지
+$dict = @('jung.html', 'gyeopbatchim.html', 'tools\dictation\build.js') |
+        Where-Object { -not (Test-Path (Join-Path $Dest $_)) }
+if ($dict) { Warn ("받아쓰기 중급반 파일 없음: " + ($dict -join ', ')) }
+else {
+    Ok "받아쓰기 중급반 파일 있음 (jung.html, gyeopbatchim.html)"
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        Push-Location (Join-Path $Dest 'tools\dictation')
+        $out = (cmd /c "node build.js ..\..\index.html 2>&1" | Out-String)
+        Pop-Location
+        if ($out -match '녹음이 필요한 낱말 0 개') {
+            Move-Item (Join-Path $Dest 'tools\dictation\jung.html')         $Dest -Force
+            Move-Item (Join-Path $Dest 'tools\dictation\gyeopbatchim.html') $Dest -Force
+            Ok "받아쓰기 중급반 다시 만들기 됨"
+        } else {
+            Warn "받아쓰기 중급반 빌드가 깨끗하지 않습니다. docs/DICTATION.md 3절을 보세요."
+            Write-Host $out
+        }
+    } else { Warn "Node 가 없어 중급반 빌드는 건너뜁니다 (화면은 그대로 동작합니다)" }
+}
 Pop-Location
 Ok ("가지: " + ($branches -join ', '))
 
@@ -111,6 +138,12 @@ Write-Host "준비 끝. 이어서 할 일:" -ForegroundColor Cyan
 Write-Host "  1) 시작 메뉴에서 Claude 앱을 열고 같은 계정으로 로그인"
 Write-Host "  2) Code 탭 → 폴더 선택 → $Dest"
 Write-Host "  3) 첫마디로 이렇게 말하세요:"
-Write-Host '     "docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host "     - 기초반을 이어서:" -ForegroundColor Gray
+Write-Host '       "docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host "     - 받아쓰기 중급반을 이어서:" -ForegroundColor Gray
+Write-Host '       "docs/DICTATION.md 를 읽고 받아쓰기 중급반 작업을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  소리가 나는지 보려면:  cd $Dest ; python -m http.server 8000"
+Write-Host "    그 뒤 브라우저에서  http://localhost:8000/jung.html  → 🔊 를 눌러 보세요"
 Write-Host ""
 Write-Host "  (직접 하시려면)  cd $Dest ; git switch wip/voice-guide"
