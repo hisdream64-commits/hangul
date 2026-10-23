@@ -25,6 +25,17 @@
 - 받아쓰기 교실 — https://claude.ai/artifact/LskW33gytt1gqGRQkbPwKt
 - 겹받침 쓰기 연습 — https://claude.ai/artifact/1Ds7L6UR7yTd358pkU1KFi
 
+### 새 PC에서 시작하신다면
+
+`tools/setup-newpc.ps1` 한 번이면 끝납니다. 필요한 프로그램(Node 포함)을 깔고,
+저장소를 받고, **중급반이 제대로 왔는지 다시 만들어 확인까지** 합니다.
+자세한 것은 [MIGRATION.md 0절](MIGRATION.md#0-새-pc에서-이어서-작업하기).
+
+```powershell
+irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
+powershell -ExecutionPolicy Bypass -File .\setup-newpc.ps1
+```
+
 ### 배우는 내용
 
 **1부 낱말 쓰기** — 단계마다 10문제를 무작위로 냅니다.
@@ -95,6 +106,18 @@ gyeopbatchim.html 41KB
 > ⚠️ `build.js` 는 **보이는 낱말과 들리는 소리가 어긋나면 일부러 실패합니다.**
 > 받아쓰기에서 화면에는 「괜찮다」가 뜨는데 소리는 "괜찮습니다"가 나오면 학습자가
 > 틀린 답을 쓰게 됩니다. 실제로 그 버그가 있었고, 그래서 검사를 넣었습니다.
+
+### 소리까지 넣은 미리보기
+
+저장소를 올리지 않고 **그 자리에서 들어 보실 때** 씁니다. 소리 127개를 파일 안에
+넣으므로 한 개가 1.6MB쯤 됩니다. 배포용이 아니라 확인용입니다.
+
+```bash
+cd tools/dictation && node build.js ../../index.html --preview
+```
+
+`jung-preview.html` 과 `gyeopbatchim-preview.html` 이 생깁니다. 더블클릭해서 열어도
+소리가 납니다. 확인이 끝나면 지우세요 — 저장소에는 넣지 않습니다.
 
 ---
 

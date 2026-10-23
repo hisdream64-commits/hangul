@@ -131,11 +131,18 @@ const gyeopData = { A: used, FX: FX, SC: SC, G: GYEOP };
    소리 자체는 손대지 않습니다 - audio/ 의 mp3 를 그대로 담기만 합니다. */
 function inlineAudio(data, links) {
   const map = {};
+  /* 소리는 index.html 이 있는 곳(저장소 맨 위)의 audio/ 에서 가져옵니다.
+     지금 폴더 기준으로 찾으면 tools/dictation 에서 돌릴 때 못 찾고
+     소리 없는 미리보기가 조용히 만들어집니다. */
+  const audioDir = path.join(path.dirname(path.resolve(SRC)), 'audio');
   function toData(p) {
     if (!p) return p;
     if (map[p]) return map[p];
-    const file = path.join('audio', path.basename(p));
-    if (!fs.existsSync(file)) return p;
+    const file = path.join(audioDir, path.basename(p));
+    if (!fs.existsSync(file)) {
+      console.error('소리 파일을 못 찾았습니다: ' + file);
+      return p;
+    }
     map[p] = 'data:audio/mpeg;base64,' + fs.readFileSync(file).toString('base64');
     return map[p];
   }
