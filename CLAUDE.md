@@ -57,12 +57,18 @@ python -m http.server 8000                    # 그 뒤 http://localhost:8000/ju
   남의 변경을 쓸어 담지 마세요 — `git commit <경로> -m ...`. 실제로 한 번 섞인 적이 있습니다.
 - `main` 에 올리면 **운영 주소(https://urihangul.vercel.app/)가 바로 바뀝니다.**
   어르신이 쓰시는 화면이므로, 묻지 않고 올리지 마세요. 가지에 올리면 미리보기만 생깁니다.
+- **클라우드 세션에서는 태그를 못 올립니다.** `refs/tags` 푸시와 git 쓰기 API가 둘 다
+  막혀 있어 브랜치만 올라갑니다. 태그 글은 `docs/releases/` 에 남기고 PC에서 답니다
+  ([docs/releases/README.md](docs/releases/README.md)).
 
 ## 지금 상태 (2026-10-23)
 
 `main` 이 판 **1.2** 입니다. 기초반 소리 안내와 중급반(오프라인 소리 · 첫 화면 메뉴
 연결)이 모두 합쳐져 있습니다. 합칠 때 부딪힌 네 군데를 어떻게 풀었는지는
 `docs/DICTATION.md` **5-3절**에 적혀 있습니다.
+
+**`v1.2` 태그는 아직 안 붙었습니다.** 글은 `docs/releases/v1.2.txt` 에 있고,
+PC에서 세 줄이면 됩니다 — `docs/releases/README.md` 참고.
 
 남은 일은 **받아쓰기 3단계 생활 문장 소리 12개**뿐입니다 (`docs/DICTATION.md` 5-1절).
 `python tools/regen_audio_edge.py --missing` 로 만듭니다. 인터넷이 막힌 곳에서는
