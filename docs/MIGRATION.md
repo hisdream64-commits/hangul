@@ -6,7 +6,7 @@
 - 운영 주소: **https://urihangul.vercel.app/**
 - 저장소: `hisdream64-commits/hangul` (public)
 - 호스팅: Vercel 프로젝트 `hangul` (계정 `hisdream64-7112`, Hobby) — `git push` 하면 자동 배포
-- 현재 판: **1.1** = **버전 1 (2026-09-21)** · git 태그 `v1.1` · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
+- 현재 판: **1.2** (2026-10-23, 소리 안내 ①②④⑥) · git 태그 `v1.2` · 직전 판 **1.1** = **버전 1 (2026-09-21)** `v1.1` · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
 - 갱신일: 2026-10-23
 
 > 이 문서는 저장소 안 `docs/MIGRATION.md` 에 있습니다. 저장소를 받으면 함께 따라옵니다.
@@ -107,8 +107,8 @@ git switch main-ta7yke            # 여기서 이어갑니다 (= wip/voice-guide
    `python tools/verify.py https://hangul-git-main-ta7yke-hisdream64-7112.vercel.app/` 로 전수 확인
    (클라우드 세션은 `*.vercel.app` 접속이 막혀 있어 로컬 서버로만 ✅ 확인했음 — 1,240개, 묶음 11,226,464 바이트)
 2. **실제 휴대폰**에서 미리보기 주소로 6절 손 확인 (특히 🔊 단추가 안드로이드·아이폰에서 소리를 내는지)
-3. `git switch main && git merge main-ta7yke` → 푸시 → 운영 주소에서 6절 손 확인 → `git tag -a v1.2` (10절)
-   → 이 문서 맨 위 "현재 판"을 1.2 로
+3. ✅ `main` 에 합쳐 푸시(2026-10-23, Vercel 운영 배포 성공) → 운영 주소 손 확인 → 태그 `v1.2`
+   → 이 문서 맨 위 "현재 판" 1.2. **이 절의 일은 모두 끝났습니다.** 다음 일은 11절 2순위부터.
 
 > ⚠️ 묶음(`audio.bin`)이 바뀌었으므로 이미 받아 둔 휴대폰은 길이가 안 맞아 **다시 받게 됩니다**
 > (`loadBundle` 의 `b.size !== B.total`). 아직 실사용자가 없어 괜찮지만, 배포 뒤에 또 바꿀

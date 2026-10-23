@@ -65,8 +65,15 @@ else {
 Say "2/6  저장소"
 if (Test-Path (Join-Path $Dest '.git')) {
     Ok "이미 있음: $Dest → 최신으로 받습니다"
-    git -C $Dest fetch --all --quiet
-    git -C $Dest pull --ff-only --quiet
+    # git 은 진행 상태를 stderr 로 찍는다. PowerShell 5.1 은 이를 오류로 바꿔 멈추므로 cmd 를 거친다.
+    cmd /c "git -C ""$Dest"" fetch --all --quiet 2>&1" | Out-Null
+    # 가지를 옮겨 둔 채였거나 안 올린 커밋이 있으면 pull 이 멈춥니다. 그때는 건드리지 않습니다.
+    $pull = (cmd /c "git -C ""$Dest"" pull --ff-only --quiet 2>&1" | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        $cur = (cmd /c "git -C ""$Dest"" rev-parse --abbrev-ref HEAD 2>&1" | Out-String).Trim()
+        Warn "지금 가지($cur)를 그대로 둡니다 — 안 올린 커밋이 있거나 다른 가지에 계신 듯합니다"
+        if ($pull.Trim()) { Write-Host ("      " + $pull.Trim()) -ForegroundColor DarkGray }
+    }
 } else {
     New-Item -ItemType Directory -Force (Split-Path $Dest) | Out-Null
     git clone --quiet $Repo $Dest
@@ -110,6 +117,14 @@ Push-Location $Dest
 python tools\clips.py | Select-Object -First 1
 $branches = git branch -r --format='%(refname:short)' | Where-Object { $_ -ne 'origin/HEAD' }
 
+# 받아쓰기 중급반의 오프라인 소리와 기초반 메뉴 연결은 아직 가지에 있습니다.
+# main 만 받으면 그 부분이 없는 옛 화면이 옵니다.
+$cur = (cmd /c "git rev-parse --abbrev-ref HEAD 2>&1" | Out-String).Trim()
+if ($branches -contains 'origin/wip/dictation-offline' -and $cur -ne 'wip/dictation-offline') {
+    Warn "중급반 오프라인 소리·메뉴 연결은 가지 wip/dictation-offline 에 있습니다 (지금 가지: $cur)"
+    Write-Host "      그쪽에서 이어가시려면:  git switch wip/dictation-offline" -ForegroundColor Yellow
+}
+
 # 받아쓰기 중급반 — 파일이 다 왔는지, 다시 만들 수 있는 상태인지
 $dict = @('jung.html', 'gyeopbatchim.html', 'tools\dictation\build.js') |
         Where-Object { -not (Test-Path (Join-Path $Dest $_)) }
@@ -139,11 +154,20 @@ Write-Host "  1) 시작 메뉴에서 Claude 앱을 열고 같은 계정으로 �
 Write-Host "  2) Code 탭 → 폴더 선택 → $Dest"
 Write-Host "  3) 첫마디로 이렇게 말하세요:"
 Write-Host "     - 기초반을 이어서:" -ForegroundColor Gray
-Write-Host '       "docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host '       "wip/voice-guide 가지에서 기초반 소리 안내를 이어서 해줘."' -ForegroundColor Yellow
 Write-Host "     - 받아쓰기 중급반을 이어서:" -ForegroundColor Gray
-Write-Host '       "docs/DICTATION.md 를 읽고 받아쓰기 중급반 작업을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host '       "wip/dictation-offline 가지에서 받아쓰기 중급반을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host ""
+Write-Host "     저장소에 CLAUDE.md 가 있어 규칙과 읽을 문서는 Claude 가 알아서 봅니다." -ForegroundColor Gray
+Write-Host "     (소리를 가공하지 말 것 - 고친 뒤 stamp_sw.py - 커밋은 경로 지정)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  소리가 나는지 보려면:  cd $Dest ; python -m http.server 8000"
 Write-Host "    그 뒤 브라우저에서  http://localhost:8000/jung.html  → 🔊 를 눌러 보세요"
 Write-Host ""
-Write-Host "  (직접 하시려면)  cd $Dest ; git switch wip/voice-guide"
+Write-Host "  비행기 모드에서도 소리가 나는지 (중급반):" -ForegroundColor Gray
+Write-Host "    pip install playwright ; python -m playwright install chromium   (처음 한 번)"
+Write-Host "    python tools\dictation\check_offline.py"
+Write-Host ""
+Write-Host "  (가지를 직접 옮기시려면)" -ForegroundColor Gray
+Write-Host "    cd $Dest ; git switch wip/voice-guide          # 기초반 소리 안내"
+Write-Host "    cd $Dest ; git switch wip/dictation-offline    # 중급반 오프라인 소리·메뉴"

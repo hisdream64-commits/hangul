@@ -17,6 +17,20 @@ import re
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IDX = os.path.join(HERE, "index.html")
 
+# 받아쓰기 중급반의 3단계 생활 문장. tools/dictation/build.js 가 내보냅니다.
+# 여기서 베껴 적지 않는 까닭: 화면에 보이는 문장과 들리는 소리가 어긋나면
+# 학습자가 틀린 답을 쓰게 됩니다. 원본은 build.js 의 SENT3 하나뿐입니다.
+SENT_JSON = os.path.join(HERE, "tools", "dictation", "문장목록.json")
+
+
+def dictation_sentences():
+    """[(소리 키, 문장, 말하기 속도)] — 목록 파일이 없으면 빈 목록."""
+    if not os.path.exists(SENT_JSON):
+        return []
+    d = json.load(open(SENT_JSON, encoding="utf-8"))
+    pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
+    return [(pre + s, s, rate) for s in d.get("sentences", [])]
+
 
 def _grab(html, pat):
     m = re.search(pat, html, re.S)
@@ -99,6 +113,9 @@ def build(html=None):
     c["g_perfect"] = ("만점입니다! 정말 훌륭하세요!", "-10%")
     c["g_good"] = ("아주 잘하셨어요! 조금만 더 하면 만점이에요!", "-10%")
     c["g_ok"] = ("잘하고 계세요. 천천히 다시 한번 해 볼까요?", "-10%")
+
+    for key, text, rate in dictation_sentences():       # 받아쓰기 중급반 3단계 생활 문장
+        c[key] = (text, rate)
     return c
 
 
@@ -120,6 +137,9 @@ if __name__ == "__main__":
         pass
     c = build()
     print(f"조각 {len(c):,}개, 글자 {sum(len(t) for t, _r in c.values()):,}자")
+    sents = dictation_sentences()
+    print(f"  그 가운데 받아쓰기 생활 문장 {len(sents)}개"
+          + ("" if sents else " (tools/dictation/문장목록.json 이 없습니다)"))
     for k in SAMPLE_KEYS:
         t, r = c[k]
         print(f"  {k:12} {r:>5}  {t}")
