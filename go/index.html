@@ -322,7 +322,7 @@
       이제 <strong>혼자서 서류를 읽고 쓰실 수 있도록</strong> 관공서 말, 서식 채우는 법,
       편지와 문자 쓰기, 긴 글 읽기를 배웁니다. 단추를 누르면 <strong>성우 목소리로 읽어</strong> 드리고,
       마지막 과에서는 <strong>내가 읽은 소리를 녹음해</strong> 바르게 읽었는지 확인해 드립니다. 🎙️</p>
-      <p style="margin-top:0.6rem"><a href="https://jb9193.github.io/hangul/">← 기초반으로 돌아가기</a></p>
+      <p style="margin-top:0.6rem"><a href="../index.html">← 기초반으로 돌아가기</a></p>
     </div>
     <div class="overall">
       <span class="ov-num" id="ovNum">0/13</span>
@@ -1770,7 +1770,12 @@ const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition || nu
 let VC = {
   m: null, i: 0, right: 0, stream: null, rec: null, recog: null, chunks: [],
   url: '', heard: '', busy: false, judged: false, counted: false,
-  gotResult: false, recReady: false, timer: null, waitTimer: null
+  gotResult: false, recReady: false, timer: null, waitTimer: null,
+  /* parts: 끊겨서 여러 번 들어온 말을 이어 붙이려고 모아 둡니다.
+     restarts: 천천히 읽는 사이 인식이 먼저 끝나면 다시 켜는 횟수.
+     srBlocked: 음성 인식을 못 쓰게 막힌 기기 — 「내 소리 듣기」로 넘깁니다.
+     safety: 녹음기가 끝 신호를 안 보내도 화면이 멈추지 않게 하는 안전망. */
+  parts: [], cur: '', restarts: 0, srBlocked: false, safety: null, lastStart: 0
 };
 
 function vcSent() { return VC.m.sentences[VC.i]; }
@@ -1847,12 +1852,13 @@ function startVoice(m) {
 
 function renderVoice(withSound, keepCount) {
   VC.judged = false; VC.heard = ''; VC.gotResult = false; VC.recReady = false;
+  VC.parts = []; VC.cur = ''; VC.restarts = 0;
   if (!keepCount) VC.counted = false;
-  clearTimeout(VC.waitTimer);
+  clearTimeout(VC.waitTimer); clearTimeout(VC.safety);
   if (VC.url) { URL.revokeObjectURL(VC.url); VC.url = ''; }
   $('vcProgress').textContent = (VC.i + 1) + ' / ' + VC.m.sentences.length + ' 문장 · 잘 읽은 문장 ' + VC.right + '개';
   vcRenderSentence(null);
-  $('vcTip').textContent = SRClass
+  $('vcTip').textContent = (SRClass && !VC.srBlocked)
     ? '먼저 들어 보신 뒤에 읽으시면 쉽습니다.'
     : '녹음한 뒤 내 소리와 바른 소리를 견주어 보세요.';
   const fb = $('vcFeedback'); fb.className = 'feedback'; fb.innerHTML = '';
@@ -1865,18 +1871,28 @@ function renderVoice(withSound, keepCount) {
 }
 
 /* ---- 녹음 ---- */
-function vcAbort() {
-  clearTimeout(VC.timer); clearTimeout(VC.waitTimer);
-  VC.busy = false;
-  try { if (VC.recog) VC.recog.abort(); } catch (e) {}
-  VC.recog = null;
-  try { if (VC.rec && VC.rec.state !== 'inactive') VC.rec.stop(); } catch (e) {}
+/* 마이크를 놓아 줍니다. 안 놓으면 폰 위쪽에 녹음 표시가 계속 켜져 있습니다. */
+function vcReleaseMic() {
   if (VC.stream) {
     try { VC.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
     VC.stream = null;
   }
+}
+
+function vcAbort() {
+  clearTimeout(VC.timer); clearTimeout(VC.waitTimer); clearTimeout(VC.safety);
+  VC.busy = false;
+  try { if (VC.recog) VC.recog.abort(); } catch (e) {}
+  VC.recog = null;
+  try { if (VC.rec && VC.rec.state !== 'inactive') VC.rec.stop(); } catch (e) {}
+  vcReleaseMic();
   const b = $('vcRec');
   if (b) { b.textContent = '🎙️ 눌러서 읽기'; b.classList.remove('recording'); }
+}
+
+/* 모아 둔 말 + 지금 들리는 말을 한 줄로 이어 붙입니다. */
+function vcHeardAll() {
+  return VC.parts.concat(VC.cur ? [VC.cur] : []).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 function vcStartRecog() {
@@ -1884,26 +1900,53 @@ function vcStartRecog() {
   try {
     const rg = new SRClass();
     rg.lang = 'ko-KR';
-    rg.continuous = false;
+    /* continuous 를 켜 둡니다. 꺼 두면 첫 어절만 듣고 끝나 버려서,
+       쉼표에서 쉬어 가며 천천히 읽는 분은 앞머리만 채점됩니다. */
+    rg.continuous = true;
     rg.interimResults = false;
     rg.maxAlternatives = 3;
     rg.onresult = function (e) {
       const target = normText(vcSent().text);
-      let best = '', bestS = -1;
+      const got = [];
       for (let i = 0; i < e.results.length; i++) {
         const res = e.results[i];
+        if (res.isFinal === false) continue;
+        let best = '', bestS = -1;
         for (let j = 0; j < res.length; j++) {
           const txt = res[j].transcript || '';
           const sc = simRatio(target, normText(txt));
           if (sc > bestS) { bestS = sc; best = txt; }
         }
+        if (best) got.push(best);
       }
-      if (best) VC.heard = best;
-      VC.gotResult = true;
+      VC.cur = got.join(' ');
+      const all = vcHeardAll();
+      if (all) { VC.heard = all; VC.gotResult = true; }
     };
-    rg.onerror = function () { VC.gotResult = true; vcMaybeJudge(); };
-    rg.onend = function () { VC.gotResult = true; vcMaybeJudge(); };
+    rg.onerror = function (e) {
+      const code = (e && e.error) || '';
+      if (code === 'not-allowed' || code === 'service-not-allowed') VC.srBlocked = true;
+      VC.gotResult = true;
+      vcMaybeJudge();
+    };
+    rg.onend = function () {
+      /* 아직 읽고 계시는데 인식이 먼저 끝났으면 조용히 다시 켭니다.
+         읽기 시작하기 전에 끊기는 일이 잦아 넉넉히 허용합니다(전체는 20초로 묶여 있음).
+         켠 지 0.2초도 안 되어 끝났다면 쉼이 아니라 고장이므로 더 켜지 않습니다. */
+      const quick = (Date.now() - VC.lastStart) < 200;
+      if (VC.busy && !VC.srBlocked && !quick && VC.restarts < 12) {
+        if (VC.cur) VC.parts.push(VC.cur);
+        VC.cur = '';
+        VC.restarts++;
+        VC.lastStart = Date.now();
+        try { rg.start(); return; } catch (err) {}
+      }
+      VC.heard = vcHeardAll() || VC.heard;
+      VC.gotResult = true;
+      vcMaybeJudge();
+    };
     VC.recog = rg;
+    VC.lastStart = Date.now();
     rg.start();
   } catch (e) { VC.recog = null; }
 }
@@ -1926,6 +1969,7 @@ function vcRecClick() {
 
 function vcBegin(stream) {
   VC.chunks = []; VC.heard = ''; VC.gotResult = false; VC.judged = false; VC.recReady = false;
+  VC.parts = []; VC.cur = ''; VC.restarts = 0;
   if (stream) {
     let rec = null;
     try { rec = new MediaRecorder(stream); } catch (e) { rec = null; }
@@ -1956,14 +2000,29 @@ function vcStop() {
   $('vcTip').textContent = '잠깐만 기다려 주세요…';
   try { if (VC.recog) VC.recog.stop(); } catch (e) {}
   if (VC.rec && VC.rec.state !== 'inactive') {
-    try { VC.rec.stop(); } catch (e) { VC.recReady = true; vcMaybeJudge(); }
+    /* 끝 신호(onstop)를 끝내 안 보내는 기기가 있습니다.
+       그대로 두면 「잠깐만 기다려 주세요」에서 화면이 멈추므로 2.5초 뒤 넘어갑니다. */
+    clearTimeout(VC.safety);
+    VC.safety = setTimeout(function () {
+      vcReleaseMic();
+      VC.recReady = true;
+      vcMaybeJudge();
+    }, 2500);
+    try { VC.rec.stop(); } catch (e) {
+      clearTimeout(VC.safety);
+      vcReleaseMic();
+      VC.recReady = true;
+      vcMaybeJudge();
+    }
   } else {
+    vcReleaseMic();
     VC.recReady = true;
     vcMaybeJudge();
   }
 }
 
 function vcFinishRecording() {
+  clearTimeout(VC.safety);
   try {
     const type = (VC.chunks[0] && VC.chunks[0].type) || 'audio/webm';
     const blob = new Blob(VC.chunks, { type: type });
@@ -1971,17 +2030,14 @@ function vcFinishRecording() {
     VC.url = URL.createObjectURL(blob);
     $('vcPlay').hidden = false;
   } catch (e) {}
-  if (VC.stream) {
-    try { VC.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
-    VC.stream = null;
-  }
+  vcReleaseMic();
   VC.recReady = true;
   vcMaybeJudge();
 }
 
 function vcMaybeJudge() {
   if (VC.busy || !VC.recReady || VC.judged) return;
-  if (!SRClass) { vcSelfCheck(); return; }
+  if (!SRClass || VC.srBlocked) { vcSelfCheck(); return; }
   if (VC.gotResult) { vcJudge(); return; }
   clearTimeout(VC.waitTimer);
   VC.waitTimer = setTimeout(vcJudge, 3000);
@@ -2004,7 +2060,9 @@ function vcSelfCheck() {
   fb.className = 'feedback show';
   fb.style.background = 'var(--accent-soft)';
   fb.style.color = 'var(--ink)';
-  fb.innerHTML = '녹음이 끝났습니다.<br>「▶ 내 소리 듣기」와 「🔊 먼저 들어 보기」를 <b>번갈아 들어</b> 보시고,<br>비슷하게 읽으셨으면 「👍 잘 읽었어요」를 눌러 주세요.';
+  fb.innerHTML = VC.url
+    ? '녹음이 끝났습니다.<br>「▶ 내 소리 듣기」와 「🔊 먼저 들어 보기」를 <b>번갈아 들어</b> 보시고,<br>비슷하게 읽으셨으면 「👍 잘 읽었어요」를 눌러 주세요.'
+    : '이 기기에서는 점수를 내 드리지 못합니다.<br>「🔊 먼저 들어 보기」로 바른 소리를 듣고 <b>따라 읽어</b> 보신 뒤,<br>잘 읽으셨으면 「👍 잘 읽었어요」를 눌러 주세요.';
   $('vcOk').hidden = false;
   $('vcRetry').hidden = false;
   $('vcNext').hidden = false;
