@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/go/hangul-go.html",
+      "destination": "/go/",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/audio/(.*)",

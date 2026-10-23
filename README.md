@@ -4,6 +4,9 @@
 
 **바로가기: https://urihangul.vercel.app/**
 
+이 저장소에는 **고급반**도 함께 있습니다 — 바로가기 **https://urihangul.vercel.app/go/** ,
+소스는 `go/`, 인수인계는 [go/MIGRATION.md](go/MIGRATION.md).
+
 현재 판 **1.1** · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
 
 처음 맡으시거나 다른 PC에서 이어서 하시려면 **[docs/MIGRATION.md](docs/MIGRATION.md)** 부터 읽어 주세요.
