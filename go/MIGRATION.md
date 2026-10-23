@@ -13,9 +13,41 @@
 
 ---
 
-## 0. 급하면 이것만 — 30분 설치
+## 0. 급하면 이것만
 
-새 노트북(윈도우 기준)에서 Git Bash 를 열고 차례대로 합니다.
+### 0-A. 윈도우라면 — 두 줄
+
+새 PC 의 **PowerShell** 에서 이것만 하면 끝납니다. 프로그램 설치부터 저장소 받기,
+소리 375개 전수 점검까지 합니다.
+
+```powershell
+# 1) 공통 준비 — git · gh · python · node · Claude 앱 설치 + 저장소 받기
+irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
+powershell -ExecutionPolicy Bypass -File .\setup-newpc.ps1
+
+# 2) 고급반 몫 — 소리가 다 왔는지, 바로 작업할 수 있는지 점검
+powershell -ExecutionPolicy Bypass -File $HOME\projects\hangul\go\tools\setup-go.ps1
+```
+
+2) 가 이렇게 나오면 준비된 것입니다.
+
+```
+== 4/4  고급반 점검
+   OK  소리 375개 다 있음 (7.2 MB)
+   OK  읽을 말 375 개 — 목록과 앱이 맞습니다
+   OK  받아야 할 소리 없음 — 바로 작업하실 수 있습니다
+```
+
+스크립트가 `go/MIGRATION.md`(이 문서)를 **바탕화면과 Downloads 에 `MIGRATION-고급반.md`**
+로 복사해 둡니다. 점검만 다시 하려면 `-NoPull -NoCopy` 를 붙이세요.
+
+그 뒤 Claude 앱 → Code 탭 → 폴더 `~/projects/hangul` 을 열고 첫마디로:
+
+> **"go/MIGRATION.md 를 읽고 한글 교실 고급반 작업을 이어서 해줘."**
+
+### 0-B. 직접 하실 때 — 30분 설치
+
+Git Bash 를 열고 차례대로 합니다.
 
 ```bash
 # 1) 기본 도구 — 이미 있으면 건너뜁니다
@@ -38,6 +70,8 @@ git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + �
 
 그다음 Claude Code 안에서 `/setup-gbrain` 을 실행해 gbrain(기억)을 연결하고,
 `~/.claude/settings.json` 을 3절 내용으로 맞추면 끝입니다.
+(0-A 의 스크립트는 **저장소와 앱까지만** 준비합니다. gstack 스킬과 gbrain 기억은
+쓰시던 분이라면 3·4절을 따로 해 주셔야 합니다.)
 
 고급반은 받은 저장소의 `go/` 안에 있습니다. 바로 열어 보려면:
 
@@ -159,6 +193,8 @@ ls audio | wc -l          # 375 가 나와야 합니다
 npx -y http-server -p 8777 -c-1
 ```
 
+윈도우에서는 `go/tools/setup-go.ps1` 이 위 과정을 대신 하고 전수 점검까지 합니다(0-A).
+
 고친 뒤에는 `go/` 안에서 평소처럼 커밋·푸시하면, 다른 컴퓨터에서는 `git pull` 로 받습니다.
 **두 컴퓨터에서 같이 고치지 마세요.** 음성 mp3 는 합쳐지지 않으므로, 한쪽에서 끝내고
 푸시한 다음 다른 쪽에서 받는 순서를 지키는 편이 안전합니다.
@@ -182,6 +218,7 @@ go/
 │   ├─ extract_used.js            앱이 읽는 말 뽑기
 │   ├─ make_audio.py              edge-tts 로 mp3 만들기 / 안 쓰는 것 지우기
 │   ├─ inject_map.py              window.AUDIO 지도 넣기
+│   ├─ setup-go.ps1               새 PC 준비 + 전수 점검 (윈도우)
 │   ├─ used.json                  읽는 말 375개
 │   └─ audio_map.json             말 → mp3 대응표
 └─ MIGRATION.md                   이 문서
@@ -309,7 +346,21 @@ python tools/inject_map.py                                   # 3) 지도를 html
    으로 고쳤으니 중급반 파일에도 같은 수정을 넣으시면 됩니다.
 4. **기초 → 중급 → 고급 링크가 이어져 있지 않습니다.** 고급반 첫 화면에는 기초반으로
    가는 링크만 있습니다.
-5. 중급반(`hangul-jung.html`)도 아직 저장소 밖에 있습니다. 함께 챙기세요.
+5. 중급반은 **다른 세션이 이 저장소에서 따로 작업 중**입니다(`jung.html`,
+   `gyeopbatchim.html`, `tools/dictation/`, 가지 `wip/voice-guide`). 초급자반·중급반 쪽
+   인수인계는 `docs/MIGRATION.md` 와 `docs/DICTATION.md` 에 따로 있습니다.
+   **고급반 작업은 `go/` 안에서만** 하시는 편이 서로 엉키지 않습니다.
+
+### 치운 것 — 2026-10-23
+
+저장소 **뿌리에 고급반 파일 383개가 풀려 있었습니다**(`hangul-go.zip` 을 `go/` 가 아니라
+저장소 뿌리에 푼 듯합니다). `go/` 안의 것과 바이트까지 같은 중복이어서 지웠습니다.
+뿌리 `audio/` 에 섞여 있던 `v*.mp3` 375개도 함께 지웠습니다 — 기초반 `a*.mp3` 1,226개와
+`audio.bin` 은 그대로입니다. 꾸러미 `hangul-go.zip` 은 지우지 않고 `~/Downloads/` 로
+옮겨 두었습니다.
+
+> 앞으로도 **고급반 파일은 반드시 `go/` 안에** 두세요. 뿌리 `audio/` 에 `v*.mp3` 가
+> 섞이면 기초반 도구(`tools/verify.py`, `build_audio_bundle.py`)가 헷갈립니다.
 
 ---
 
