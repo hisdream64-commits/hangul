@@ -161,9 +161,51 @@ def do_all(raw, yes):
     print("  python tools/stamp_sw.py")
 
 
+def do_missing(raw):
+    """대본에는 있는데 아직 녹음이 없는 조각만 만들어 뒤에 붙인다.
+
+    안내문·메뉴 설명처럼 새 말을 추가했을 때 씁니다. 기존 1,226개는 손대지 않고,
+    새 조각에 다음 번호(a1226.mp3 …)를 매겨 window.AUDIO 에 더합니다.
+    번호가 이어지므로 묶음 색인(길이 배열)도 그대로 맞습니다.
+    """
+    c = clips.build()
+    html = open(IDX, encoding="utf-8", newline="").read()
+    amap = json.loads(re.search(r'window\.AUDIO = (\{.*?\});</script>', html, re.S).group(1))
+    missing = [k for k in c if k not in amap]
+    if not missing:
+        print("새로 만들 조각이 없습니다. 대본과 녹음이 같습니다.")
+        return
+    bitrate, rate_hz, note = settings(raw)
+    nums = [int(re.search(r"a(\d+)\.mp3$", p).group(1)) for p in amap.values()]
+    start = max(nums) + 1
+    print(f"새 조각 {len(missing)}개 — {start}번부터 매깁니다 ({note})")
+    for k in missing:
+        print(f"  {k:22} {c[k][1]:>5}  {c[k][0][:48]}{'…' if len(c[k][0]) > 48 else ''}")
+
+    got = asyncio.run(fetch([(k, c[k][0], c[k][1]) for k in missing]))
+    failed = [k for k in missing if not got.get(k)]
+    if failed:
+        sys.exit(f"{len(failed)}개를 만들지 못했습니다: {failed}\n아무것도 바꾸지 않았습니다.")
+
+    # 전부 받은 뒤에야 파일을 쓰고 색인을 고친다
+    for i, k in enumerate(missing):
+        name = f"a{start + i}.mp3"
+        open(os.path.join(AUDIO_DIR, name), "wb").write(az.shrink(got[k], bitrate, rate_hz))
+        amap[k] = "audio/" + name
+    block = "<script>window.AUDIO = " + json.dumps(amap, ensure_ascii=False) + ";</script>"
+    html = re.sub(r"<script>window\.AUDIO = \{.*?\};</script>", block, html, flags=re.S)
+    html = re.sub(r"\n?<script>window\.AUDIO_BIN = \{.*?\};</script>\n?", "\n", html, flags=re.S)
+    open(IDX, "w", encoding="utf-8", newline="").write(html)
+    print(f"\n{len(missing)}개 추가 → 소리 {len(amap):,}개. 이어서:")
+    print("  python tools/build_audio_bundle.py")
+    print("  python tools/stamp_sw.py")
+
+
 def main():
     ap = argparse.ArgumentParser(description="edge-tts 로 소리를 다시 만든다 (무료)")
     ap.add_argument("--sample", action="store_true", help="시험 음성만 (권장 첫 단계)")
+    ap.add_argument("--missing", action="store_true",
+                    help="대본에 새로 생긴 조각만 만들어 뒤에 붙인다 (기존 소리는 그대로)")
     ap.add_argument("--all", action="store_true", help="1,226개 전부 다시 만들기")
     ap.add_argument("--raw", action="store_true",
                     help="다시 담지 않고 받은 그대로 (48kbps, 15.1MB, 재압축 손실 0)")
@@ -171,6 +213,8 @@ def main():
     a = ap.parse_args()
     if a.sample:
         do_sample(a.raw)
+    elif a.missing:
+        do_missing(a.raw)
     elif a.all:
         do_all(a.raw, a.yes)
     else:

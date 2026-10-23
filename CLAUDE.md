@@ -58,12 +58,15 @@ python -m http.server 8000                    # 그 뒤 http://localhost:8000/ju
 - `main` 에 올리면 **운영 주소(https://urihangul.vercel.app/)가 바로 바뀝니다.**
   어르신이 쓰시는 화면이므로, 묻지 않고 올리지 마세요. 가지에 올리면 미리보기만 생깁니다.
 
-## 지금 진행 중인 가지
+## 지금 상태 (2026-10-23)
 
-| 가지 | 무엇 |
-|---|---|
-| `wip/voice-guide` | 기초반 소리 안내 (`docs/MIGRATION.md` 0-1절) |
-| `wip/dictation-offline` | 중급반 오프라인 소리 + 기초반 메뉴 연결 (`docs/DICTATION.md` 1절·5-3) |
-
-두 가지가 `index.html` 메뉴와 `sw.js` 지문에서 겹칩니다. 합치는 방법은
+`main` 이 판 **1.2** 입니다. 기초반 소리 안내와 중급반(오프라인 소리 · 첫 화면 메뉴
+연결)이 모두 합쳐져 있습니다. 합칠 때 부딪힌 네 군데를 어떻게 풀었는지는
 `docs/DICTATION.md` **5-3절**에 적혀 있습니다.
+
+남은 일은 **받아쓰기 3단계 생활 문장 소리 12개**뿐입니다 (`docs/DICTATION.md` 5-1절).
+`python tools/regen_audio_edge.py --missing` 로 만듭니다. 인터넷이 막힌 곳에서는
+안 됩니다 — `edge-tts` 가 `speech.platform.bing.com` 에 연결합니다.
+
+> 소리를 더하면 `audio.bin` 크기가 바뀝니다. 그러면 **중급반을 반드시 다시 만들어야**
+> 합니다(위 「고친 뒤 반드시」). 안 하면 비행기 모드에서 중급반 소리가 안 납니다.

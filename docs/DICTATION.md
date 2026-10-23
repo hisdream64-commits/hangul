@@ -20,9 +20,8 @@
 | 오프라인(묶음) 연동 | — | 됩니다 · 브라우저로 확인함 |
 | 3단계 생활 문장 음성 12개 | — | **아직 안 만듦** · 만들 준비는 끝 (5-1) |
 
-> 📍 메뉴 연결과 오프라인 소리는 가지 **`wip/dictation-offline`** 에 있습니다 (`main` 아님).
-> Vercel 은 가지에 미리보기만 만들고 운영 주소(`urihangul.vercel.app`)는 그대로 둡니다.
-> 보시고 괜찮으면 `main` 에 합쳐 주세요. 기초반 가지와 겹치는 곳은 **5-3** 에 적어 두었습니다.
+기초반 소리 안내(`wip/voice-guide`, 판 1.2)와 함께 **`main` 에 올라가 있습니다.**
+운영 주소는 https://urihangul.vercel.app/ 입니다.
 
 소리를 파일 안에 넣어 둔 미리보기입니다. 저장소를 받지 않아도 열립니다. (계정 로그인 필요)
 
@@ -31,16 +30,15 @@
 
 ### 내 PC에서 이어가기
 
-이미 `~/projects/hangul` 이 있으시면 **세 줄**이면 됩니다.
+이미 `~/projects/hangul` 이 있으시면 **두 줄**이면 됩니다.
 
 ```bash
 cd ~/projects/hangul
-git fetch origin
-git switch wip/dictation-offline        # 중급반 작업이 있는 가지
+git switch main && git pull
 ```
 
 그 뒤 Claude 앱 → Code 탭 → 그 폴더를 고르고, 첫마디로
-**"`wip/dictation-offline` 가지에서 받아쓰기 중급반을 이어서 해줘."** 하시면 됩니다.
+**"받아쓰기 중급반을 이어서 해줘."** 하시면 됩니다.
 저장소 맨 위에 **`CLAUDE.md`** 가 있어 규칙(소리를 가공하지 말 것 · 고친 뒤
 `stamp_sw.py` · 커밋은 경로 지정)과 읽을 문서는 Claude 가 알아서 봅니다.
 
@@ -53,9 +51,6 @@ python -m http.server 8000                             # http://localhost:8000/
 ```
 
 첫 화면 메뉴 맨 아래에 **📝 받아쓰기 교실 · 🧩 겹받침 쓰기 연습** 두 줄이 보이면 맞습니다.
-
-> `main` 에는 아직 없습니다. `git switch main` 하시면 메뉴 두 줄과 오프라인 소리가
-> 없는 옛 화면이 나옵니다. 합치는 것은 **5-3** 을 보세요.
 
 ### 처음 쓰는 PC라면
 
@@ -238,10 +233,9 @@ cd tools/dictation && node build.js ../../index.html && mv -f jung.html gyeopbat
 `--missing` 은 **이미 있는 소리를 건드리지 않습니다.** 대본에 있는데 녹음이 없는 조각만
 `a1226` 부터 뒤에 덧붙입니다. 어르신이 듣던 소리는 한 개도 바뀌지 않고, 15~20분 기다릴 일도 없습니다.
 
-> ⚠️ `--missing` 은 기초반 가지 **`wip/voice-guide`** 에서 만들어진 기능입니다.
-> `main` 에만 있는 상태라면 아직 없습니다. 먼저 그 가지를 `main` 에 합치시거나
-> (`git merge wip/voice-guide`), 그 가지에서 위 명령을 돌리세요.
-> 자세한 것은 [MIGRATION.md 0-1절](MIGRATION.md#0-1-진행-중인-작업-이어받기-2026-10-23-기준).
+끝난 뒤 묶음 조각이 1,240개에서 **1,252개**로 늘어납니다. 그래서 `audio.bin` 크기가
+바뀌므로 **중급반을 반드시 다시 만들어야 합니다**(위 네 번째 줄). 이미 소리를 받아 둔
+휴대폰은 크기가 안 맞아 한 번 더 받게 됩니다.
 
 목소리는 기초반과 같은 edge-tts `ko-KR-SunHiNeural`, 말 속도는 문장이므로 **-10%** 로
 `clips.py` 가 알아서 잡습니다 ([MIGRATION.md 4절](MIGRATION.md#4-소리-파일-다시-만들기) 속도표).
@@ -262,15 +256,29 @@ cd tools/dictation && node build.js ../../index.html && mv -f jung.html gyeopbat
 - `audio/` 의 mp3 가 32kbps 로 세게 눌려 있습니다. 원본이 남아 있으면 더 좋게 다시 뽑을 수
   있습니다 (`tools/dictation/녹음이-필요한-말.txt` 아래쪽 ffmpeg 명령)
 
-### 5-3. 다른 가지와 겹치는 곳 (합치실 때 보세요)
+### 5-3. 기초반과 어떻게 합쳐졌나 (2026-10-23)
 
-같은 저장소에서 기초반(`wip/voice-guide`)과 고급반(`go/`)이 함께 돌아갑니다.
-고급반은 `go/` 안에만 있어 겹치지 않습니다. 기초반 가지와는 겹칩니다.
+기초반 소리 안내(`wip/voice-guide`)와 중급반(`wip/dictation-offline`)을 `main` 에서
+합쳤습니다. 부딪힌 곳은 **두 파일, 네 군데**였고 이렇게 풀었습니다.
 
-미리 합쳐 보았습니다(`git merge wip/voice-guide`). 부딪히는 곳은 **두 파일, 네 군데**입니다.
+| 파일 | 어떻게 풀었나 |
+|---|---|
+| `tools/clips.py` | 저절로 합쳐짐. 둘 다 `build()` 끝쪽에 더하는데 자리가 달랐습니다. 지금 `python tools/clips.py` 는 **1,252개**(1,226 + 안내 14 + 문장 12)를 보여 줍니다 |
+| `sw.js` | 지문 한 줄만 부딪혔습니다. 한쪽을 받고 `SHELL_FILES` 두 줄을 다시 넣은 뒤 `python tools/stamp_sw.py` 로 지문을 새로 찍었습니다 |
+| `index.html` 메뉴 | 기초반 쪽(`<div class="menu-item">` + 🔊)을 살리고, 중급반 두 줄을 그 아래에 같은 `.menu-item` 으로 붙였습니다 |
+| `index.html` 메뉴 선택자 | 기초반 쪽(`go()` 에 `history.pushState`)을 살리고 `querySelectorAll('.menu-btn')` 만 **`'.menu-btn[data-go]'`** 로 좁혔습니다. 안 좁히면 중급반 줄을 눌렀을 때 `go(undefined)` 가 불려 화면이 하나도 안 보입니다 |
 
-| 파일 | 결과 | 어떻게 |
-|---|---|---|
+**중급반 두 줄에는 🔊 를 달지 않았습니다.** 안내 녹음이 없기 때문입니다
+(녹음이 없는 말은 소리 단추를 내보내지 않는다 — 2절). 위 다섯 줄과 폭이 어긋나지 않게
+🔊 자리만 `.menu-spk-gap` 으로 비워 두었습니다. 나중에 달고 싶으시면
+`index.html` 의 `window.UI_SAY` 에 두 줄을 더하고 `--missing` 을 돌리면 됩니다.
+
+> ⚠️ 합친 뒤에는 **중급반을 반드시 다시 만들어야 합니다.** 묶음이 1,226조각에서
+> 1,240조각으로 늘어 `audio.bin` 의 크기가 바뀌었고, 중급반은 그 크기로 묶음이 제
+> 것인지 확인합니다(`loadBundle` 의 `b.size !== B.total`). 다시 만들지 않으면
+> 비행기 모드에서 소리가 안 납니다. 3절 명령을 그대로 돌리면 됩니다.
+
+---|---|---|
 | `tools/clips.py` | 저절로 합쳐집니다 | 둘 다 `build()` 끝쪽에 더하는데 자리가 달라 안 부딪힙니다. 합친 뒤 `python tools/clips.py` 가 **1,252개**(1,226 + 안내 14 + 문장 12)를 보여 주면 맞습니다 |
 | `sw.js` | 부딪힘 (지문 한 줄) | 아무 쪽이나 고르고 **`python tools/stamp_sw.py` 를 다시 돌리면** 올바른 지문이 찍힙니다 |
 | `index.html` 메뉴 | 부딪힘 | `wip/voice-guide` 쪽(`<div class="menu-item">` 으로 감싸고 🔊 를 나란히 둔 것)을 **살리고**, 그 아래에 중급반 두 줄(`<a class="menu-btn" href="jung.html">`, `…gyeopbatchim.html`)을 그대로 붙이세요 |
