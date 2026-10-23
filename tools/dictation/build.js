@@ -14,6 +14,34 @@ const html = fs.readFileSync(SRC, 'utf8');
 const AUDIO = JSON.parse(html.match(/window\.AUDIO = (\{[\s\S]*?\});/)[1]);
 const WORDS = JSON.parse(html.match(/window\.WORDS_DATA = (\{[\s\S]*?\});/)[1]);
 
+/* 소리 묶음(audio/audio.bin) 의 자리표.
+   기초반에서 「소리 모두 받기」를 누르면 낱개 audio/aN.mp3 가 아니라 묶음 한 덩어리만
+   저장됩니다. 그래서 비행기 모드에서 낱개 주소로 틀면 소리가 나지 않습니다.
+   쓰는 파일의 자리(시작·길이)를 함께 넣어 두면, 중급반도 기초반처럼 묶음에서 잘라 씁니다.
+   기초반이 묶음을 아직 안 만들었으면(window.AUDIO_BIN 없음) 예전처럼 낱개로 재생합니다. */
+const BIN_SRC = (function () {
+  const m = html.match(/window\.AUDIO_BIN = (\{[\s\S]*?\});/);
+  return m ? JSON.parse(m[1]) : null;
+})();
+
+function binFor(paths) {
+  if (!BIN_SRC || !BIN_SRC.lens) return null;
+  const all = {};
+  let at = 0;
+  BIN_SRC.lens.forEach((len, i) => { all['audio/a' + i + '.mp3'] = [at, len]; at += len; });
+  if (at !== BIN_SRC.total) {
+    console.error('묶음 자리표가 맞지 않습니다: 조각 합 ' + at + ' ≠ total ' + BIN_SRC.total);
+    process.exit(1);
+  }
+  const off = {}, lost = [];
+  paths.filter(Boolean).forEach(p => { if (all[p]) off[p] = all[p]; else if (lost.indexOf(p) === -1) lost.push(p); });
+  if (lost.length) {
+    console.error('묶음에 없는 소리 파일: ' + lost.join(' '));
+    process.exit(1);
+  }
+  return { file: BIN_SRC.file, total: BIN_SRC.total, off: off };
+}
+
 const missing = [];
 function clip(word) {                                   // 낱말 → 소리 파일 (없으면 null)
   const f = AUDIO['w_' + word];
@@ -61,6 +89,17 @@ const SENT3 = [
   [['택배가', '택배', '택빼가'], ['경비실에', null, null], ['있어요', null, '이써요']],
   [['딸에게', '딸', null], ['편지를', '편지', null], ['씁니다', '쓰다', null]]
 ];
+
+/* 3단계에서 통째로 들려줄 문장. 녹음 키는 d_<문장>, 말 속도는 문장이므로 -10%.
+   목록을 tools/dictation/문장목록.json 으로 내보내고, tools/clips.py 가 그것을 읽습니다.
+   그래서 소리를 만들 때 따로 적어 넣을 것이 없습니다:
+     python tools/regen_audio_edge.py --missing
+     python tools/build_audio_bundle.py
+     python tools/stamp_sw.py
+   이렇게 하면 문장도 다른 소리와 같이 묶음(audio/audio.bin)에 들어가므로
+   비행기 모드에서도 소리가 납니다. */
+const SENT3_TEXT = SENT3.map(s => s.map(p => p[0]).join(' '));
+const SENT_KEY = s => 'd_' + s;
 
 /* ================= 겹받침 쓰기 연습 ================= */
 /* [겹받침, 이름, 소리 나는 쪽, 설명, 낱말들 [낱말, 읽기, 녹음낱말]] */
@@ -120,12 +159,27 @@ const FX = {
 const SC = [];
 for (let i = 0; i <= 10; i++) SC.push(AUDIO['sc_' + i] || null);
 
+/* 통문장 녹음이 들어온 것만 모은다. 없으면 지금처럼 낱말 소리로 문장을 만들어 봅니다. */
+const SENT_AUDIO = {};
+const sentMissing = [];
+SENT3_TEXT.forEach(s => {
+  const f = AUDIO[SENT_KEY(s)];
+  if (f) SENT_AUDIO[s] = f; else sentMissing.push(s);
+});
+
+/* 두 화면이 쓰는 소리 파일 전부 — 묶음 자리표를 이 목록만큼만 넣는다 */
+const USED_PATHS = Object.keys(used).map(k => used[k])
+  .concat(Object.keys(SENT_AUDIO).map(k => SENT_AUDIO[k]))
+  .concat(Object.keys(FX).map(k => FX[k]))
+  .concat(SC);
+const BIN = binFor(USED_PATHS);
+
 const jungData = {
-  A: used, FX: FX, SC: SC,
+  A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO,
   W: WORD_STAGES,
   S1: SENT1, S2: SENT2, S3: SENT3
 };
-const gyeopData = { A: used, FX: FX, SC: SC, G: GYEOP };
+const gyeopData = { A: used, FX: FX, SC: SC, BIN: BIN, G: GYEOP };
 
 /* 미리보기 판: 녹음을 파일 안에 통째로 넣어, 저장소에 올리지 않아도 소리가 납니다.
    소리 자체는 손대지 않습니다 - audio/ 의 mp3 를 그대로 담기만 합니다. */
@@ -147,7 +201,9 @@ function inlineAudio(data, links) {
     return map[p];
   }
   const out = JSON.parse(JSON.stringify(data));
+  out.BIN = null;                                       // 미리보기는 소리가 파일 안에 있으므로 묶음을 안 씁니다
   Object.keys(out.A).forEach(k => { out.A[k] = toData(out.A[k]); });
+  if (out.SENT_AUDIO) Object.keys(out.SENT_AUDIO).forEach(k => { out.SENT_AUDIO[k] = toData(out.SENT_AUDIO[k]); });
   Object.keys(out.FX).forEach(k => { out.FX[k] = toData(out.FX[k]); });
   out.SC = out.SC.map(toData);
   out.LINKS = links;
@@ -182,17 +238,29 @@ if (process.argv.indexOf('--preview') !== -1) {
     { 'index.html': BASIC, 'jung.html': jungUrl });
 }
 
+/* 소리 만드는 쪽(tools/clips.py)이 읽어 갈 문장 목록.
+   이 파일이 있으면 regen_audio_edge.py 가 d_<문장> 키로 함께 만들어 줍니다. */
+fs.writeFileSync('문장목록.json',
+  JSON.stringify({ rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT }, null, 1) + '\n',
+  'utf8');
+
 /* 녹음이 아직 없는 말 - 기초반 만들 때 쓰신 성우 음성으로 뽑으시면 그대로 붙습니다 */
-const needSent = SENT3.map(s => s.map(p => p[0]).join(' '));
+const needSent = sentMissing.slice();
 const needWord = missing.slice();
 const txt =
   '■ 아직 녹음이 없는 말\n' +
-  '기초반을 만드실 때 쓰신 성우 음성으로 아래를 뽑아 audio/ 에 넣고,\n' +
-  'jung.html 의 DATA.A 에 "말": "audio/파일이름.mp3" 로 한 줄씩 넣으면 그대로 소리가 납니다.\n\n' +
+  '기초반과 같은 목소리(edge-tts ko-KR-SunHiNeural)로 아래를 만들면 그대로 붙습니다.\n' +
+  '만드는 방법은 아래 ※ 를 보세요. 손으로 적어 넣을 것은 없습니다.\n\n' +
   '[낱말 ' + needWord.length + '개]\n' + (needWord.join('\n') || '(없음)') + '\n\n' +
-  '[문장 ' + needSent.length + '개 - 3단계 생활 문장]\n' + needSent.join('\n') + '\n\n' +
-  '※ 문장 녹음이 들어오면 jung.html 의 DATA.SENT_AUDIO 에\n' +
-  '   "오늘 병원에 갑니다": "audio/s1.mp3" 꼴로 넣어 주세요. 바로 받아쓰기로 바뀝니다.\n' +
+  '[문장 ' + needSent.length + '개 - 3단계 생활 문장]\n' + (needSent.join('\n') || '(없음)') + '\n\n' +
+  '※ 손으로 적어 넣을 것은 없습니다. 문장 목록은 문장목록.json 으로 나가 있고,\n' +
+  '   tools/clips.py 가 그것을 읽어 d_<문장> 키로 소리를 만듭니다.\n' +
+  '   인터넷이 되는 PC에서 이 세 줄이면 끝납니다.\n' +
+  '     python tools/regen_audio_edge.py --missing\n' +
+  '     python tools/build_audio_bundle.py\n' +
+  '     python tools/stamp_sw.py\n' +
+  '   그 뒤 build.js 를 다시 돌리면 3단계가 통문장 받아쓰기로 바뀝니다.\n' +
+  '   (이미 있는 소리는 건드리지 않고, 없는 것만 더 만듭니다)\n' +
   '\n' +
   '■ 소리는 기초반과 똑같이 냅니다\n' +
   'jung.html · gyeopbatchim.html 은 기초반(index.html)의 재생 방식을 그대로 씁니다.\n' +
@@ -210,3 +278,7 @@ const txt =
   '기초반·중급반·겹받침 세 화면이 한꺼번에 좋아집니다.\n';
 fs.writeFileSync('녹음이-필요한-말.txt', txt, 'utf8');
 console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needSent.length, '개');
+console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
+console.log(BIN
+  ? '오프라인 소리  묶음 자리표 ' + Object.keys(BIN.off).length + '개 넣었습니다 (' + BIN.file + ')'
+  : '오프라인 소리  기초반에 묶음(window.AUDIO_BIN)이 없어 낱개로 재생합니다');

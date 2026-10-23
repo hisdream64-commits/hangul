@@ -107,6 +107,7 @@
     border: 1px solid var(--line); border-left: 12px solid var(--accent);
     border-radius: 18px; padding: 1.3rem 1.3rem; cursor: pointer;
     font-family: inherit; box-shadow: var(--shadow);
+    text-decoration: none;          /* 중급반으로 넘어가는 줄은 <a> 입니다 */
   }
   .menu-btn:hover { background: var(--accent-soft); }
   .menu-btn .icon { font-size: 2.6rem; line-height: 1; }
@@ -413,6 +414,22 @@
           <span class="desc">그림과 소리를 듣고 알맞은 낱말을 골라요</span>
         </span>
       </button>
+      <!-- 중급반은 따로 만든 화면이라 단추가 아니라 주소로 넘어갑니다.
+           data-go 가 없으므로 아래 화면 바꾸기 코드가 집어 가지 않습니다. -->
+      <a class="menu-btn" href="jung.html">
+        <span class="icon">📝</span>
+        <span>
+          <span class="label">받아쓰기 교실 (중급)</span>
+          <span class="desc">듣고 직접 써 봐요 · 낱말 4단계, 문장 3단계</span>
+        </span>
+      </a>
+      <a class="menu-btn" href="gyeopbatchim.html">
+        <span class="icon">🧩</span>
+        <span>
+          <span class="label">겹받침 쓰기 연습</span>
+          <span class="desc">받침이 두 개인 낱말을 배우고 받아써요</span>
+        </span>
+      </a>
     </div>
     <p class="version" id="appVersion"></p>
   </section>
@@ -809,7 +826,8 @@
     if (id === 'basics') showLessonItem();
     window.scrollTo(0, 0);
   }
-  document.querySelectorAll('.menu-btn').forEach(b =>
+  // data-go 가 있는 줄만 화면 바꾸기. 중급반 줄은 <a href> 로 그냥 넘어갑니다.
+  document.querySelectorAll('.menu-btn[data-go]').forEach(b =>
     b.addEventListener('click', () => go(b.dataset.go)));
   btnHome.addEventListener('click', () => go('home'));
 
