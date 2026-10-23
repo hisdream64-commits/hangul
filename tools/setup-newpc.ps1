@@ -7,7 +7,7 @@
 #        powershell -ExecutionPolicy Bypass -File .\setup-newpc.ps1
 #
 # 하는 일
-#   - git, GitHub CLI(gh), Python 이 없으면 winget 으로 설치
+#   - git, GitHub CLI(gh), Python, Claude 데스크톱 앱이 없으면 winget 으로 설치
 #   - 저장소를 $HOME\projects\hangul 에 받는다 (이미 있으면 최신으로)
 #   - 이 저장소의 커밋 작성자를 hisdream64-commits 로
 #   - 도구가 쓰는 파이썬 패키지 설치
@@ -48,6 +48,16 @@ Need gh     'GitHub.cli'         'GitHub CLI (gh)'
 Need python 'Python.Python.3.13' 'Python'
 if (Test-Path "$env:ProgramFiles\Google\Chrome\Application\chrome.exe") { Ok "Chrome 있음" }
 else { Warn "Chrome 없음 — 안내문 PDF(regen_qr_poster.py)를 만들 때만 필요합니다. 나머지는 됩니다." }
+
+# Claude 데스크톱 앱 — 새 PC에서 Claude 가 직접 손을 쓰려면 이것이 있어야 한다.
+# (크롬 확장으로는 브라우저만 다룰 수 있고, 프로그램 설치나 저장소 작업은 못 한다)
+$claudeListed = (cmd /c "winget list --id Anthropic.Claude -e --accept-source-agreements 2>&1" | Out-String)
+if ($claudeListed -match 'Anthropic\.Claude') { Ok "Claude 앱 있음" }
+else {
+    Warn "Claude 앱 없음 → winget 으로 설치합니다"
+    winget install --id Anthropic.Claude -e --accept-source-agreements --accept-package-agreements
+    Ok "Claude 앱 설치됨 — 끝나면 시작 메뉴에서 Claude 를 열고 같은 계정으로 로그인하세요"
+}
 
 Say "2/6  저장소"
 if (Test-Path (Join-Path $Dest '.git')) {
@@ -98,7 +108,9 @@ Ok ("가지: " + ($branches -join ', '))
 
 Write-Host ""
 Write-Host "준비 끝. 이어서 할 일:" -ForegroundColor Cyan
-Write-Host "  cd $Dest"
-Write-Host "  git switch wip/voice-guide        # 하던 작업(①②④⑥) 가지"
-Write-Host "  docs\MIGRATION.md 의 0-1절을 읽거나, Claude 에게 이렇게 말하세요:"
-Write-Host '  "docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."'
+Write-Host "  1) 시작 메뉴에서 Claude 앱을 열고 같은 계정으로 로그인"
+Write-Host "  2) Code 탭 → 폴더 선택 → $Dest"
+Write-Host "  3) 첫마디로 이렇게 말하세요:"
+Write-Host '     "docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  (직접 하시려면)  cd $Dest ; git switch wip/voice-guide"
