@@ -1,0 +1,746 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="받침이 두 개인 글자 - 닭, 값, 많다 - 를 읽고 쓰는 연습. 어르신을 위한 큰 글자 한글 학습 도구.">
+<meta name="theme-color" content="#14646E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="겹받침 쓰기">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+<title>겹받침 쓰기 연습</title>
+<style>
+  :root {
+    --bg: #FBF7EF; --card: #FFFFFF; --ink: #26221B; --sub: #6B6353;
+    --accent: #14646E; --accent-ink: #FFFFFF; --accent-soft: #E3F0F1;
+    --warm: #A65A28; --warm-soft: #FAEDE1;
+    --good: #2E7D32; --good-soft: #E6F3E6; --bad: #C4472B; --bad-soft: #FBEAE5;
+    --line: #E4DCCB; --paper: #FFFDF6;
+    --shadow: 0 2px 8px rgba(60, 50, 30, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #201D18; --card: #2C2822; --ink: #F2EDE2; --sub: #B5AC9A;
+      --accent: #6FC3CE; --accent-ink: #10343A; --accent-soft: #1E3A3E;
+      --warm: #E2A273; --warm-soft: #3A2A1E;
+      --good: #7FC983; --good-soft: #253A26; --bad: #E8896F; --bad-soft: #3F2620;
+      --line: #45403A; --paper: #322D26; --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #201D18; --card: #2C2822; --ink: #F2EDE2; --sub: #B5AC9A;
+    --accent: #6FC3CE; --accent-ink: #10343A; --accent-soft: #1E3A3E;
+    --warm: #E2A273; --warm-soft: #3A2A1E;
+    --good: #7FC983; --good-soft: #253A26; --bad: #E8896F; --bad-soft: #3F2620;
+    --line: #45403A; --paper: #322D26; --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 22px; }
+  html[data-size="big"] { font-size: 26px; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", sans-serif;
+    line-height: 1.5; -webkit-text-size-adjust: 100%; }
+  main { max-width: 520px; margin: 0 auto; padding-block: 0.7rem 2.6rem; padding-left: 0.7rem; padding-right: 0.7rem; }
+  button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-family: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid var(--accent); outline-offset: 3px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.2rem 0.5rem; }
+  header h1 { font-size: 1.35rem; margin: 0; }
+  .top-tools { display: flex; gap: 0.4rem; }
+  .tool-btn { font-size: 0.88rem; font-weight: 700; padding: 0.45rem 0.75rem; border-radius: 14px;
+    border: 3px solid var(--accent); background: var(--card); color: var(--accent); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .greeting { background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 1rem 1.1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .greeting p { margin: 0; font-size: 1.02rem; line-height: 1.6; }
+  .greeting strong { color: var(--accent); }
+  .greeting a { color: var(--accent); font-weight: 800; }
+
+  .menu { display: flex; flex-direction: column; gap: 0.7rem; }
+  .menu-btn { display: flex; align-items: center; gap: 0.9rem; text-align: left; width: 100%;
+    background: var(--card); color: var(--ink); border: 1px solid var(--line);
+    border-left: 12px solid var(--accent); border-radius: 18px; padding: 0.95rem 1rem; box-shadow: var(--shadow); }
+  .menu-btn:hover { background: var(--accent-soft); }
+  .menu-btn .icon { font-size: 2rem; }
+  .menu-btn .mid { flex: 1; }
+  .menu-btn .label { font-size: 1.15rem; font-weight: 800; display: block; }
+  .menu-btn .desc { font-size: 0.85rem; color: var(--sub); display: block; margin-top: 0.15rem; line-height: 1.45; }
+  .stamp { font-size: 1.3rem; width: 2.2rem; text-align: center; line-height: 1.15; }
+  .stamp .score { display: block; font-size: 0.65rem; font-weight: 800; color: var(--good); }
+  .back-link { display: inline-block; margin-top: 1.2rem; font-size: 0.95rem; color: var(--accent); font-weight: 800; }
+
+  .section-title { font-size: 1.2rem; font-weight: 800; margin: 0.6rem 0 0.3rem; }
+  .hint { font-size: 0.92rem; color: var(--sub); margin: 0.2rem 0 0.8rem; line-height: 1.55; }
+  .progress { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 0 0 0.6rem; font-variant-numeric: tabular-nums; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    padding: 1rem 0.85rem; box-shadow: var(--shadow); text-align: center; }
+
+  .gb-glyph { font-size: 4.2rem; font-weight: 900; line-height: 1.1; margin: 0.2rem 0 0; }
+  .gb-split { font-size: 1.2rem; font-weight: 800; color: var(--sub); margin: 0 0 0.4rem; }
+  .gb-sound { display: inline-block; font-size: 1.2rem; font-weight: 800;
+    background: var(--good-soft); color: var(--good); border-radius: 12px; padding: 0.3rem 0.9rem; }
+  .gb-note { font-size: 1rem; background: var(--accent-soft); border-radius: 14px;
+    padding: 0.7rem 0.85rem; margin: 0.7rem 0 0; text-align: left; line-height: 1.6; }
+  .gb-note b { color: var(--accent); }
+  .wordlist { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.8rem; }
+  .wordchip { font-size: 1.15rem; font-weight: 800; background: var(--bg); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 999px; padding: 0.45rem 0.9rem; }
+  .wordchip.can:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .wordchip .rd { color: var(--sub); font-weight: 700; font-size: 0.88rem; }
+  .wordchip.mute { opacity: 0.75; cursor: default; }
+
+  /* 쓰는 순서 */
+  .order { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.9rem; }
+  .order .box { width: 3.4rem; height: 3.4rem; border: 3px solid var(--line); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; background: var(--paper); }
+  .order .box.first { border-color: var(--accent); color: var(--accent); }
+  .order .box.second { border-color: var(--warm); color: var(--warm); }
+  .order .arrow { font-size: 1.3rem; color: var(--sub); }
+  .order-cap { font-size: 0.92rem; color: var(--sub); margin-top: 0.4rem; }
+
+  .q-word { font-size: 3.2rem; font-weight: 900; margin: 0.6rem 0 0.2rem; letter-spacing: 0.05em; }
+  .q-word .blank { color: var(--accent); border-bottom: 5px solid var(--accent); }
+  .q-ask { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.3rem; line-height: 1.55; }
+  .listen-row { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .listen-btn { flex: 2; font-size: 1.15rem; font-weight: 800; padding: 0.9rem 0.6rem; border-radius: 16px;
+    border: 3px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+  .slow-btn { flex: 1; font-size: 0.95rem; font-weight: 800; padding: 0.9rem 0.4rem; border-radius: 16px;
+    border: 3px solid var(--accent); background: var(--card); color: var(--accent); }
+
+  .pal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.45rem; margin-top: 0.7rem; }
+  .pal button { font-size: 1.5rem; font-weight: 800; padding: 0.6rem 0.1rem; border-radius: 12px;
+    border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+  .pal button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .pal button.miss { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+  .pal.six { grid-template-columns: repeat(6, 1fr); }
+  .pal.six button { font-size: 1.3rem; padding: 0.55rem 0.1rem; }
+  .pal button.wide { grid-column: span 3; font-size: 1rem; }
+
+  .slots { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0 0.4rem; }
+  .slot { width: 3rem; height: 3.4rem; border: 3px solid var(--line); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900;
+    background: var(--paper); color: var(--ink); }
+  .slot.cur { border-color: var(--accent); background: var(--accent-soft); }
+  .slot.ok { border-color: var(--good); color: var(--good); }
+  .build-now { font-size: 1.02rem; font-weight: 800; color: var(--accent); margin: 0.3rem 0 0; }
+  .build-now .pv { font-size: 1.5rem; color: var(--ink); }
+
+  .choices { display: flex; gap: 0.6rem; justify-content: center; margin-top: 0.8rem; }
+  .choice { flex: 1; font-size: 1.8rem; font-weight: 900; padding: 0.8rem 0.4rem; border-radius: 16px;
+    border: 3px solid var(--line); background: var(--bg); color: var(--ink); }
+  .choice:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.right { border-color: var(--good); background: var(--good-soft); color: var(--good); }
+  .choice.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+
+  .btn-row { display: flex; gap: 0.5rem; margin-top: 0.8rem; flex-wrap: wrap; }
+  .btn-row > * { flex: 1 1 7rem; }
+  .nav-btn { font-size: 1rem; font-weight: 800; padding: 0.75rem 0.6rem; border-radius: 16px;
+    border: 3px solid var(--accent); background: var(--card); color: var(--accent); }
+  .nav-btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .nav-btn.quiet { border-color: var(--line); color: var(--sub); }
+  .nav-btn:disabled { opacity: 0.4; }
+  .wide { flex: 1 1 100%; }
+
+  .feedback { font-size: 1rem; font-weight: 700; margin: 0.8rem 0 0; line-height: 1.6;
+    border-radius: 14px; padding: 0.75rem 0.85rem; display: none; text-align: left; word-break: keep-all; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: var(--good-soft); color: var(--good); }
+  .feedback.ng { background: var(--bad-soft); color: var(--bad); }
+
+  .result { text-align: center; background: var(--card); border: 1px solid var(--line);
+    border-radius: 20px; padding: 1.3rem 1rem; box-shadow: var(--shadow); }
+  .result .trophy { font-size: 3rem; line-height: 1; }
+  .result h2 { font-size: 1.35rem; margin: 0.4rem 0 0.3rem; }
+  .result p { font-size: 1rem; color: var(--sub); margin: 0 0 0.9rem; line-height: 1.6; }
+
+  .notice { position: fixed; left: 0.7rem; right: 0.7rem; bottom: 0.9rem; max-width: 500px; margin: 0 auto;
+    background: var(--bad-soft); color: var(--bad); border: 3px solid var(--bad); border-radius: 16px;
+    padding: 0.9rem 1rem; font-size: 1rem; font-weight: 700; line-height: 1.5;
+    box-shadow: var(--shadow); z-index: 60; display: none; white-space: pre-line; }
+  .notice.show { display: block; }
+
+  @media (max-width: 360px) { html { font-size: 20px; } .q-word { font-size: 2.6rem; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .screen.active { animation: fadein 0.25s ease; }
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+    .shake { animation: shake 0.3s; }
+    @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  }
+</style>
+
+<main>
+  <header>
+    <h1>🧩 겹받침 쓰기 연습</h1>
+    <div class="top-tools">
+      <button class="tool-btn" id="btnSize">🔍 글자 크게</button>
+      <button class="tool-btn" id="btnHome" hidden>🏠 처음으로</button>
+    </div>
+  </header>
+
+  <section class="screen active" id="scr-home">
+    <div class="greeting">
+      <p><strong>받침이 두 개인 글자</strong>만 모아 놓은 연습입니다.<br>
+      닭 · 값 · 많다처럼 <strong>소리는 하나만 나는데 두 개를 써야 하는</strong> 글자를
+      읽고 써 봅니다.</p>
+    </div>
+    <div class="menu" id="menu"></div>
+    <a class="back-link" href="jung.html">← 받아쓰기 교실로</a>
+    <a class="back-link" href="index.html" style="margin-left:1rem">← 기초 한글 교실로</a>
+  </section>
+
+  <!-- 배우기 -->
+  <section class="screen" id="scr-learn">
+    <h2 class="section-title">📖 겹받침 배우기</h2>
+    <p class="hint">받침 두 개 가운데 <b>어느 쪽이 소리 나는지</b>를 익혀 둡시다. 낱말을 누르면 성우가 읽어 드립니다.</p>
+    <p class="progress" id="lProgress"></p>
+    <div class="panel" id="lCard"></div>
+    <div class="btn-row">
+      <button class="nav-btn" id="lPrev">◀ 앞으로</button>
+      <button class="nav-btn primary" id="lNext">다음 ▶</button>
+    </div>
+  </section>
+
+  <!-- 받침 채워 쓰기 -->
+  <section class="screen" id="scr-fill">
+    <h2 class="section-title">✏️ 받침 채워 쓰기</h2>
+    <p class="hint">빈 자리에 들어갈 <b>겹받침</b>을 고르세요.</p>
+    <p class="progress" id="fProgress"></p>
+    <div class="panel">
+      <p class="q-ask" id="fAsk"></p>
+      <p class="q-word" id="fWord"></p>
+      <div class="listen-row" id="fListenRow">
+        <button class="listen-btn" id="fListen">🔊 소리 듣기</button>
+        <button class="slow-btn" id="fSlow">🔁 한 번 더</button>
+      </div>
+      <div class="pal six" id="fPal"></div>
+      <p class="feedback" id="fFeedback"></p>
+      <div class="btn-row"><button class="nav-btn primary wide" id="fNext" hidden>다음 ▶</button></div>
+    </div>
+  </section>
+
+  <!-- 듣고 쓰기 -->
+  <section class="screen" id="scr-write">
+    <h2 class="section-title">🔊 듣고 쓰기</h2>
+    <p class="hint">성우가 읽어 주는 낱말을 듣고, 글자를 하나씩 만들어 보세요.</p>
+    <p class="progress" id="dProgress"></p>
+    <div class="panel">
+      <div class="listen-row">
+        <button class="listen-btn" id="dListen">🔊 다시 듣기</button>
+        <button class="slow-btn" id="dSlow">🔁 한 번 더</button>
+      </div>
+      <div class="slots" id="dSlots"></div>
+      <div id="dBuild">
+        <p class="build-now" id="dStep"></p>
+        <div class="pal six" id="dPal"></div>
+      </div>
+      <p class="feedback" id="dFeedback"></p>
+      <div class="btn-row" id="dBtns"></div>
+    </div>
+  </section>
+
+  <!-- 어느 쪽이 소리 날까 -->
+  <section class="screen" id="scr-quiz">
+    <h2 class="section-title">🧠 어느 쪽이 소리 날까요</h2>
+    <p class="hint">받침 두 글자 가운데 실제로 소리 나는 쪽을 고르세요.</p>
+    <p class="progress" id="qProgress"></p>
+    <div class="panel">
+      <p class="q-ask" id="qAsk"></p>
+      <p class="q-word" id="qWord"></p>
+      <div class="listen-row" id="qListenRow" hidden>
+        <button class="listen-btn" id="qListen">🔊 소리 듣기</button>
+      </div>
+      <div class="choices" id="qChoices"></div>
+      <p class="feedback" id="qFeedback"></p>
+      <div class="btn-row"><button class="nav-btn primary wide" id="qNext" hidden>다음 ▶</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-result">
+    <div class="result">
+      <div class="trophy" id="rTrophy">🏆</div>
+      <h2 id="rTitle"></h2>
+      <p id="rDesc"></p>
+      <div class="btn-row">
+        <button class="nav-btn primary wide" id="rAgain">🔄 한 번 더 하기</button>
+        <button class="nav-btn wide" id="rHome">🏠 처음으로</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="notice" id="notice" role="status" aria-live="polite"></div>
+</main>
+
+<script>
+var DATA = /*__DATA__*/;
+</script>
+<script>
+'use strict';
+var $ = function (id) { return document.getElementById(id); };
+
+/* ============ 소리 ============
+   기초반 성우 녹음(audio/*.mp3)을 그대로 씁니다. 꾸며 낸 목소리는 쓰지 않습니다.
+
+   녹음이 32kbps로 눌러 담겨 있어 그냥 틀면 쇳소리가 섞여 기계음처럼 들립니다.
+   그래서 들려 드릴 때 아주 옅게 다듬습니다.
+     · 시작과 끝을 부드럽게 열고 닫아 「툭」 끊기는 소리를 없앱니다
+     · 눌러 담을 때 생긴 쇳소리(5kHz 위)를 낮춥니다
+     · 낮은 소리를 조금 올려 도톰하게 만듭니다
+     · 귀에 거슬리는 3kHz 언저리를 살짝 눌러 줍니다
+     · 낱말과 낱말 사이는 사람이 읽듯 쉬어 줍니다
+     · 빠르기는 건드리지 않습니다 (배속을 바꾸면 목소리가 뭉개집니다)
+   웹오디오를 못 쓰는 기기에서는 예전처럼 그대로 재생합니다. */
+
+/* ============ 소리 ============
+   기초반(index.html)의 재생 방식을 그대로 씁니다. 소리를 손대지 않습니다.
+     · 음성 파일 하나를 <audio> 로 그냥 재생합니다 (기초반과 똑같은 방식)
+     · 음색을 다듬거나 크기를 키우지 않습니다 — 손대면 기초반과 다른 소리가 납니다
+     · 빠르기(배속)도 건드리지 않습니다 — 늦추면 목소리가 뭉개집니다
+     · 이어 붙일 때도 기초반의 say() 처럼 사이를 두지 않고 바로 잇습니다
+   그래서 기초반에서 듣던 아나운서 목소리가 그대로 나옵니다. */
+
+var player = new Audio();
+player.preload = 'auto';
+var stepQueue = [], stepTimer = null;
+
+/* 아이폰·안드로이드는 화면을 누른 직후가 아니면 소리를 막는다.
+   첫 터치 때 소리 없는 짧은 소리를 한 번 재생해 두면 그 뒤로는 자유롭게 들려줄 수 있다. */
+var SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
+var unlocked = false;
+function unlockAudio() {
+  if (unlocked) return;
+  unlocked = true;
+  try {
+    player.muted = true;
+    player.src = SILENT;
+    var p = player.play();
+    var done = function () { try { player.pause(); player.currentTime = 0; } catch (e) {} player.muted = false; };
+    if (p && p.then) p.then(done).catch(done); else done();
+  } catch (e) { player.muted = false; }
+}
+document.addEventListener('pointerdown', unlockAudio, { capture: true, once: true });
+document.addEventListener('touchstart', unlockAudio, { capture: true, once: true });
+document.addEventListener('click', unlockAudio, { capture: true, once: true });
+
+var noticeTimer = null, lastNotice = 0;
+function showNotice(msg) {
+  var el = document.getElementById('notice'), now = Date.now();
+  if (!el || now - lastNotice < 4000) return;
+  lastNotice = now;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(function () { el.classList.remove('show'); }, 7000);
+}
+function onPlayFail() {
+  if (navigator.onLine === false) {
+    showNotice('이 소리는 아직 받지 못했어요.\n와이파이에 연결한 뒤 기초 한글 교실 첫 화면에서\n「소리 모두 받기」를 눌러 주세요.');
+  } else {
+    showNotice('소리를 불러오지 못했습니다.\n잠시 뒤 다시 눌러 주세요.');
+  }
+}
+player.addEventListener('error', onPlayFail);
+
+function advanceStep() {
+  var st = stepQueue.shift();
+  if (!st) return;
+  stepTimer = setTimeout(function () {
+    player.src = st.src;
+    player.play().catch(onPlayFail);
+  }, st.delay || 0);
+}
+player.addEventListener('ended', advanceStep);
+
+function playSteps(steps) {
+  stopAll();
+  stepQueue = steps.slice();
+  advanceStep();
+}
+function stopAll() {
+  stepQueue = [];
+  clearTimeout(stepTimer);
+  try { player.pause(); } catch (e) {}
+}
+
+/* 낱말·문장 → 소리 파일. 녹음이 없으면 null (꾸며 낸 목소리는 쓰지 않습니다) */
+function fileOf(text) {
+  if (!text) return null;
+  if (DATA.SENT_AUDIO && DATA.SENT_AUDIO[text]) return DATA.SENT_AUDIO[text];
+  return DATA.A[text] || null;
+}
+
+/* 다음에 들려줄 소리를 미리 받아 둡니다. 소리 자체는 건드리지 않습니다. */
+function warm(list) {
+  if (!list) return;
+  if (typeof list === 'string') list = [list];
+  list.forEach(function (t) { var f = fileOf(t); if (f) warmSrc([f]); });
+}
+function warmSrc(srcs) {
+  if (!window.fetch) return;
+  (srcs || []).filter(Boolean).forEach(function (s) { fetch(s).catch(function () {}); });
+}
+
+/* slow 가 참이면 빠르기는 그대로 두고 한 번 더 들려줍니다.
+   (배속을 늦추면 목소리가 뭉개져 기계음처럼 들립니다) */
+function play(text, slow) {
+  var list = (typeof text === 'string') ? [text] : (text || []);
+  var srcs = list.map(fileOf).filter(Boolean);
+  if (!srcs.length) return false;
+  var steps = srcs.map(function (s, i) { return { src: s, delay: i ? 0 : 0 }; });
+  if (slow) {
+    steps = steps.concat(srcs.map(function (s, i) { return { src: s, delay: i ? 0 : 700 }; }));
+  }
+  playSteps(steps);
+  return true;
+}
+function playFx(key, then) {
+  var steps = [];
+  if (DATA.FX[key]) steps.push({ src: DATA.FX[key] });
+  var g = fileOf(then);
+  if (g) steps.push({ src: g });
+  if (steps.length) playSteps(steps);
+}
+function playSrcs(srcs) {
+  var steps = (srcs || []).filter(Boolean).map(function (s) { return { src: s }; });
+  if (steps.length) playSteps(steps);
+}
+
+/* ============ 한글 ============ */
+var CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+var JUNG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+var JONG = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+var DOUBLE = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18];      // 겹받침 11개
+function parts(ch) {
+  var c = ch.charCodeAt(0) - 0xAC00;
+  if (c < 0 || c > 11171) return null;
+  return [Math.floor(c / 588), Math.floor((c % 588) / 28), c % 28];
+}
+function compose(a, b, c) { return String.fromCharCode(0xAC00 + (a * 21 + b) * 28 + (c || 0)); }
+function doubleAt(word) {                                    // 겹받침이 있는 글자 자리
+  for (var i = 0; i < word.length; i++) {
+    var p = parts(word[i]);
+    if (p && DOUBLE.indexOf(p[2]) !== -1) return i;
+  }
+  return -1;
+}
+
+/* ============ 기록 · 글자 크기 ============ */
+var STORE = 'hangul-gb:progress';
+var prog = {};
+try { prog = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { prog = {}; }
+function saveScore(id, right, total) {
+  var cur = prog[id];
+  if (!cur || right >= cur.best) prog[id] = { best: right, total: total };
+  try { localStorage.setItem(STORE, JSON.stringify(prog)); } catch (e) {}
+}
+function stampOf(id) {
+  var p = prog[id];
+  if (!p) return '<span class="stamp" style="color:var(--line)">○</span>';
+  if (p.best / p.total >= 0.8) return '<span class="stamp">✅<span class="score">' + p.best + '/' + p.total + '</span></span>';
+  return '<span class="stamp">🔁<span class="score" style="color:var(--sub)">' + p.best + '/' + p.total + '</span></span>';
+}
+try { if (localStorage.getItem('hangul-gb:size') === 'big') document.documentElement.dataset.size = 'big'; } catch (e) {}
+function syncSize() { $('btnSize').textContent = document.documentElement.dataset.size === 'big' ? '🔍 글자 작게' : '🔍 글자 크게'; }
+$('btnSize').addEventListener('click', function () {
+  var big = document.documentElement.dataset.size === 'big';
+  if (big) delete document.documentElement.dataset.size; else document.documentElement.dataset.size = 'big';
+  try { localStorage.setItem('hangul-gb:size', big ? 'normal' : 'big'); } catch (e) {}
+  syncSize();
+});
+syncSize();
+
+function go(id) {
+  stopAll();
+  var list = document.querySelectorAll('.screen');
+  for (var i = 0; i < list.length; i++) list[i].classList.toggle('active', list[i].id === 'scr-' + id);
+  $('btnHome').hidden = (id === 'home');
+  window.scrollTo(0, 0);
+}
+$('btnHome').addEventListener('click', function () { go('home'); renderHome(); });
+
+/* ============ 자료 고르기 ============ */
+var ALL_WORDS = [];                                          // [낱말, 읽기, 녹음낱말, 겹받침 index, 묶음]
+DATA.G.forEach(function (g) {
+  g[4].forEach(function (w) {
+    var at = doubleAt(w[0]);
+    if (at !== -1) ALL_WORDS.push({ w: w[0], read: w[1], audio: w[2], at: at, g: g });
+  });
+});
+var HEARD = ALL_WORDS.filter(function (x) { return fileOf(x.audio); });
+
+function pick(arr, n) {
+  var c = arr.slice();
+  for (var i = c.length - 1; i > 0; i--) { var k = Math.floor(Math.random() * (i + 1)); var t = c[i]; c[i] = c[k]; c[k] = t; }
+  return c.slice(0, Math.min(n, c.length));
+}
+
+var ACTS = [
+  { id: 'learn', icon: '📖', title: '겹받침 배우기', desc: '11가지 겹받침을 하나씩 · 어느 쪽이 소리 나는지', go: startLearn },
+  { id: 'fill', icon: '✏️', title: '받침 채워 쓰기', desc: '빈 자리에 들어갈 겹받침 고르기 · 10문제', go: startFill },
+  { id: 'write', icon: '🔊', title: '듣고 쓰기', desc: '성우 목소리를 듣고 글자를 만들어 쓰기 · ' + Math.min(10, HEARD.length) + '문제', go: startWrite },
+  { id: 'quiz', icon: '🧠', title: '어느 쪽이 소리 날까요', desc: '닭의 ㄺ은 ㄱ 소리 · 10문제', go: startQuiz }
+];
+
+function renderHome() {
+  $('menu').innerHTML = ACTS.map(function (a, i) {
+    return '<button class="menu-btn" data-a="' + i + '"><span class="icon">' + a.icon + '</span>' +
+      '<span class="mid"><span class="label">' + a.title + '</span>' +
+      '<span class="desc">' + a.desc + '</span></span>' +
+      (a.id === 'learn' ? '<span class="stamp" style="color:var(--line)">▶</span>' : stampOf(a.id)) + '</button>';
+  }).join('');
+  var bs = $('menu').querySelectorAll('.menu-btn');
+  for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function () { ACTS[+this.dataset.a].go(); });
+}
+
+/* ============ 배우기 ============ */
+var L = 0;
+function startLearn() { L = 0; go('learn'); renderLearn(); }
+function renderLearn() {
+  var g = DATA.G[L];
+  $('lProgress').textContent = (L + 1) + ' / ' + DATA.G.length;
+  var chips = g[4].map(function (w) {
+    var can = !!fileOf(w[2]);
+    return '<button class="wordchip ' + (can ? 'can' : 'mute') + '"' + (can ? ' data-w="' + w[2] + '"' : ' disabled') + '>' +
+      w[0] + ' <span class="rd">[' + w[1] + ']</span></button>';
+  }).join('');
+  $('lCard').innerHTML =
+    '<p class="gb-glyph">' + g[1] + '</p>' +
+    '<p class="gb-split">' + g[0][0] + ' + ' + g[0][1] + ' 을 나란히 씁니다</p>' +
+    '<p><span class="gb-sound">소리 나는 쪽 · ' + g[2] + '</span></p>' +
+    '<div class="order">' +
+      '<span class="box first">' + g[0][0] + '</span><span class="arrow">▶</span>' +
+      '<span class="box second">' + g[0][1] + '</span><span class="arrow">=</span>' +
+      '<span class="box">' + g[1] + '</span>' +
+    '</div>' +
+    '<p class="order-cap">쓸 때는 <b>왼쪽 먼저, 오른쪽 나중</b>. 두 글자를 받침 칸 안에 나란히 눌러 씁니다.</p>' +
+    '<div class="wordlist">' + chips + '</div>' +
+    '<p class="gb-note">' + g[3] + '<br>뒤에 <b>모음</b>이 오면 두 받침이 모두 살아납니다. 값이[갑씨] · 닭을[다글]</p>';
+  var cs = $('lCard').querySelectorAll('.wordchip.can');
+  for (var i = 0; i < cs.length; i++) cs[i].addEventListener('click', function () { play(this.dataset.w); });
+  $('lPrev').disabled = (L === 0);
+  $('lNext').textContent = (L === DATA.G.length - 1) ? '연습하러 가기 ▶' : '다음 ▶';
+}
+$('lPrev').addEventListener('click', function () { if (L > 0) { L--; renderLearn(); } });
+$('lNext').addEventListener('click', function () {
+  if (L < DATA.G.length - 1) { L++; renderLearn(); } else startFill();
+});
+
+/* ============ 받침 채워 쓰기 ============ */
+var F = null;
+function startFill() {
+  F = { items: pick(ALL_WORDS, 10), i: 0, right: 0, done: false };
+  go('fill'); renderFill();
+}
+function renderFill() {
+  var it = F.items[F.i];
+  var p = parts(it.w[it.at]);
+  $('fProgress').textContent = (F.i + 1) + ' / ' + F.items.length + ' · 맞힌 개수 ' + F.right + '개';
+  $('fAsk').innerHTML = '[' + it.read + '] 라고 읽는 낱말입니다. 빈 받침 자리에 무엇이 들어갈까요?';
+  var shown = '';
+  for (var i = 0; i < it.w.length; i++) {
+    if (i === it.at && !F.done) shown += compose(p[0], p[1], 0) + '<span class="blank">?</span>';
+    else shown += it.w[i];
+  }
+  $('fWord').innerHTML = shown;
+  $('fListenRow').hidden = !fileOf(it.audio);
+  var h = '';
+  for (var k = 0; k < DOUBLE.length; k++) h += '<button data-j="' + DOUBLE[k] + '">' + JONG[DOUBLE[k]] + '</button>';
+  $('fPal').innerHTML = h;
+  var bs = $('fPal').querySelectorAll('button');
+  for (var m = 0; m < bs.length; m++) bs[m].addEventListener('click', onFill);
+  $('fFeedback').className = 'feedback';
+  $('fNext').hidden = true;
+  if (fileOf(it.audio)) play(it.audio);
+  if (F.items[F.i + 1]) warm(F.items[F.i + 1].audio);
+}
+function onFill() {
+  if (F.done) return;
+  var it = F.items[F.i], want = parts(it.w[it.at])[2], got = +this.dataset.j;
+  var fb = $('fFeedback');
+  if (got !== want) {
+    this.classList.add('miss', 'shake');
+    fb.className = 'feedback show ng';
+    fb.innerHTML = '<b>' + JONG[got] + '</b> 은 아닙니다. [' + it.read + '] 소리를 생각하며 다시 골라 보세요.';
+    return;
+  }
+  F.done = true; F.right++;
+  renderFillDone();
+}
+function renderFillDone() {
+  var it = F.items[F.i];
+  $('fWord').innerHTML = it.w;
+  var fb = $('fFeedback');
+  fb.className = 'feedback show ok';
+  fb.innerHTML = '⭕ 맞습니다! <b>' + it.w + '</b> [' + it.read + ']<br>' + it.g[3];
+  $('fNext').hidden = false;
+  $('fNext').textContent = (F.i === F.items.length - 1) ? '결과 보기 ▶' : '다음 ▶';
+  playFx('praise');
+}
+$('fNext').addEventListener('click', function () {
+  if (F.i === F.items.length - 1) { finish('fill', F.right, F.items.length, startFill); return; }
+  F.i++; F.done = false; renderFill();
+});
+$('fListen').addEventListener('click', function () { play(F.items[F.i].audio); });
+$('fSlow').addEventListener('click', function () { play(F.items[F.i].audio, true); });
+
+/* ============ 듣고 쓰기 ============ */
+var D = null;
+function startWrite() {
+  if (!HEARD.length) { showNotice('아직 소리가 있는 겹받침 낱말이 없습니다.'); return; }
+  D = { items: pick(HEARD, 10), i: 0, right: 0, slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
+  go('write'); renderWrite(true);
+}
+function renderWrite(playIt) {
+  var it = D.items[D.i], w = it.w;
+  $('dProgress').textContent = (D.i + 1) + ' / ' + D.items.length + ' · 맞힌 낱말 ' + D.right + '개';
+  var s = '';
+  for (var i = 0; i < w.length; i++) {
+    var filled = D.done ? w[i] : (i < D.slot ? w[i] : (i === D.slot ? previewD() : ''));
+    s += '<span class="slot' + (D.done ? ' ok' : (i === D.slot ? ' cur' : '')) + '">' + filled + '</span>';
+  }
+  $('dSlots').innerHTML = s;
+  $('dBuild').hidden = D.done;
+  if (!D.done) {
+    var labels = ['① 첫소리를 고르세요', '② 가운뎃소리를 고르세요', '③ 받침을 고르세요'];
+    var pv = previewD();
+    $('dStep').innerHTML = labels[D.step] + (pv ? ' <span class="pv">' + pv + '</span>' : '');
+    var list = D.step === 0 ? CHO : (D.step === 1 ? JUNG : JONG);
+    var h = '';
+    for (var k = 0; k < list.length; k++) {
+      if (D.step === 2 && k === 0) h += '<button class="wide" data-i="0">받침 없음</button>';
+      else h += '<button data-i="' + k + '">' + list[k] + '</button>';
+    }
+    $('dPal').innerHTML = h;
+    var bs = $('dPal').querySelectorAll('button');
+    for (var m = 0; m < bs.length; m++) bs[m].addEventListener('click', onWritePal);
+  }
+  $('dFeedback').className = 'feedback';
+  $('dBtns').innerHTML = D.done
+    ? '<button class="nav-btn primary wide" id="dNext">' + (D.i === D.items.length - 1 ? '결과 보기 ▶' : '다음 낱말 ▶') + '</button>'
+    : '<button class="nav-btn quiet" id="dUndo">◀ 지우기</button><button class="nav-btn" id="dGive">모르겠어요</button>';
+  if ($('dNext')) $('dNext').addEventListener('click', nextWrite);
+  if ($('dUndo')) $('dUndo').addEventListener('click', function () {
+    if (D.step > 0) D.step--;
+    else if (D.slot > 0) { D.slot--; var p = parts(D.items[D.i].w[D.slot]); D.step = 2; D.cur = p ? [p[0], p[1], 0] : [0, 0, 0]; }
+    renderWrite(false);
+  });
+  if ($('dGive')) $('dGive').addEventListener('click', function () { D.miss = true; doneWrite(); });
+  if (playIt) play(it.audio);
+  if (D.items[D.i + 1]) warm(D.items[D.i + 1].audio);
+}
+function previewD() {
+  if (D.step === 0) return '';
+  if (D.step === 1) return CHO[D.cur[0]];
+  return compose(D.cur[0], D.cur[1], 0);
+}
+function onWritePal() {
+  var it = D.items[D.i], want = parts(it.w[D.slot]), got = +this.dataset.i;
+  if (want && got !== want[D.step]) {
+    this.classList.add('miss', 'shake');
+    D.miss = true;
+    var names = ['첫소리', '가운뎃소리', '받침'];
+    var fb = $('dFeedback');
+    fb.className = 'feedback show ng';
+    fb.innerHTML = names[D.step] + '가 다릅니다. [' + it.read + '] 소리를 다시 들어 보세요.';
+    play(it.audio);
+    return;
+  }
+  D.cur[D.step] = got;
+  $('dFeedback').className = 'feedback';
+  if (D.step < 2) { D.step++; renderWrite(false); return; }
+  D.slot++; D.step = 0; D.cur = [0, 0, 0];
+  if (D.slot < it.w.length) { renderWrite(false); return; }
+  doneWrite();
+}
+function doneWrite() {
+  var it = D.items[D.i];
+  D.done = true;
+  if (!D.miss) D.right++;
+  renderWrite(false);
+  var fb = $('dFeedback');
+  fb.className = 'feedback show ' + (D.miss ? 'ng' : 'ok');
+  fb.innerHTML = (D.miss ? '바르게 쓴 낱말은 ' : '⭕ 잘 쓰셨습니다! ') +
+    '<b>' + it.w + '</b> [' + it.read + ']<br>' + it.g[3];
+  if (D.miss) playFx('wrong', it.audio); else playFx('praise');
+}
+function nextWrite() {
+  if (D.i === D.items.length - 1) { finish('write', D.right, D.items.length, startWrite); return; }
+  D.i++; D.slot = 0; D.step = 0; D.cur = [0, 0, 0]; D.miss = false; D.done = false;
+  renderWrite(true);
+}
+$('dListen').addEventListener('click', function () { play(D.items[D.i].audio); });
+$('dSlow').addEventListener('click', function () { play(D.items[D.i].audio, true); });
+
+/* ============ 어느 쪽이 소리 날까요 ============ */
+var Q = null;
+function startQuiz() {
+  var items = DATA.G.map(function (g) {
+    var w = g[4][0];
+    return { g: g, w: w[0], read: w[1], audio: w[2] };
+  });
+  Q = { items: pick(items, 10), i: 0, right: 0, done: false };
+  go('quiz'); renderQuiz();
+}
+function renderQuiz() {
+  var it = Q.items[Q.i], g = it.g;
+  $('qProgress').textContent = (Q.i + 1) + ' / ' + Q.items.length + ' · 맞힌 개수 ' + Q.right + '개';
+  $('qAsk').innerHTML = '「' + it.w + '」의 받침 <b>' + g[1] + '</b> 에서는 어느 쪽 소리가 날까요?';
+  $('qWord').textContent = it.w;
+  $('qListenRow').hidden = !fileOf(it.audio);
+  $('qChoices').innerHTML =
+    '<button class="choice" data-c="' + g[0][0] + '">' + g[0][0] + '</button>' +
+    '<button class="choice" data-c="' + g[0][1] + '">' + g[0][1] + '</button>';
+  var bs = $('qChoices').querySelectorAll('.choice');
+  for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', onQuiz);
+  $('qFeedback').className = 'feedback';
+  $('qNext').hidden = true;
+  Q.done = false;
+}
+function onQuiz() {
+  if (Q.done) return;
+  Q.done = true;
+  var it = Q.items[Q.i], ok = (this.dataset.c === it.g[2]);
+  if (ok) Q.right++;
+  var bs = $('qChoices').querySelectorAll('.choice');
+  for (var i = 0; i < bs.length; i++) {
+    bs[i].disabled = true;
+    if (bs[i].dataset.c === it.g[2]) bs[i].classList.add('right');
+    else if (bs[i] === this) bs[i].classList.add('wrong');
+  }
+  var fb = $('qFeedback');
+  fb.className = 'feedback show ' + (ok ? 'ok' : 'ng');
+  fb.innerHTML = (ok ? '⭕ 맞습니다! ' : '소리 나는 쪽은 <b>' + it.g[2] + '</b> 입니다. ') +
+    '<b>' + it.w + '</b> [' + it.read + ']<br>' + it.g[3];
+  $('qNext').hidden = false;
+  $('qNext').textContent = (Q.i === Q.items.length - 1) ? '결과 보기 ▶' : '다음 ▶';
+  if (ok) playFx('praise'); else playFx('wrong', it.audio);
+}
+$('qListen').addEventListener('click', function () { play(Q.items[Q.i].audio); });
+$('qNext').addEventListener('click', function () {
+  if (Q.i === Q.items.length - 1) { finish('quiz', Q.right, Q.items.length, startQuiz); return; }
+  Q.i++; renderQuiz();
+});
+
+/* ============ 결과 ============ */
+var againFn = null;
+function finish(id, right, total, again) {
+  saveScore(id, right, total);
+  againFn = again;
+  go('result');
+  var ratio = right / total, trophy = '🌱', title = '천천히 한 번 더 해 볼까요?', grade = 'ok';
+  if (ratio === 1) { trophy = '🏆'; title = '만점입니다!'; grade = 'perfect'; }
+  else if (ratio >= 0.7) { trophy = '🎉'; title = '아주 잘하셨어요!'; grade = 'good'; }
+  $('rTrophy').textContent = trophy;
+  $('rTitle').textContent = title;
+  $('rDesc').textContent = total + '개 가운데 ' + right + '개를 맞히셨습니다.';
+  playSrcs([DATA.SC[right], DATA.FX[grade]]);
+}
+$('rAgain').addEventListener('click', function () { if (againFn) againFn(); });
+$('rHome').addEventListener('click', function () { go('home'); renderHome(); });
+
+renderHome();
+warmSrc([DATA.FX.praise, DATA.FX.wrong], true);
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  navigator.serviceWorker.register('sw.js').catch(function () {});
+}
+</script>
