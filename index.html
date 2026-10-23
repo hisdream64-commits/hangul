@@ -140,6 +140,8 @@
   .menu-btn .icon { font-size: 2.6rem; line-height: 1; }
   .menu-btn .label { font-size: 1.45rem; font-weight: 800; display: block; }
   .menu-btn .desc { font-size: 1rem; color: var(--sub); display: block; margin-top: 0.15rem; }
+  .menu-btn .prog { font-size: 1rem; color: var(--accent); font-weight: 700; display: block; margin-top: 0.25rem; }
+  .menu-btn .prog:empty { display: none; }
 
   /* 판 번호. 휴대폰이 옛 화면을 붙들고 있는지 확인할 때 씁니다.
      어르신 눈에 걸리지 않게 작고 흐리게 둡니다. */
@@ -413,6 +415,7 @@
           <span>
             <span class="label">기초 학습 (처음 오신 분)</span>
             <span class="desc">자음 → 모음 → 소리 합치기 → 받침, 차례대로 배워요</span>
+            <span class="prog" id="progBasics"></span>
           </span>
         </button>
         <button class="menu-spk" data-say="ui_menu_basics" aria-label="기초 학습 설명 듣기">🔊</button>
@@ -443,6 +446,7 @@
           <span>
             <span class="label">낱말 배우기</span>
             <span class="desc">가족, 음식, 시장, 인사말… 생활 낱말 760여 개를 익혀요</span>
+            <span class="prog" id="progWords"></span>
           </span>
         </button>
         <button class="menu-spk" data-say="ui_menu_words" aria-label="낱말 배우기 설명 듣기">🔊</button>
@@ -453,6 +457,7 @@
           <span>
             <span class="label">낱말 맞히기 놀이</span>
             <span class="desc">그림과 소리를 듣고 알맞은 낱말을 골라요</span>
+            <span class="prog" id="progQuiz"></span>
           </span>
         </button>
         <button class="menu-spk" data-say="ui_menu_quiz" aria-label="낱말 맞히기 놀이 설명 듣기">🔊</button>
@@ -464,7 +469,7 @@
   <!-- 기초 학습 -->
   <section class="screen" id="scr-basics">
     <h2 class="section-title">기초 학습</h2>
-    <p class="hint">1단계부터 차례대로 익혀 보세요. 「다음」을 누르면 한 글자씩 나옵니다.</p>
+    <p class="hint" id="basicsHint">1단계부터 차례대로 익혀 보세요. 「다음」을 누르면 한 글자씩 나옵니다.</p>
     <div class="tab-row">
       <button class="tab on" data-step="ja">1단계 · 자음</button>
       <button class="tab" data-step="mo">2단계 · 모음</button>
@@ -607,6 +612,7 @@
       <div class="trophy">🏆</div>
       <h2 id="rTitle"></h2>
       <p id="rDesc"></p>
+      <p class="hint" id="rBest"></p>
       <button class="speak-btn" id="rAgain">🔄 다시 해 보기</button>
     </div>
   </section>
@@ -632,7 +638,9 @@
   "ui_n_done_browser": "소리를 모두 받았어요. 홈 화면에 추가하신 뒤에는, 앱에서 한 번 더 받아 주세요.",
   "ui_n_quota": "휴대폰에 남은 공간이 모자라서, 소리를 저장하지 못했어요. 사진이나 쓰지 않는 앱을 정리하신 뒤, 다시 눌러 주세요.",
   "ui_n_network_fail": "소리를 받는 중에 인터넷이 끊겼어요. 와이파이를 확인하신 뒤, 단추를 한 번 더 눌러 주세요.",
-  "ui_n_nostorage": "이 휴대폰에서는 미리 받기를 쓸 수 없어요. 와이파이에서 그대로 쓰셔도 돼요."
+  "ui_n_nostorage": "이 휴대폰에서는 미리 받기를 쓸 수 없어요. 와이파이에서 그대로 쓰셔도 돼요.",
+  "ui_resume_home": "지난번에 배우던 곳이 저장되어 있어요. 새싹 단추를 누르면, 거기서부터 이어서 해요.",
+  "ui_resume": "지난번에 배우던 곳부터 이어서 할게요. 처음부터 다시 하시려면, 위에 있는 1단계 단추를 누르세요."
 };</script>
 <script>
   // ---------- 음성: 내장 성우 녹음 우선, 없으면 브라우저 음성 ----------
@@ -642,7 +650,7 @@
   // 이 앱은 소리와 화면을 휴대폰에 저장해 두고 인터넷 없이도 씁니다.
   // 그래서 "고쳤는데 그대로인데요" 하는 일이 생기면, 먼저 이 번호를 봐야 합니다.
   // 첫 화면 맨 아래에 작게 나옵니다. 판을 올릴 때 여기와 git 태그를 함께 올리세요.
-  const APP_VERSION = '1.2';
+  const APP_VERSION = '1.3';
   window.APP_VERSION = APP_VERSION;
   document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('appVersion');
@@ -817,13 +825,13 @@
     speechSynthesis.onvoiceschanged = pickVoice;
   }
 
-  function ttsFallback(text) {
-    if (!('speechSynthesis' in window) || !text) return;
+  function ttsFallback(text, onend) {
+    if (!('speechSynthesis' in window) || !text) { if (onend) onend(); return; }
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ko-KR';
     if (koVoice) u.voice = koVoice;
     u.rate = 0.85;
-    u.onend = u.onerror = clearSpeaking;
+    u.onend = u.onerror = function () { clearSpeaking(); if (onend) onend(); };
     speechSynthesis.speak(u);
   }
 
@@ -846,6 +854,34 @@
   // 화면 안내 말. 블록이 메인 스크립트보다 앞에 있지만, 버릇대로 쓸 때마다 새로 읽는다.
   function uiText(key) {
     return (window.UI_SAY || {})[key] || '';
+  }
+  // 안내 말 한 마디를 읽은 뒤에 next 를 이어서 한다 (녹음이 없으면 브라우저 음성으로).
+  function sayThen(key, next) {
+    const AUDIO = window.AUDIO || {};
+    // next 는 제 몫의 재생 목록을 새로 만들므로, 이 목록이 다 끝난 다음 차례에 돌린다
+    // (같은 차례에 부르면 advanceStep 이 새 목록의 두 번째 조각까지 겹쳐 틀어 버린다)
+    if (AUDIO[key]) { playSteps([{ key: key }, { fn: () => setTimeout(next, 0), delay: 400 }]); return; }
+    stopAll();
+    ttsFallback(uiText(key), next);
+  }
+
+  // ---------- 진도 저장 ----------
+  // 열 때마다 ㄱ부터 다시 시작하면 혼자 공부하는 분은 늘 같은 자리만 맴돈다.
+  // 로그인 없이 이 휴대폰 안(localStorage)에만 둔다: 기초 학습의 단계와 글자,
+  // 낱말의 갈래와 쪽, 놀이 점수. 저장이 안 되는 기기(사생활 보호 모드)에서는 조용히 건너뛴다.
+  const PROG_KEY = 'hangul.progress';
+  let prog = {};
+  try { prog = JSON.parse(localStorage.getItem(PROG_KEY)) || {}; } catch (e) { prog = {}; }
+  if (typeof prog !== 'object' || Array.isArray(prog)) prog = {};
+  function saveProgress(part, value) {
+    prog[part] = value;
+    prog.at = Date.now();
+    try { localStorage.setItem(PROG_KEY, JSON.stringify(prog)); } catch (e) {}
+  }
+  // 기초 학습을 맨 처음 자리(1단계 ㄱ)보다 나아간 적이 있는가
+  function hasBasicsProgress() {
+    const b = prog.basics;
+    return !!b && typeof b === 'object' && (b.step !== 'ja' || (b.idx | 0) > 0);
   }
 
   // ---------- 자료 ----------
@@ -901,7 +937,8 @@
     if (id === 'quiz') startQuiz();
     // 메뉴를 누른 것이 사용자 동작이라 소리를 바로 낼 수 있다. 조용히 들어가면
     // 글을 못 읽는 분은 「다시 듣기」가 무엇인지 몰라 그대로 멈춘다.
-    if (id === 'basics') showLessonItem(true);
+    if (id === 'basics') enterBasics();
+    if (id === 'home') updateHomeProgress();
     window.scrollTo(0, 0);
   }
   // 화면을 바꿀 때 브라우저 이력에 한 칸 남긴다. 기기의 ◀ 뒤로 가기를 누르면
@@ -925,6 +962,8 @@
   // 화면을 읽어 주고, 메뉴마다 붙은 작은 스피커가 그 메뉴를 설명한다.
   document.getElementById('guideBtn').addEventListener('click', function () {
     const keys = ['ui_greet'], text = [uiText('ui_greet')];
+    // 지난번 진도가 있으면 새싹 단추가 거기서 이어진다고 알려 준다
+    if (hasBasicsProgress()) { keys.push('ui_resume_home'); text.push(uiText('ui_resume_home')); }
     // 「소리 모두 받기」 칸이 보이면 그 안내도 이어서 읽는다
     const card = document.getElementById('offlineCard');
     if (card && !card.hidden && !card.classList.contains('oc-done')) {
@@ -964,7 +1003,33 @@
     document.getElementById('lvPrev').disabled = (lessonIdx === 0);
     document.getElementById('lvNext').textContent =
       (lessonIdx === list.length - 1) ? '다음 단계 ▶' : '다음 ▶';
-    if (playSound) sayLetter(glyph, name, ex, sound);
+    // 소리를 내는 호출은 사람이 넘긴 것이므로 그 자리를 진도로 적어 둔다
+    if (playSound) { sayLetter(glyph, name, ex, sound); saveBasics(); }
+  }
+
+  // 기초 학습에 들어올 때: 저장된 단계의 소리를 바로 낸다. 지난번 진도가 있으면
+  // 이번에 연 뒤 처음 한 번만 "이어서 한다"고 먼저 말해 준다.
+  let resumeTold = false;
+  function enterBasics() {
+    const play = () => {
+      if (lessonStep === 'ja' || lessonStep === 'mo') showLessonItem(true);
+      else if (lessonStep === 'mix') speakCombined();
+      else { const [made] = BATCHIM[curBat].ex[curBatIdx]; say(['s2_' + made], made); }
+    };
+    const tell = !resumeTold && hasBasicsProgress();
+    resumeTold = true;
+    if (tell) {
+      document.getElementById('basicsHint').textContent =
+        '지난번에 배우던 곳부터 이어서 합니다. 처음부터 하시려면 「1단계」를 누르세요.';
+      sayThen('ui_resume', play);
+    } else play();
+  }
+
+  function saveBasics() {
+    saveProgress('basics', {
+      step: lessonStep, idx: lessonIdx,
+      cho: curCho, jung: curJung, bat: curBat, batIdx: curBatIdx
+    });
   }
 
   document.getElementById('lvPrev').addEventListener('click', () => {
@@ -981,18 +1046,23 @@
     sayLetter(glyph, name, ex, sound);
   });
 
-  function setStep(step) {
+  // 단계 탭과 상자만 바꾼다 (소리·저장 없음). 저장된 진도를 되살릴 때도 쓴다.
+  function applyStep(step) {
     lessonStep = step;
-    lessonIdx = 0;
     document.querySelectorAll('[data-step]').forEach(t =>
       t.classList.toggle('on', t.dataset.step === step));
     lessonViewer.style.display = (step === 'ja' || step === 'mo') ? '' : 'none';
     combineBox.style.display = (step === 'mix') ? '' : 'none';
     document.getElementById('batchimBox').style.display = (step === 'bat') ? '' : 'none';
+  }
+  function setStep(step) {
+    applyStep(step);
+    lessonIdx = 0;
     stopAll();
     if (step === 'ja' || step === 'mo') showLessonItem(true);
     else if (step === 'mix') speakCombined();
     else renderBatchim();
+    saveBasics();
   }
   document.querySelectorAll('[data-step]').forEach(t =>
     t.addEventListener('click', () => setStep(t.dataset.step)));
@@ -1079,14 +1149,14 @@
   Object.keys(CHO_IDX).forEach(ch => {
     const b = document.createElement('button');
     b.className = 'mini'; b.textContent = ch;
-    b.addEventListener('click', () => { curCho = ch; renderCombined(); speakCombined(); });
+    b.addEventListener('click', () => { curCho = ch; renderCombined(); speakCombined(); saveBasics(); });
     choRow.appendChild(b);
   });
   const jungRow = document.getElementById('jungRow');
   Object.keys(JUNG_IDX).forEach(ch => {
     const b = document.createElement('button');
     b.className = 'mini'; b.textContent = ch;
-    b.addEventListener('click', () => { curJung = ch; renderCombined(); speakCombined(); });
+    b.addEventListener('click', () => { curJung = ch; renderCombined(); speakCombined(); saveBasics(); });
     jungRow.appendChild(b);
   });
   document.getElementById('cSpeak').addEventListener('click', speakCombined);
@@ -1128,7 +1198,7 @@
   Object.keys(BATCHIM).forEach(bat => {
     const b = document.createElement('button');
     b.className = 'mini'; b.textContent = bat;
-    b.addEventListener('click', () => { curBat = bat; curBatIdx = 0; renderBatchim(); blendBatchim(); });
+    b.addEventListener('click', () => { curBat = bat; curBatIdx = 0; renderBatchim(); blendBatchim(); saveBasics(); });
     batRow.appendChild(b);
   });
 
@@ -1150,7 +1220,7 @@
       const b = document.createElement('button');
       b.className = 'mini' + (i === curBatIdx ? ' on' : '');
       b.textContent = m;
-      b.addEventListener('click', () => { curBatIdx = i; renderBatchim(); blendBatchim(); });
+      b.addEventListener('click', () => { curBatIdx = i; renderBatchim(); blendBatchim(); saveBasics(); });
       exRow.appendChild(b);
     });
     batRow.querySelectorAll('.mini').forEach(b =>
@@ -1200,6 +1270,43 @@
     say(['s2_' + made], made);
   });
   renderBatchim();
+
+  // 저장된 기초 학습 진도를 되살린다 (소리는 내지 않는다 — 앱을 열 때는 재생이 막혀 있다)
+  (function restoreBasics() {
+    const b = prog.basics;
+    if (!b || typeof b !== 'object') return;
+    if (CHO_IDX[b.cho] !== undefined) curCho = b.cho;
+    if (JUNG_IDX[b.jung] !== undefined) curJung = b.jung;
+    if (BATCHIM[b.bat]) {
+      curBat = b.bat;
+      curBatIdx = Math.min(Math.max(b.batIdx | 0, 0), BATCHIM[curBat].ex.length - 1);
+    }
+    if (['ja', 'mo', 'mix', 'bat'].indexOf(b.step) >= 0) applyStep(b.step);
+    lessonIdx = Math.min(Math.max(b.idx | 0, 0), lessonList().length - 1);
+    renderCombined();
+    renderBatchim();
+    showLessonItem(false);
+  })();
+
+  // 첫 화면 메뉴 밑에 "지난번" 자리를 적어 둔다. 어디까지 했는지 눈에 보이면
+  // 학습 순서(자음→모음→합치기→받침→낱말→놀이)도 함께 보인다.
+  const STEP_NAME = { ja: '1단계 자음', mo: '2단계 모음', mix: '3단계 소리 합치기', bat: '4단계 받침 읽기' };
+  function updateHomeProgress() {
+    const b = prog.basics, w = prog.words, q = prog.quiz;
+    let t = '';
+    if (hasBasicsProgress() && STEP_NAME[b.step]) {
+      t = '📌 지난번: ' + STEP_NAME[b.step];
+      if (b.step === 'ja' || b.step === 'mo') t += ' ' + ((b.idx | 0) + 1) + '번째 글자';
+      t += ' — 이어서 해요';
+    }
+    document.getElementById('progBasics').textContent = t;
+    document.getElementById('progWords').textContent =
+      (w && WORDS[w.cat] && ((w.page | 0) > 0 || w.cat !== cats[0]))
+        ? '📌 지난번: ' + w.cat + ' ' + ((w.page | 0) + 1) + '쪽' : '';
+    document.getElementById('progQuiz').textContent =
+      (q && (q.n | 0) > 0)
+        ? '📌 지난 점수 ' + (q.last | 0) + '문제 · 가장 잘한 점수 ' + (q.best | 0) + '문제' : '';
+  }
 
   // ---------- 글씨 쓰기 연습 (필순 GIF) ----------
   const GIFS = window.STROKE_GIFS || {};
@@ -1325,13 +1432,16 @@
     document.getElementById('wpPrev').disabled = (curPage === 0);
     document.getElementById('wpNext').disabled = (curPage === pages - 1);
     document.getElementById('wordPager').style.display = (pages > 1) ? '' : 'none';
+    saveProgress('words', { cat: cat, page: curPage });
   }
   document.getElementById('wpPrev').addEventListener('click', () => renderWords(curCat, curPage - 1));
   document.getElementById('wpNext').addEventListener('click', () => renderWords(curCat, curPage + 1));
 
-  cats.forEach((cat, i) => {
+  // 지난번에 보던 갈래와 쪽에서 다시 시작한다
+  const savedWords = (prog.words && WORDS[prog.words.cat]) ? prog.words : { cat: cats[0], page: 0 };
+  cats.forEach(cat => {
     const t = document.createElement('button');
-    t.className = 'tab' + (i === 0 ? ' on' : '');
+    t.className = 'tab' + (cat === savedWords.cat ? ' on' : '');
     t.textContent = cat;
     t.addEventListener('click', () => {
       catRow.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
@@ -1339,7 +1449,8 @@
     });
     catRow.appendChild(t);
   });
-  renderWords(cats[0], 0);
+  renderWords(savedWords.cat, savedWords.page | 0);
+  updateHomeProgress();                   // 낱말 갈래(cats)까지 준비된 뒤에 첫 화면 "지난번"을 채운다
 
   // ---------- 퀴즈 ----------
   // 그림이 있는 낱말만 문제로 낸다 (같은 낱말이 여러 갈래에 있으면 처음 것만)
@@ -1442,6 +1553,12 @@
     else if (qScore >= 7) { msg = '아주 잘하셨어요! 조금만 더 하면 만점이에요. 👏'; gradeKey = 'g_good'; }
     else { msg = '잘하고 계세요. 천천히 다시 한번 해 볼까요? 🙂'; gradeKey = 'g_ok'; }
     rDesc.textContent = msg;
+    // 점수를 적어 둔다: 지난 점수, 지금까지 가장 잘한 점수, 해 본 횟수
+    const q = (prog.quiz && typeof prog.quiz === 'object') ? prog.quiz : {};
+    const best = Math.max(q.best | 0, qScore), n = (q.n | 0) + 1;
+    saveProgress('quiz', { last: qScore, best: best, n: n });
+    document.getElementById('rBest').textContent =
+      (n > 1) ? '지금까지 ' + n + '번 해 보셨고, 가장 잘한 점수는 ' + best + '문제예요.' : '';
     say(['sc_' + qScore, gradeKey],
       QUIZ_LEN + '문제 가운데 ' + qScore + '문제를 맞히셨어요. ' + msg.replace(/[👏🙂]/g, ''));
   }
