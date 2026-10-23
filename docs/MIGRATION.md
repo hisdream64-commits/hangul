@@ -63,6 +63,72 @@ python tools/verify.py https://urihangul.vercel.app/
 
 Azure 음성 키를 쓰신다면(4-2절) 그것도 PC마다 새로 넣어야 합니다. 키는 어디에도 적혀 있지 않습니다.
 
+### 0-1. 진행 중인 작업 이어받기 (2026-10-23 기준)
+
+11절 1순위 **①②④⑥** 수정이 **가지 `wip/voice-guide`** 에 절반쯤 되어 있습니다.
+`main` 에는 넣지 않았습니다 — 끝나지 않았고 시험도 안 했으므로, 합치면 학습자가
+반쯤 고친 앱을 보게 됩니다. 가지를 푸시해도 Vercel 은 미리보기만 만들고 운영 주소는
+바뀌지 않습니다.
+
+```bash
+git fetch
+git switch wip/voice-guide        # 여기서 이어갑니다
+```
+
+Claude 에게 맡기신다면 이렇게 말하면 됩니다:
+**"docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."**
+
+**된 것** (`index.html`, `tools/clips.py`, `tools/regen_audio_edge.py`)
+
+- ① 첫 화면 맨 위 **「🔊 소리로 안내 듣기」** 큰 단추(`.guide-btn`) · 메뉴 5개마다 작은 🔊(`.menu-spk`,
+  단추 안에 단추를 둘 수 없어 `.menu-item` 으로 나란히) · 읽을 말 14개를 **`window.UI_SAY`** 에
+  모아 두었고 `tools/clips.py` 가 같은 것을 읽습니다(`python tools/clips.py` → 1,240개) ·
+  읽는 동안 그 단추를 밝힘(`markSpeaking/clearSpeaking`, `sayFrom`)
+- ② `render('basics')` 가 `showLessonItem(true)` — 들어가자마자 ㄱ 소리
+- ④ `showNotice()` 가 글자와 함께 브라우저 음성(`ttsFallback`)으로도 읽음
+- ⑥ `go()` → `history.pushState`, `popstate` → `render(...)`. 기기 ◀가 첫 화면으로. 🏠는 `history.back()`
+- 덤: 첫 터치 무음(`unlockAudio`)이 진짜 소리를 끄지 않도록 `player.src === SILENT` 일 때만 멈춤 ·
+  `APP_VERSION = '1.2'` · `regen_audio_edge.py --missing`(대본에 새로 생긴 조각만 뒤 번호로 붙임)
+
+**남은 것** (이 순서대로)
+
+1. 「소리 모두 받기」 칸의 상태 안내를 소리로. `index.html` 끝부분 IIFE 안:
+   `setDone(n)` → `setDone(n, speak)` 로 바꾸고 단추를 눌러 끝났을 때만
+   `say([standalone ? 'ui_n_done' : 'ui_n_done_browser'], uiText(...))` ·
+   `needDownload()` 에 `card.dataset.say = 'ui_n_need_download'` (안내 단추가 이어서 읽음) ·
+   받기 시작 `ui_n_downloading` · 저장공간 부족 `ui_n_quota` · 인터넷 끊김 `ui_n_network_fail` ·
+   미리 받기 불가 `ui_n_nostorage`. **앱을 열 때 자동으로 말하게 하지 말 것** — 사용자 동작
+   없이는 재생이 막혀 `onPlayFail` 이 엉뚱한 안내를 띄웁니다.
+2. `python tools/regen_audio_edge.py --missing` — 새 조각 14개(`a1226`~`a1239`)를 지금 목소리로 녹음.
+   edge-tts 가 막혀 있으면 4-2절 Azure 로.
+3. `python tools/build_audio_bundle.py` → `python tools/stamp_sw.py`
+4. 로컬에서 손으로: 안내 단추·🔊가 말하면서 밝아지는지 · 기초 학습 들어갈 때 ㄱ이 바로 들리는지 ·
+   기기 ◀(또는 브라우저 뒤로)가 첫 화면으로 오는지 · 소리 파일을 막아 두고 빨간 안내가 **소리로도**
+   나는지 · 「소리 모두 받기」 흐름이 말을 하는지
+5. `python tools/verify.py <미리보기 주소>` → 커밋 → `git switch main && git merge wip/voice-guide`
+   → 푸시 → 6절 손 확인 → `git tag -a v1.2` (10절)
+
+> ⚠️ 묶음(`audio.bin`)이 바뀌면 이미 받아 둔 휴대폰은 길이가 안 맞아 **다시 받게 됩니다**
+> (`loadBundle` 의 `b.size !== B.total`). 아직 실사용자가 없어 괜찮지만, 배포 뒤에 또 바꿀
+> 일이 생기면 안내 조각만 따로 묶는 방법을 생각해야 합니다.
+
+### 0-2. 같은 저장소에 있는 다른 작업 — 고급반
+
+2026-10-23 다른 세션이 **고급반**을 이 저장소에 추가했습니다(`main` 커밋 `d88d9cf`, `b6a3f29`).
+초급자반 파일(`index.html`, `sw.js`, `audio/`, `tools/*.py`)은 건드리지 않았습니다.
+
+| 어디 | 무엇 |
+|---|---|
+| `go/` | 고급반 앱 `go/hangul-go.html`, 소리 375개 `go/audio/`, 도구 `go/tools/`, **인수인계 문서 `go/MIGRATION.md`** |
+| `gyeopbatchim.html`, `jung.html` | 받아쓰기 연습 (`tools/dictation/` 로 만듦, 설명은 `docs/DICTATION.md`) |
+
+이 문서는 **초급자반만** 다룹니다. 고급반은 `go/MIGRATION.md` 를 보세요.
+
+> ⚠️ 이 PC에는 그 작업의 **미추적 파일**이 남아 있습니다 — 루트의 `MIGRATION.md`(고급반 옮기기
+> 문서 초안, `go/MIGRATION.md` 와 내용이 다름)와 `audio/v*.mp3` 375개(`go/audio/` 로 옮기고
+> 남은 사본, 내용 동일). **커밋되지 않은 것은 다른 PC로 가지 않습니다.** 루트 `MIGRATION.md` 가
+> 더 새 것이라면 그 세션에서 `go/` 로 옮겨 커밋해야 합니다. 초급자반 쪽에서는 손대지 않았습니다.
+
 ---
 
 ## 1. 앱 개요
@@ -119,8 +185,12 @@ hangul/
 ├─ poster.pdf                  83.9 KB  인쇄용 A4 안내문
 ├─ README.md
 ├─ docs/MIGRATION.md                    이 문서
-└─ tools/                               관리용 스크립트 (배포 대상 아님)
-                              합계 약 21 MB (실제 내려받는 건 10.18 MB)
+├─ tools/                               관리용 스크립트 (배포 대상 아님)
+│                             초급자반 합계 약 21 MB (실제 내려받는 건 10.18 MB)
+│
+├─ go/                                  고급반 — 별도 문서 go/MIGRATION.md (0-2절)
+├─ gyeopbatchim.html, jung.html         받아쓰기 연습 (0-2절)
+└─ tools/dictation/, docs/DICTATION.md  받아쓰기 만드는 도구와 설명
 ```
 
 **index.html 안에 인라인된 데이터**
@@ -463,7 +533,7 @@ git switch -c fix-1.1 v1.1       # 1.1 에서 가지 쳐서 작업
 
 대상을 "한글을 모르는 성인, 집에서 혼자"로 놓고 코드를 전부 검토한 결과입니다.
 기준은 하나: **글을 못 읽는 사람이 혼자서, 다음에 무엇을 눌러야 할지 알 수 있는가.**
-아직 고치지 않았습니다. 고칠 때는 `v1.1` 에서 가지를 치세요.
+①②④⑥은 가지 `wip/voice-guide` 에서 진행 중입니다(0-1절). 나머지는 아직 손대지 않았습니다.
 
 **1순위 — 여기서 막히면 그걸로 끝**
 
