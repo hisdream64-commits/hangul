@@ -95,7 +95,7 @@ Push-Location $Dest
 # 읽을 말 목록이 앱과 어긋나지 않았는지 (node 가 있을 때만)
 if (Get-Command node -ErrorAction SilentlyContinue) {
     $tmp = Join-Path $env:TEMP 'used-check.json'
-    cmd /c "node go\tools\extract_used.js go\hangul-go.html `"$tmp`" 2>&1" | Out-Null
+    cmd /c "node go\tools\extract_used.js go\index.html `"$tmp`" 2>&1" | Out-Null
     if (Test-Path $tmp) {
         $a = (Get-Content $tmp -Raw -Encoding UTF8 | ConvertFrom-Json).Count
         if ($a -eq $want) { Ok "읽을 말 $a 개 — 목록과 앱이 맞습니다" }
@@ -124,7 +124,7 @@ Write-Host "  3) 첫마디로 이렇게 말하세요:" -ForegroundColor Gray
 Write-Host '     "go/MIGRATION.md 를 읽고 한글 교실 고급반 작업을 이어서 해줘."' -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  화면을 보려면:  cd $Go ; python -m http.server 8000"
-Write-Host "    그 뒤 브라우저에서  http://localhost:8000/hangul-go.html"
+Write-Host "    그 뒤 브라우저에서  http://localhost:8000/index.html"
 Write-Host "    🔊 를 눌러 성우 목소리가 나오면 제대로 온 것입니다."
 Write-Host ""
 Write-Host "  ※ 제 12 과 「소리 내어 읽기」의 녹음은 http://localhost 또는 https 에서만 됩니다." -ForegroundColor Gray

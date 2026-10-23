@@ -3,6 +3,7 @@
 이 문서 하나로 **새 노트북에 작업 환경을 깔고, 고급반 웹앱 작업을 이어서** 할 수 있도록 적었습니다.
 
 - 만든 것: **한글 교실 고급반** (기초반 → 중급반 다음 과정)
+- 운영 주소: **https://urihangul.vercel.app/go/**  (기초반은 같은 주소의 `/`)
 - 쓰던 컴퓨터: Windows 11, 사용자 `Jb`, Git Bash
 - 갱신일: 2026-10-23
 - 함께 받는 것: `hangul-go.zip` (앱 + 음성 375개 + 도구 + 이 문서)
@@ -77,7 +78,7 @@ git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + �
 
 ```bash
 cd ~/projects/hangul/go && npx -y http-server -p 8777 -c-1
-# 브라우저에서 http://localhost:8777/hangul-go.html
+# 브라우저에서 http://localhost:8777/index.html
 ```
 
 ---
@@ -199,8 +200,15 @@ npx -y http-server -p 8777 -c-1
 **두 컴퓨터에서 같이 고치지 마세요.** 음성 mp3 는 합쳐지지 않으므로, 한쪽에서 끝내고
 푸시한 다음 다른 쪽에서 받는 순서를 지키는 편이 안전합니다.
 
-배포는 기초반처럼 Vercel 을 쓰며 `https://<주소>/go/hangul-go.html` 로 열립니다.
-(아직 `vercel.json` 에 `go/` 용 캐시 설정은 넣지 않았습니다.)
+배포는 기초반과 **같은 Vercel 프로젝트**가 합니다. `main` 에 푸시하면 몇 분 안에
+`https://urihangul.vercel.app/go/` 에 반영됩니다. 따로 할 일은 없습니다.
+
+`vercel.json` 에 `go/` 몫 두 줄이 들어 있습니다.
+
+| 경로 | 캐시 |
+|---|---|
+| `/go/audio/(.*)` | 1년 · `immutable` — 파일 이름이 내용 해시라 바뀌면 이름이 바뀝니다 |
+| `/go/index.html` | `max-age=0, must-revalidate` — 고치면 바로 반영됩니다 |
 
 > **마이크는 https 에서만 열립니다.** 「소리 내어 읽기」 과정이 동작하려면 반드시
 > https 주소(또는 localhost)여야 합니다. 파일을 더블클릭해 `file://` 로 열면 녹음이
@@ -212,7 +220,7 @@ npx -y http-server -p 8777 -c-1
 
 ```
 go/
-├─ hangul-go.html        172 KB   앱 전체 (HTML+CSS+JS+배움자료 인라인)
+├─ index.html        172 KB   앱 전체 (HTML+CSS+JS+배움자료 인라인)
 ├─ audio/                7.2 MB   성우 음성 375개 (v<해시>.mp3)
 ├─ tools/
 │   ├─ extract_used.js            앱이 읽는 말 뽑기
@@ -278,7 +286,7 @@ go/
 **말을 고치거나 더했을 때 — 세 줄이면 끝납니다**
 
 ```bash
-node tools/extract_used.js hangul-go.html tools/used.json   # 1) 읽을 말 다시 뽑기
+node tools/extract_used.js index.html tools/used.json   # 1) 읽을 말 다시 뽑기
 python tools/make_audio.py                                   # 2) 빠진 것만 받고 안 쓰는 것 지우기
 python tools/inject_map.py                                   # 3) 지도를 html 에 넣기
 ```

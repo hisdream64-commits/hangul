@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# inject_map.py — tools/audio_map.json 을 hangul-go.html 안에 window.AUDIO 로 넣는다.
+# inject_map.py — tools/audio_map.json 을 index.html 안에 window.AUDIO 로 넣는다.
 #
 #   python tools/inject_map.py
 #
@@ -14,7 +14,7 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-HTML = os.path.join(ROOT, "hangul-go.html")
+HTML = os.path.join(ROOT, "index.html")
 MAP = os.path.join(HERE, "audio_map.json")
 
 try:
@@ -46,7 +46,7 @@ block = u"<script>window.AUDIO = %s;</script>\n" % payload
 s = re.sub(r"<script>window\.AUDIO = \{.*?\};</script>\n?", "", s, flags=re.S)
 anchor = u"<script>\n/* ===================== 소리 들려 주기"
 if s.count(anchor) != 1:
-    raise SystemExit("hangul-go.html 에서 소리 스크립트 자리를 찾지 못했습니다.")
+    raise SystemExit("index.html 에서 소리 스크립트 자리를 찾지 못했습니다.")
 s = s.replace(anchor, block + anchor)
 io.open(HTML, "w", encoding="utf-8").write(s)
-print("소리 지도 %d개를 hangul-go.html 에 넣었습니다. (%.1f KB)" % (len(amap), len(payload) / 1024))
+print("소리 지도 %d개를 index.html 에 넣었습니다. (%.1f KB)" % (len(amap), len(payload) / 1024))

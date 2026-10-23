@@ -1,19 +1,19 @@
 /* extract_used.js — 앱이 실제로 소리 내어 읽는 말만 뽑아 tools/used.json 에 적는다.
  *
- *   node tools/extract_used.js hangul-go.html tools/used.json
+ *   node tools/extract_used.js index.html tools/used.json
  *
  * 읽지 않는 말(오답 보기 등)은 일부러 뺍니다. 음성을 만들어 봐야 쓰이지 않습니다.
  * 뽑는 규칙이 앱의 speak() 호출과 어긋나면 그 말만 기기 음성으로 새어 나가니,
  * 화면 쪽 문구를 고쳤으면 아래 UI 목록도 같이 고쳐 주세요.
  */
 const fs = require('fs'), vm = require('vm');
-const FILE = process.argv[2] || 'hangul-go.html';
+const FILE = process.argv[2] || 'index.html';
 const OUT = process.argv[3] || 'tools/used.json';
 
 const html = fs.readFileSync(FILE, 'utf8');
 const block = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1])
   .find(b => b.indexOf('const MODULES') >= 0);
-if (!block) { console.error('hangul-go.html 에서 MODULES 를 찾지 못했습니다.'); process.exit(1); }
+if (!block) { console.error('index.html 에서 MODULES 를 찾지 못했습니다.'); process.exit(1); }
 
 const ctx = { console };
 vm.createContext(ctx);
