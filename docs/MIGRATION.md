@@ -69,9 +69,12 @@ Azure 음성 키를 쓰신다면(4-2절) 그것도 PC마다 새로 넣어야 합
 남은 것은 운영 주소에 내는 일뿐입니다. 가지를 푸시해도 Vercel 은 미리보기만 만들고
 운영 주소는 바뀌지 않으므로, 아래 순서대로 사람이 확인한 뒤 `main` 에 합치세요.
 
+> 2026-10-23 클라우드 세션에서 `wip/voice-guide` 에 그 사이 `main` 에 들어온 고급반 커밋까지 합쳐
+> **가지 `main-ta7yke`** 로 푸시해 두었습니다(`wip/voice-guide` 는 그대로 남아 있음). 이어갈 때는 이 가지에서:
+
 ```bash
 git fetch
-git switch wip/voice-guide        # 여기서 이어갑니다
+git switch main-ta7yke            # 여기서 이어갑니다 (= wip/voice-guide + main)
 ```
 
 **된 것** (`index.html`, `sw.js`, `audio/`, `tools/clips.py`, `tools/regen_audio_edge.py`, `tools/verify.py`)
@@ -98,9 +101,13 @@ git switch wip/voice-guide        # 여기서 이어갑니다
 
 **남은 것** (이 순서대로)
 
-1. 가지 푸시 → Vercel 미리보기 주소에서 `python tools/verify.py <미리보기 주소>`
+1. ✅ 가지 푸시 → Vercel 미리보기가 만들어짐(GitHub 커밋 상태 Vercel ✔). 미리보기 주소는
+   Vercel 규칙대로라면 `https://hangul-git-main-ta7yke-hisdream64-7112.vercel.app/` (추정 — 정확한
+   주소는 GitHub 커밋 옆 ✔ → Vercel 화면에서 확인). **PC에서**
+   `python tools/verify.py https://hangul-git-main-ta7yke-hisdream64-7112.vercel.app/` 로 전수 확인
+   (클라우드 세션은 `*.vercel.app` 접속이 막혀 있어 로컬 서버로만 ✅ 확인했음 — 1,240개, 묶음 11,226,464 바이트)
 2. **실제 휴대폰**에서 미리보기 주소로 6절 손 확인 (특히 🔊 단추가 안드로이드·아이폰에서 소리를 내는지)
-3. `git switch main && git merge wip/voice-guide` → 푸시 → 운영 주소에서 6절 손 확인 → `git tag -a v1.2` (10절)
+3. `git switch main && git merge main-ta7yke` → 푸시 → 운영 주소에서 6절 손 확인 → `git tag -a v1.2` (10절)
    → 이 문서 맨 위 "현재 판"을 1.2 로
 
 > ⚠️ 묶음(`audio.bin`)이 바뀌었으므로 이미 받아 둔 휴대폰은 길이가 안 맞아 **다시 받게 됩니다**
