@@ -19,7 +19,7 @@
 거의 모든 것이 GitHub·Vercel 에 있습니다. 새 PC에서 할 일은 다섯 가지입니다.
 
 ```bash
-# 1) 소스 받기 — 소리 1,226개와 묶음까지 모두 들어 있습니다 (약 21MB)
+# 1) 소스 받기 — 소리 1,240개와 묶음까지 모두 들어 있습니다 (약 22MB)
 git clone https://github.com/hisdream64-commits/hangul.git
 cd hangul
 
@@ -34,7 +34,7 @@ gh auth login --web --git-protocol https
 pip install -r tools/requirements.txt
 
 # 5) 제대로 받아졌는지
-python tools/clips.py                         # "조각 1,226개, 글자 3,872자" 가 나오면 정상
+python tools/clips.py                         # "조각 1,240개, 글자 4,607자" 가 나오면 정상
 python tools/verify.py https://urihangul.vercel.app/
 ```
 
@@ -65,20 +65,16 @@ Azure 음성 키를 쓰신다면(4-2절) 그것도 PC마다 새로 넣어야 합
 
 ### 0-1. 진행 중인 작업 이어받기 (2026-10-23 기준)
 
-11절 1순위 **①②④⑥** 수정이 **가지 `wip/voice-guide`** 에 절반쯤 되어 있습니다.
-`main` 에는 넣지 않았습니다 — 끝나지 않았고 시험도 안 했으므로, 합치면 학습자가
-반쯤 고친 앱을 보게 됩니다. 가지를 푸시해도 Vercel 은 미리보기만 만들고 운영 주소는
-바뀌지 않습니다.
+11절 1순위 **①②④⑥** 수정이 **가지 `wip/voice-guide`** 에서 **끝났습니다**(아래 "된 것").
+남은 것은 운영 주소에 내는 일뿐입니다. 가지를 푸시해도 Vercel 은 미리보기만 만들고
+운영 주소는 바뀌지 않으므로, 아래 순서대로 사람이 확인한 뒤 `main` 에 합치세요.
 
 ```bash
 git fetch
 git switch wip/voice-guide        # 여기서 이어갑니다
 ```
 
-Claude 에게 맡기신다면 이렇게 말하면 됩니다:
-**"docs/MIGRATION.md 0-1절을 읽고, wip/voice-guide 가지에서 남은 일을 이어서 해줘."**
-
-**된 것** (`index.html`, `tools/clips.py`, `tools/regen_audio_edge.py`)
+**된 것** (`index.html`, `sw.js`, `audio/`, `tools/clips.py`, `tools/regen_audio_edge.py`, `tools/verify.py`)
 
 - ① 첫 화면 맨 위 **「🔊 소리로 안내 듣기」** 큰 단추(`.guide-btn`) · 메뉴 5개마다 작은 🔊(`.menu-spk`,
   단추 안에 단추를 둘 수 없어 `.menu-item` 으로 나란히) · 읽을 말 14개를 **`window.UI_SAY`** 에
@@ -87,28 +83,27 @@ Claude 에게 맡기신다면 이렇게 말하면 됩니다:
 - ② `render('basics')` 가 `showLessonItem(true)` — 들어가자마자 ㄱ 소리
 - ④ `showNotice()` 가 글자와 함께 브라우저 음성(`ttsFallback`)으로도 읽음
 - ⑥ `go()` → `history.pushState`, `popstate` → `render(...)`. 기기 ◀가 첫 화면으로. 🏠는 `history.back()`
+- 「소리 모두 받기」 칸의 상태를 소리로(`tell(key, speak)`): 받기 시작 `ui_n_downloading` ·
+  끝 `ui_n_done`/`ui_n_done_browser` · 저장공간 부족 `ui_n_quota` · 끊김 `ui_n_network_fail` ·
+  미리 받기 불가 `ui_n_nostorage`. 앱을 열 때는 말하지 않고 `card.dataset.say` 에만 적어 두어
+  안내 단추가 이어서 읽습니다(`ui_n_need_download`). "약 10MB" 글도 묶음 크기에서 계산합니다.
+- 새 조각 14개(`a1226`~`a1239`)를 같은 목소리(edge-tts, SunHi, -10%)로 녹음 → 묶음 다시 만듦
+  (`audio.bin` 10.71MB) → `sw.js` 지문 갱신. `tools/verify.py` 는 기대 개수를 1,226 고정이 아니라
+  대본(`clips.py`)에서 읽습니다.
 - 덤: 첫 터치 무음(`unlockAudio`)이 진짜 소리를 끄지 않도록 `player.src === SILENT` 일 때만 멈춤 ·
   `APP_VERSION = '1.2'` · `regen_audio_edge.py --missing`(대본에 새로 생긴 조각만 뒤 번호로 붙임)
+- 로컬(`python -m http.server`)에서 확인함: 안내 단추·🔊가 말하면서 밝아짐 · 기초 학습 들어갈 때 ㄱ이
+  바로 남 · 브라우저 뒤로가 첫 화면으로 옴 · 소리 파일을 막으면 빨간 안내가 소리로도 남 ·
+  「소리 모두 받기」가 받는 중·끝났음을 말함 · `verify.py` ✅
 
 **남은 것** (이 순서대로)
 
-1. 「소리 모두 받기」 칸의 상태 안내를 소리로. `index.html` 끝부분 IIFE 안:
-   `setDone(n)` → `setDone(n, speak)` 로 바꾸고 단추를 눌러 끝났을 때만
-   `say([standalone ? 'ui_n_done' : 'ui_n_done_browser'], uiText(...))` ·
-   `needDownload()` 에 `card.dataset.say = 'ui_n_need_download'` (안내 단추가 이어서 읽음) ·
-   받기 시작 `ui_n_downloading` · 저장공간 부족 `ui_n_quota` · 인터넷 끊김 `ui_n_network_fail` ·
-   미리 받기 불가 `ui_n_nostorage`. **앱을 열 때 자동으로 말하게 하지 말 것** — 사용자 동작
-   없이는 재생이 막혀 `onPlayFail` 이 엉뚱한 안내를 띄웁니다.
-2. `python tools/regen_audio_edge.py --missing` — 새 조각 14개(`a1226`~`a1239`)를 지금 목소리로 녹음.
-   edge-tts 가 막혀 있으면 4-2절 Azure 로.
-3. `python tools/build_audio_bundle.py` → `python tools/stamp_sw.py`
-4. 로컬에서 손으로: 안내 단추·🔊가 말하면서 밝아지는지 · 기초 학습 들어갈 때 ㄱ이 바로 들리는지 ·
-   기기 ◀(또는 브라우저 뒤로)가 첫 화면으로 오는지 · 소리 파일을 막아 두고 빨간 안내가 **소리로도**
-   나는지 · 「소리 모두 받기」 흐름이 말을 하는지
-5. `python tools/verify.py <미리보기 주소>` → 커밋 → `git switch main && git merge wip/voice-guide`
-   → 푸시 → 6절 손 확인 → `git tag -a v1.2` (10절)
+1. 가지 푸시 → Vercel 미리보기 주소에서 `python tools/verify.py <미리보기 주소>`
+2. **실제 휴대폰**에서 미리보기 주소로 6절 손 확인 (특히 🔊 단추가 안드로이드·아이폰에서 소리를 내는지)
+3. `git switch main && git merge wip/voice-guide` → 푸시 → 운영 주소에서 6절 손 확인 → `git tag -a v1.2` (10절)
+   → 이 문서 맨 위 "현재 판"을 1.2 로
 
-> ⚠️ 묶음(`audio.bin`)이 바뀌면 이미 받아 둔 휴대폰은 길이가 안 맞아 **다시 받게 됩니다**
+> ⚠️ 묶음(`audio.bin`)이 바뀌었으므로 이미 받아 둔 휴대폰은 길이가 안 맞아 **다시 받게 됩니다**
 > (`loadBundle` 의 `b.size !== B.total`). 아직 실사용자가 없어 괜찮지만, 배포 뒤에 또 바꿀
 > 일이 생기면 안내 조각만 따로 묶는 방법을 생각해야 합니다.
 
@@ -179,8 +174,8 @@ hangul/
 ├─ .nojekyll                      0 B   GitHub Pages 로 되돌릴 때를 위해 남겨 둠
 ├─ icon-180/192/512/512-maskable.png    앱 아이콘
 ├─ audio/
-│   ├─ a0.mp3 … a1225.mp3    10.18 MB  성우 음성 1,226개 (인터넷 재생용)
-│   └─ audio.bin             10.18 MB  위 1,226개를 이어 붙인 묶음 (내려받기용)
+│   ├─ a0.mp3 … a1239.mp3    10.71 MB  성우 음성 1,240개 (인터넷 재생용)
+│   └─ audio.bin             10.71 MB  위 1,240개를 이어 붙인 묶음 (내려받기용)
 ├─ qr.png                       9.7 KB  QR 코드
 ├─ poster.pdf                  83.9 KB  인쇄용 A4 안내문
 ├─ README.md
@@ -237,14 +232,14 @@ hangul/
 `tools/` 에 있습니다. 배포되지는 않습니다.
 
 ```bash
-python tools/clips.py                          # 대본 1,226개 확인 (index.html 이 원본)
+python tools/clips.py                          # 대본 1,240개 확인 (index.html 이 원본)
 python tools/sample_edge.py                    # 음질 비교용 시험 음성 (무료)
 python tools/regen_audio_edge.py --all --yes   # edge-tts 로 전체 재생성 (무료)
 python tools/regen_audio_azure.py --sample     # 같은 것을 Azure 로 (키 필요)
 python tools/build_audio_bundle.py             # audio/*.mp3 -> audio/audio.bin
 python tools/stamp_sw.py                       # sw.js 캐시 지문 갱신
 python tools/regen_qr_poster.py https://주소/    # QR·안내문·README 주소 갱신
-python tools/verify.py https://주소/             # 배포된 소리 1,226개 전수 확인
+python tools/verify.py https://주소/             # 배포된 소리 1,240개 전수 확인
 ```
 
 **손대고 나서 꼭 하는 순서**
@@ -269,7 +264,7 @@ git add -A && git commit -m "..." && git push
 **음질·용량을 바꾸거나 낱말·안내문을 추가할 때만** 필요합니다.
 
 **대본은 따로 없습니다.** `index.html` 안의 자료(`JAUM`/`MOUM`/`BATCHIM`/`WORDS_DATA`)가
-유일한 원본이고, `tools/clips.py` 가 그것을 읽어 조각 1,226개(**3,872자**)를 만듭니다.
+유일한 원본이고, `tools/clips.py` 가 그것을 읽어 조각 1,240개(**4,607자**)를 만듭니다.
 낱말을 추가하려면 `index.html` 의 자료를 고치세요. 안내문처럼 자료 밖의 말을 소리로
 만들려면 `clips.py` 의 `build()` 끝부분에 조각을 추가하면 됩니다.
 
@@ -353,7 +348,7 @@ python tools/regen_audio_azure.py --forget-key                # 끝난 뒤 키 �
 
 ## 5. 소리 키 규칙
 
-낱말을 추가하거나 코드를 고칠 때 필요한 대응표입니다. 총 1,226개.
+낱말을 추가하거나 코드를 고칠 때 필요한 대응표입니다. 총 1,240개.
 
 | 접두사 | 개수 | 뜻 | 예 |
 |---|---|---|---|
@@ -382,7 +377,7 @@ python tools/regen_audio_azure.py --forget-key                # 끝난 뒤 키 �
 python tools/verify.py https://urihangul.vercel.app/
 ```
 
-판 번호, 소리 키 1,226개, 낱개 파일 1,226개, 묶음 길이, 묶음에서 잘라낸 조각이 낱개
+판 번호, 소리 키 1,240개(대본 수와 비교), 낱개 파일 1,240개, 묶음 길이, 묶음에서 잘라낸 조각이 낱개
 파일과 같은지까지 봅니다.
 
 손으로 확인할 것:
@@ -392,7 +387,7 @@ python tools/verify.py https://urihangul.vercel.app/
 - [ ] 3단계에서 「천천히 합쳐 듣기」가 마지막에 3배속으로 뭉쳐진다
 - [ ] 4단계에서 ㄱ 받침이 **"⚠️ 예외! 「기역」이지만 소리는 「윽」"** 으로 나온다
 - [ ] 낱말 카드에 🔊 표시가 있고, 누르면 아래에 「다시 듣기」가 뜬다
-- [ ] 「소리 모두 받기」 후 제목이 **"✅ 인터넷 없이 쓸 수 있어요 (소리 1226개)"** 가 된다
+- [ ] 「소리 모두 받기」 후 제목이 **"✅ 인터넷 없이 쓸 수 있어요 (소리 1240개)"** 가 되고, 같은 말이 **소리로도** 나온다
 - [ ] 비행기 모드로 바꾼 뒤에도 앱이 열리고 소리가 난다
 
 ---
@@ -533,7 +528,7 @@ git switch -c fix-1.1 v1.1       # 1.1 에서 가지 쳐서 작업
 
 대상을 "한글을 모르는 성인, 집에서 혼자"로 놓고 코드를 전부 검토한 결과입니다.
 기준은 하나: **글을 못 읽는 사람이 혼자서, 다음에 무엇을 눌러야 할지 알 수 있는가.**
-①②④⑥은 가지 `wip/voice-guide` 에서 진행 중입니다(0-1절). 나머지는 아직 손대지 않았습니다.
+①②④⑥은 가지 `wip/voice-guide` 에서 끝났고 `main` 합치기만 남았습니다(0-1절). 나머지는 아직 손대지 않았습니다.
 
 **1순위 — 여기서 막히면 그걸로 끝**
 

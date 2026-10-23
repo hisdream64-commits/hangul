@@ -2,13 +2,17 @@
 #
 #   python tools/verify.py https://새주소/
 #
-# 표본만 보면 놓칩니다. 1,226개를 모두 확인합니다.
+# 표본만 보면 놓칩니다. 대본(tools/clips.py)에 있는 조각을 모두 확인합니다.
 
 import json
+import os
 import re
 import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import clips                                    # noqa: E402  (대본의 조각 수가 기준)
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")   # 윈도우 명령창에서 한글이 깨지지 않게
@@ -33,8 +37,9 @@ print(f"판 번호 {mver.group(1) if mver else '없음 ⚠️'}")
 if not mver:
     ok = False
 
-print(f"소리 키 {len(AUDIO)}개 (1226이어야 정상)")
-if len(AUDIO) != 1226:
+EXPECT = len(clips.build())                     # 2026-10 안내문 14개를 더해 1,240개
+print(f"소리 키 {len(AUDIO)}개 ({EXPECT}이어야 정상)")
+if len(AUDIO) != EXPECT:
     ok = False
 
 
@@ -74,7 +79,8 @@ else:
         for L in BIN["lens"]:
             offs.append((at, L))
             at += L
-        picks = [0, 1, 2, 611, 612, 613, 1222, 1223, 1224, 1225, 400, 900]
+        last = len(BIN["lens"]) - 1
+        picks = [0, 1, 2, 611, 612, 613, 1222, 1223, 1224, 1225, 400, 900, last - 1, last]
         diff = []
         for i in picks:
             o, L = offs[i]
