@@ -15,21 +15,49 @@
 
 | 갈래 | 파일 | 상태 |
 |---|---|---|
-| 받아쓰기 중급반 | `jung.html` | 완성 · 기초반 메뉴에 **아직 연결 안 됨** |
-| 겹받침 쓰기 연습 | `gyeopbatchim.html` | 완성 · 받아쓰기 첫 화면에서 들어갑니다 |
-| 3단계 생활 문장 음성 12개 | — | **아직 안 만듦** (5-1) |
-| 오프라인(묶음) 연동 | — | **안 됨** (5-2) |
+| 받아쓰기 중급반 | `jung.html` | 완성 · 기초반 첫 화면 메뉴에서 들어갑니다 |
+| 겹받침 쓰기 연습 | `gyeopbatchim.html` | 완성 · 기초반·받아쓰기 양쪽에서 들어갑니다 |
+| 오프라인(묶음) 연동 | — | 됩니다 · 브라우저로 확인함 |
+| 3단계 생활 문장 음성 12개 | — | **아직 안 만듦** · 만들 준비는 끝 (5-1) |
+
+기초반 소리 안내(`wip/voice-guide`, 판 1.2)와 함께 **`main` 에 올라가 있습니다.**
+운영 주소는 https://urihangul.vercel.app/ 입니다.
 
 소리를 파일 안에 넣어 둔 미리보기입니다. 저장소를 받지 않아도 열립니다. (계정 로그인 필요)
 
 - 받아쓰기 교실 — https://claude.ai/artifact/LskW33gytt1gqGRQkbPwKt
 - 겹받침 쓰기 연습 — https://claude.ai/artifact/1Ds7L6UR7yTd358pkU1KFi
 
-### 새 PC에서 시작하신다면
+### 내 PC에서 이어가기
+
+이미 `~/projects/hangul` 이 있으시면 **두 줄**이면 됩니다.
+
+```bash
+cd ~/projects/hangul
+git switch main && git pull
+```
+
+그 뒤 Claude 앱 → Code 탭 → 그 폴더를 고르고, 첫마디로
+**"받아쓰기 중급반을 이어서 해줘."** 하시면 됩니다.
+저장소 맨 위에 **`CLAUDE.md`** 가 있어 규칙(소리를 가공하지 말 것 · 고친 뒤
+`stamp_sw.py` · 커밋은 경로 지정)과 읽을 문서는 Claude 가 알아서 봅니다.
+
+제대로 왔는지 보려면:
+
+```bash
+cd tools/dictation && node build.js ../../index.html   # 「녹음이 필요한 낱말 0 개」
+cd ../.. && python tools/dictation/check_offline.py    # 비행기 모드 소리까지 확인
+python -m http.server 8000                             # http://localhost:8000/
+```
+
+첫 화면 메뉴 맨 아래에 **📝 받아쓰기 교실 · 🧩 겹받침 쓰기 연습** 두 줄이 보이면 맞습니다.
+
+### 처음 쓰는 PC라면
 
 `tools/setup-newpc.ps1` 한 번이면 끝납니다. 필요한 프로그램(Node 포함)을 깔고,
-저장소를 받고, **중급반이 제대로 왔는지 다시 만들어 확인까지** 합니다.
-자세한 것은 [MIGRATION.md 0절](MIGRATION.md#0-새-pc에서-이어서-작업하기).
+저장소를 받고, **중급반이 제대로 왔는지 다시 만들어 확인까지** 합니다. 중급반 가지가
+따로 있으면 그것도 알려 줍니다. 자세한 것은
+[MIGRATION.md 0절](MIGRATION.md#0-새-pc에서-이어서-작업하기).
 
 ```powershell
 irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
@@ -65,8 +93,13 @@ gyeopbatchim.html                     겹받침 쓰기 연습 (만들어진 결�
 tools/dictation/build.js              위 둘을 만드는 스크립트 ← 고칠 곳은 여기
 tools/dictation/jung.template.html         화면·동작 원본
 tools/dictation/gyeopbatchim.template.html 화면·동작 원본
-tools/dictation/녹음이-필요한-말.txt       아직 녹음이 없는 문장 12개
+tools/dictation/check_offline.py      비행기 모드에서 소리가 나는지 확인 (브라우저로)
+tools/dictation/녹음이-필요한-말.txt       아직 녹음이 없는 문장 12개 (build.js 가 씁니다)
+tools/dictation/문장목록.json              3단계 문장 목록 (build.js 가 씁니다 · clips.py 가 읽습니다)
+CLAUDE.md                            작업 규칙 (Claude 가 세션 시작 때 읽습니다)
 ```
+
+> 뒤의 두 파일은 **손으로 고치지 마세요.** `build.js` 를 돌릴 때마다 다시 쓰입니다.
 
 > ⚠️ `jung.html` 과 `gyeopbatchim.html` 은 **`index.html` 바로 옆**에 두어야 합니다.
 > 소리를 `audio/aN.mp3` 상대경로로 찾기 때문에, 하위 폴더로 옮기면 소리가 나지 않습니다.
@@ -80,6 +113,30 @@ tools/dictation/녹음이-필요한-말.txt       아직 녹음이 없는 문장
 재생은 기초반과 **똑같은 방식**입니다. `<audio>` 하나로 그냥 틀고, 음색을 다듬거나
 크기를 키우거나 **빠르기를 바꾸지 않습니다.** 손대면 기초반과 다른 목소리가 됩니다.
 합성 음성(브라우저 TTS)은 한 줄도 쓰지 않습니다 — 녹음이 없는 말은 소리 단추를 아예 내보내지 않습니다.
+
+### 오프라인에서도 소리가 납니다
+
+기초반에서 「소리 모두 받기」를 누르면 소리가 낱개 mp3 가 아니라 `audio/audio.bin`
+**한 덩어리**로 저장됩니다. 그래서 낱개 주소(`audio/aN.mp3`)로 틀면 비행기 모드에서
+소리가 나지 않습니다. 중급반도 기초반과 똑같이, 저장해 둔 묶음을 열어 두고
+필요한 자리만 `blob.slice()` 로 잘라 씁니다. **자리를 잘라 내기만 하므로 목소리는
+조금도 달라지지 않습니다.**
+
+자리표는 `build.js` 가 `window.AUDIO_BIN` 을 읽어 쓰는 소리 127개만큼만 심습니다.
+묶음이 없으면(아직 안 받았거나 인터넷이 있으면) 예전처럼 낱개 주소로 재생합니다.
+
+**인터넷이 있는 PC에서 🔊 를 눌러 보는 것으로는 이게 멀쩡한지 알 수 없습니다.**
+그 상태를 실제로 만들어 보는 확인 도구를 넣어 두었습니다.
+
+```bash
+pip install playwright && python -m playwright install chromium   # 처음 한 번
+python tools/dictation/check_offline.py
+```
+
+네 가지를 봅니다 — 묶음에서 잘라낸 127조각이 낱개 mp3 와 **바이트 단위로** 같은가 ·
+인터넷이 있으면 낱개 주소로 재생하는가 · 묶음을 받아 둔 뒤 비행기 모드에서 `blob:` 로
+소리가 읽히는가 · 묶음이 없는 비행기 모드에서는 안 나는가(그게 정상).
+`playwright` 가 없으면 바이트 비교만 하고 넘어갑니다.
 
 ---
 
@@ -95,9 +152,11 @@ cd tools/dictation && node build.js ../../index.html && mv -f jung.html gyeopbat
 Node 18 이상이 필요합니다. 결과는 이렇게 나옵니다.
 
 ```
-jung.html 45KB
-gyeopbatchim.html 41KB
+jung.html 50KB
+gyeopbatchim.html 46KB
 녹음이 필요한 낱말 0 개 / 문장 12 개
+통문장 받아쓰기  0 / 12 문장
+오프라인 소리  묶음 자리표 127개 넣었습니다 (audio/audio.bin)
 ```
 
 **「녹음이 필요한 낱말」이 0이 아니면 멈추세요.** 그 낱말은 `index.html` 자료에 없어서
@@ -121,65 +180,116 @@ cd tools/dictation && node build.js ../../index.html --preview
 
 ---
 
-## 4. 기초반에 연결하기
+## 4. 기초반에 연결하기 (끝났습니다)
 
-### 4-1. 메뉴에 넣기
+### 4-1. 메뉴
 
-`index.html` 첫 화면 메뉴에 두 줄을 더하면 어르신이 찾아 들어가실 수 있습니다.
-`index.html` 을 고친 뒤에는 **반드시** 캐시 지문을 새로 찍으세요.
+`index.html` 첫 화면 메뉴 맨 아래 두 줄이 들어가 있습니다. 다른 메뉴와 달리
+화면을 바꾸는 단추가 아니라 **주소로 넘어가는 `<a>`** 입니다.
+
+```html
+<a class="menu-btn" href="jung.html">…받아쓰기 교실 (중급)…</a>
+<a class="menu-btn" href="gyeopbatchim.html">…겹받침 쓰기 연습…</a>
+```
+
+그래서 화면 바꾸기 코드는 `data-go` 가 있는 줄만 집어 갑니다
+(`document.querySelectorAll('.menu-btn[data-go]')`). 메뉴를 더하실 때 이 점만 기억하세요.
+
+### 4-2. 오프라인에서 열리기
+
+`sw.js` 의 `SHELL_FILES` 에 `'./jung.html'`, `'./gyeopbatchim.html'` 이 들어가 있습니다.
+소리도 납니다 ([2절 오프라인](#오프라인에서도-소리가-납니다)).
+
+### 4-3. 화면을 고친 뒤에는 반드시
 
 ```bash
 python tools/stamp_sw.py
 ```
 
 빠뜨리면 휴대폰이 옛 화면을 계속 써서 "고쳤는데 그대로인데요"가 됩니다.
-
-### 4-2. 오프라인에서도 열리게
-
-`sw.js` 의 `SHELL_FILES` 에 두 줄을 더합니다.
-
-```js
-'./jung.html',
-'./gyeopbatchim.html'
-```
-
-이러면 **화면**은 오프라인에서 열립니다. 다만 **소리**는 5-2를 보세요.
+이 스크립트는 이제 **`index.html` · `jung.html` · `gyeopbatchim.html` 세 화면**의 지문을
+함께 찍습니다. 중급반만 고친 날에도 캐시 이름이 바뀝니다.
 
 ---
 
 ## 5. 남은 일
 
-### 5-1. 3단계 생활 문장 음성 12개
+### 5-1. 3단계 생활 문장 음성 12개 — 이것만 남았습니다
 
 지금은 통문장 녹음이 없어, 낱말 소리를 들으며 문장을 만드는 방식으로 되어 있습니다.
-문장 목록은 `tools/dictation/녹음이-필요한-말.txt` 에 있습니다.
+녹음이 들어오면 그 단계가 **통문장 받아쓰기로 저절로 바뀝니다.**
 
-기초반과 **같은 목소리**(edge-tts `ko-KR-SunHiNeural`)로 만들 수 있습니다.
-[MIGRATION.md 4-1절](MIGRATION.md#4-1-edge-tts-지금-쓰는-방식-무료) 참고.
+**손으로 적어 넣을 것은 없습니다.** 문장 목록은 `build.js` 가 `문장목록.json` 으로
+내보내고, `tools/clips.py` 가 그것을 읽어 `d_<문장>` 키로 소리를 만듭니다.
+인터넷이 되는 PC에서 이 네 줄이면 끝납니다.
 
-만든 뒤 `build.js` 의 `DATA.SENT_AUDIO` 에 이렇게 적으면 그 단계가 바로 받아쓰기로 바뀝니다.
-
-```js
-"오늘 병원에 갑니다": "audio/s1.mp3"
+```bash
+python tools/regen_audio_edge.py --missing               # 없는 조각만 만들기
+python tools/build_audio_bundle.py                       # 묶음 다시 만들기
+python tools/stamp_sw.py                                 # 캐시 지문
+cd tools/dictation && node build.js ../../index.html && mv -f jung.html gyeopbatchim.html ../../
 ```
 
-말 속도는 기초반 규칙을 따르세요. 문장이므로 **-10%** 가 맞습니다
-([MIGRATION.md 4절](MIGRATION.md#4-소리-파일-다시-만들기) 속도표).
+`--missing` 은 **이미 있는 소리를 건드리지 않습니다.** 대본에 있는데 녹음이 없는 조각만
+`a1226` 부터 뒤에 덧붙입니다. 어르신이 듣던 소리는 한 개도 바뀌지 않고, 15~20분 기다릴 일도 없습니다.
 
-### 5-2. 오프라인에서 소리가 안 납니다
+끝난 뒤 묶음 조각이 1,240개에서 **1,252개**로 늘어납니다. 그래서 `audio.bin` 크기가
+바뀌므로 **중급반을 반드시 다시 만들어야 합니다**(위 네 번째 줄). 이미 소리를 받아 둔
+휴대폰은 크기가 안 맞아 한 번 더 받게 됩니다.
 
-기초반은 소리를 `audio/audio.bin` **묶음 한 덩어리**로 받아 두고,
-`blob.slice(시작, 끝, 'audio/mpeg')` 로 필요한 자리만 잘라 씁니다.
-받아쓰기 중급반은 아직 **낱개 `audio/aN.mp3`** 로만 재생합니다.
+목소리는 기초반과 같은 edge-tts `ko-KR-SunHiNeural`, 말 속도는 문장이므로 **-10%** 로
+`clips.py` 가 알아서 잡습니다 ([MIGRATION.md 4절](MIGRATION.md#4-소리-파일-다시-만들기) 속도표).
 
-인터넷이 있으면 문제없지만, 「소리 모두 받기」로 묶음만 받아 둔 휴대폰에서
-비행기 모드로 들어가면 **중급반 소리가 나지 않습니다.**
-`index.html` 의 묶음 재생 코드를 그대로 가져다 쓰면 해결됩니다.
+끝난 뒤 `build.js` 가 이렇게 나오면 된 것입니다.
 
-### 5-3. 그 밖에
+```
+녹음이 필요한 낱말 0 개 / 문장 0 개
+통문장 받아쓰기  12 / 12 문장
+오프라인 소리  묶음 자리표 139개 넣었습니다 (audio/audio.bin)
+```
 
-- 기초반 메뉴 연결 (4-1)
-- 판 올릴 때 `APP_VERSION` + `stamp_sw.py` + 태그 ([MIGRATION.md 10절](MIGRATION.md#10-판-되돌리기))
+> ⚠️ `edge-tts` 는 `speech.platform.bing.com` 에 연결합니다. 회사망이나 클라우드 환경에서는
+> 막혀 있을 수 있습니다. 집 PC나 휴대폰 테더링에서 하시면 됩니다.
+
+### 5-2. 그 밖에
+
+- `audio/` 의 mp3 가 32kbps 로 세게 눌려 있습니다. 원본이 남아 있으면 더 좋게 다시 뽑을 수
+  있습니다 (`tools/dictation/녹음이-필요한-말.txt` 아래쪽 ffmpeg 명령)
+
+### 5-3. 기초반과 어떻게 합쳐졌나 (2026-10-23)
+
+기초반 소리 안내(`wip/voice-guide`)와 중급반(`wip/dictation-offline`)을 `main` 에서
+합쳤습니다. 부딪힌 곳은 **두 파일, 네 군데**였고 이렇게 풀었습니다.
+
+| 파일 | 어떻게 풀었나 |
+|---|---|
+| `tools/clips.py` | 저절로 합쳐짐. 둘 다 `build()` 끝쪽에 더하는데 자리가 달랐습니다. 지금 `python tools/clips.py` 는 **1,252개**(1,226 + 안내 14 + 문장 12)를 보여 줍니다 |
+| `sw.js` | 지문 한 줄만 부딪혔습니다. 한쪽을 받고 `SHELL_FILES` 두 줄을 다시 넣은 뒤 `python tools/stamp_sw.py` 로 지문을 새로 찍었습니다 |
+| `index.html` 메뉴 | 기초반 쪽(`<div class="menu-item">` + 🔊)을 살리고, 중급반 두 줄을 그 아래에 같은 `.menu-item` 으로 붙였습니다 |
+| `index.html` 메뉴 선택자 | 기초반 쪽(`go()` 에 `history.pushState`)을 살리고 `querySelectorAll('.menu-btn')` 만 **`'.menu-btn[data-go]'`** 로 좁혔습니다. 안 좁히면 중급반 줄을 눌렀을 때 `go(undefined)` 가 불려 화면이 하나도 안 보입니다 |
+
+**중급반 두 줄에는 🔊 를 달지 않았습니다.** 안내 녹음이 없기 때문입니다
+(녹음이 없는 말은 소리 단추를 내보내지 않는다 — 2절). 위 다섯 줄과 폭이 어긋나지 않게
+🔊 자리만 `.menu-spk-gap` 으로 비워 두었습니다. 나중에 달고 싶으시면
+`index.html` 의 `window.UI_SAY` 에 두 줄을 더하고 `--missing` 을 돌리면 됩니다.
+
+> ⚠️ 합친 뒤에는 **중급반을 반드시 다시 만들어야 합니다.** 묶음이 1,226조각에서
+> 1,240조각으로 늘어 `audio.bin` 의 크기가 바뀌었고, 중급반은 그 크기로 묶음이 제
+> 것인지 확인합니다(`loadBundle` 의 `b.size !== B.total`). 다시 만들지 않으면
+> 비행기 모드에서 소리가 안 납니다. 3절 명령을 그대로 돌리면 됩니다.
+
+---|---|---|
+| `tools/clips.py` | 저절로 합쳐집니다 | 둘 다 `build()` 끝쪽에 더하는데 자리가 달라 안 부딪힙니다. 합친 뒤 `python tools/clips.py` 가 **1,252개**(1,226 + 안내 14 + 문장 12)를 보여 주면 맞습니다 |
+| `sw.js` | 부딪힘 (지문 한 줄) | 아무 쪽이나 고르고 **`python tools/stamp_sw.py` 를 다시 돌리면** 올바른 지문이 찍힙니다 |
+| `index.html` 메뉴 | 부딪힘 | `wip/voice-guide` 쪽(`<div class="menu-item">` 으로 감싸고 🔊 를 나란히 둔 것)을 **살리고**, 그 아래에 중급반 두 줄(`<a class="menu-btn" href="jung.html">`, `…gyeopbatchim.html`)을 그대로 붙이세요 |
+| `index.html` 메뉴 선택자 | 부딪힘 | `wip/voice-guide` 쪽(`go()` 에 `history.pushState` 를 넣은 것)을 **살리고**, 그 안의 `querySelectorAll('.menu-btn')` 만 **`'.menu-btn[data-go]'`** 로 바꾸세요. 안 바꾸면 중급반 줄을 눌렀을 때 `go(undefined)` 가 불려 화면이 하나도 안 보입니다 |
+
+- **`APP_VERSION` 은 올리지 않았습니다** (`1.1` 그대로). `wip/voice-guide` 가 `1.2` 와
+  `v1.2` 태그를 쓰기로 해 두었기 때문입니다. 중급반 메뉴는 그 판에 같이 실리면 됩니다.
+  화면이 새것으로 바뀌는 것은 판 번호가 아니라 `stamp_sw.py` 의 캐시 지문이 합니다 (4-3).
+- 소리 번호도 겹칩니다. 두 가지가 모두 `a1226` 부터 쓰려고 합니다. **합친 뒤에
+  `--missing` 을 한 번만** 돌리면 26개(14 + 12)가 한꺼번에 제 번호를 받습니다.
+  따로따로 돌리면 번호가 어긋나 묶음을 다시 만들어야 합니다.
 
 ---
 
@@ -280,3 +390,7 @@ gbrain serve --http
 - [ ] 브라우저로 `jung.html` 을 열고 🔊 를 눌렀을 때 **소리가 난다**
 - [ ] `cd tools/dictation && node build.js ../../index.html` 이 오류 없이 끝난다
 - [ ] 「녹음이 필요한 낱말 0 개」가 나온다
+- [ ] 「오프라인 소리 묶음 자리표 …개」가 나온다 (0개나 안내문이면 묶음이 없는 것)
+- [ ] 기초반 첫 화면 맨 아래 메뉴에 받아쓰기·겹받침 두 줄이 보인다
+- [ ] `python tools/dictation/check_offline.py` 가 「모두 통과했습니다」로 끝난다
+- [ ] (마지막으로 휴대폰에서) 「소리 모두 받기」 → 비행기 모드 → 받아쓰기에서 **소리가 난다**

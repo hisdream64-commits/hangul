@@ -1,6 +1,6 @@
 ■ 아직 녹음이 없는 말
-기초반을 만드실 때 쓰신 성우 음성으로 아래를 뽑아 audio/ 에 넣고,
-jung.html 의 DATA.A 에 "말": "audio/파일이름.mp3" 로 한 줄씩 넣으면 그대로 소리가 납니다.
+기초반과 같은 목소리(edge-tts ko-KR-SunHiNeural)로 아래를 만들면 그대로 붙습니다.
+만드는 방법은 아래 ※ 를 보세요. 손으로 적어 넣을 것은 없습니다.
 
 [낱말 0개]
 (없음)
@@ -19,8 +19,14 @@ jung.html 의 DATA.A 에 "말": "audio/파일이름.mp3" 로 한 줄씩 넣으�
 택배가 경비실에 있어요
 딸에게 편지를 씁니다
 
-※ 문장 녹음이 들어오면 jung.html 의 DATA.SENT_AUDIO 에
-   "오늘 병원에 갑니다": "audio/s1.mp3" 꼴로 넣어 주세요. 바로 받아쓰기로 바뀝니다.
+※ 손으로 적어 넣을 것은 없습니다. 문장 목록은 문장목록.json 으로 나가 있고,
+   tools/clips.py 가 그것을 읽어 d_<문장> 키로 소리를 만듭니다.
+   인터넷이 되는 PC에서 이 세 줄이면 끝납니다.
+     python tools/regen_audio_edge.py --missing
+     python tools/build_audio_bundle.py
+     python tools/stamp_sw.py
+   그 뒤 build.js 를 다시 돌리면 3단계가 통문장 받아쓰기로 바뀝니다.
+   (이미 있는 소리는 건드리지 않고, 없는 것만 더 만듭니다)
 
 ■ 소리는 기초반과 똑같이 냅니다
 jung.html · gyeopbatchim.html 은 기초반(index.html)의 재생 방식을 그대로 씁니다.

@@ -279,19 +279,6 @@ var DATA = /*__DATA__*/;
 var $ = function (id) { return document.getElementById(id); };
 
 /* ============ 소리 ============
-   기초반 성우 녹음(audio/*.mp3)을 그대로 씁니다. 꾸며 낸 목소리는 쓰지 않습니다.
-
-   녹음이 32kbps로 눌러 담겨 있어 그냥 틀면 쇳소리가 섞여 기계음처럼 들립니다.
-   그래서 들려 드릴 때 아주 옅게 다듬습니다.
-     · 시작과 끝을 부드럽게 열고 닫아 「툭」 끊기는 소리를 없앱니다
-     · 눌러 담을 때 생긴 쇳소리(5kHz 위)를 낮춥니다
-     · 낮은 소리를 조금 올려 도톰하게 만듭니다
-     · 귀에 거슬리는 3kHz 언저리를 살짝 눌러 줍니다
-     · 낱말과 낱말 사이는 사람이 읽듯 쉬어 줍니다
-     · 빠르기는 건드리지 않습니다 (배속을 바꾸면 목소리가 뭉개집니다)
-   웹오디오를 못 쓰는 기기에서는 예전처럼 그대로 재생합니다. */
-
-/* ============ 소리 ============
    기초반(index.html)의 재생 방식을 그대로 씁니다. 소리를 손대지 않습니다.
      · 음성 파일 하나를 <audio> 로 그냥 재생합니다 (기초반과 똑같은 방식)
      · 음색을 다듬거나 크기를 키우지 않습니다 — 손대면 기초반과 다른 소리가 납니다
@@ -303,6 +290,53 @@ var player = new Audio();
 player.preload = 'auto';
 var stepQueue = [], stepTimer = null;
 
+/* ---------- 오프라인 소리 묶음 (audio/audio.bin) ----------
+   기초반 첫 화면에서 「소리 모두 받기」를 누르면, 소리가 낱개 mp3 가 아니라
+   audio/audio.bin 한 덩어리로 저장됩니다. 그래서 비행기 모드에서 낱개 주소
+   (audio/aN.mp3)로 틀면 소리가 나지 않습니다.
+   기초반과 똑같이, 저장해 둔 묶음을 열어 두고 필요한 자리만 잘라 씁니다.
+   자리를 잘라 내기만 하므로 목소리는 조금도 달라지지 않습니다.
+   묶음이 없으면(아직 안 받았거나 인터넷이 있으면) 예전처럼 낱개 주소로 재생합니다. */
+var AUDIO_CACHE_NAME = 'hangul-audio';
+var bundle = { blob: null };
+
+function sliceFor(src) {
+  var B = DATA.BIN;
+  if (!bundle.blob || !B || !B.off) return null;
+  var at = B.off[src];
+  if (!at) return null;
+  try { return bundle.blob.slice(at[0], at[0] + at[1], 'audio/mpeg'); }
+  catch (e) { return null; }
+}
+
+function loadBundle() {
+  var B = DATA.BIN;
+  if (bundle.blob) return;
+  if (!B || !B.file || !window.caches) return;
+  caches.open(AUDIO_CACHE_NAME)
+    .then(function (c) { return c.match(B.file); })
+    .then(function (res) { return res ? res.blob() : null; })
+    .then(function (b) { if (b && b.size === B.total) bundle.blob = b; })
+    .catch(function () {});
+}
+loadBundle();
+
+/* 묶음에서 잘라낸 조각은 임시 주소를 만들어 쓰므로, 다음 소리로 넘어갈 때 치워 준다 */
+var lastObjUrl = null;
+function setSrc(src) {
+  if (lastObjUrl) {
+    try { URL.revokeObjectURL(lastObjUrl); } catch (e) {}
+    lastObjUrl = null;
+  }
+  var part = sliceFor(src);
+  if (part) {
+    lastObjUrl = URL.createObjectURL(part);
+    player.src = lastObjUrl;
+  } else {
+    player.src = src;
+  }
+}
+
 /* 아이폰·안드로이드는 화면을 누른 직후가 아니면 소리를 막는다.
    첫 터치 때 소리 없는 짧은 소리를 한 번 재생해 두면 그 뒤로는 자유롭게 들려줄 수 있다. */
 var SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
@@ -312,7 +346,7 @@ function unlockAudio() {
   unlocked = true;
   try {
     player.muted = true;
-    player.src = SILENT;
+    setSrc(SILENT);
     var p = player.play();
     var done = function () { try { player.pause(); player.currentTime = 0; } catch (e) {} player.muted = false; };
     if (p && p.then) p.then(done).catch(done); else done();
@@ -345,7 +379,7 @@ function advanceStep() {
   var st = stepQueue.shift();
   if (!st) return;
   stepTimer = setTimeout(function () {
-    player.src = st.src;
+    setSrc(st.src);
     player.play().catch(onPlayFail);
   }, st.delay || 0);
 }
@@ -377,7 +411,10 @@ function warm(list) {
 }
 function warmSrc(srcs) {
   if (!window.fetch) return;
-  (srcs || []).filter(Boolean).forEach(function (s) { fetch(s).catch(function () {}); });
+  (srcs || []).filter(Boolean).forEach(function (s) {
+    if (sliceFor(s)) return;                    /* 묶음에 이미 있으니 받을 것이 없습니다 */
+    fetch(s).catch(function () {});
+  });
 }
 
 /* slow 가 참이면 빠르기는 그대로 두고 한 번 더 들려줍니다.
