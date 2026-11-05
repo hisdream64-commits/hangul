@@ -144,7 +144,7 @@ def main():
     d = os.path.join(HERE, "tools", "dictation")
     run(["node", "build.js", os.path.join("..", "..", "index.html")], cwd=d, what="받아쓰기 화면 만들기")
     for name in ("jung.html", "gyeopbatchim.html"):
-        shutil.move(os.path.join(d, name), os.path.join(HERE, name))
+        os.replace(os.path.join(d, name), os.path.join(HERE, name))   # 윈도우에서도 덮어쓰기
 
     step(6, "캐시 지문")
     run([PY, "tools/stamp_sw.py"], what="캐시 지문")
