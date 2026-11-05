@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>한글뚝딱(초급자용)</title>
+<title>한글뚝딱(초급)</title>
 <style>
   :root {
     --bg: #FBF7EF;
@@ -78,7 +78,7 @@
     gap: 0.5rem; padding: 0.6rem 0.2rem 0.8rem;
   }
   header h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; word-break: keep-all; }
-  /* 「(초급자용)」은 조금 작게, 한 덩어리로. 좁은 화면에서 「초급자 / 용」처럼 끊기지 않게 */
+  /* 「(초급)」은 조금 작게, 한 덩어리로. 좁은 화면에서 낱말 중간에서 끊기지 않게 */
   header h1 .h1-sub { font-size: 0.78em; white-space: nowrap; }
   .home-btn {
     font-size: 1.05rem; font-weight: 700;
@@ -396,7 +396,7 @@
 
 <main>
   <header>
-    <h1>📖 한글뚝딱<span class="h1-sub">(초급자용)</span></h1>
+    <h1>📖 한글뚝딱<span class="h1-sub">(초급)</span></h1>
     <button class="home-btn" id="btnHome" hidden>🏠 처음으로</button>
   </header>
 
@@ -684,7 +684,7 @@
   window.APP_VERSION = APP_VERSION;
   document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('appVersion');
-    if (el) el.textContent = '한글뚝딱(초급자용) ' + APP_VERSION;
+    if (el) el.textContent = '한글뚝딱(초급) ' + APP_VERSION;
   });
 
   const player = new Audio();
