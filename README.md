@@ -1,10 +1,10 @@
-# 우리 한글 교실
+# 한글뚝딱
 
 70~80대 어르신을 위한 기초 한글 학습 웹앱입니다. 휴대폰에서 바로 열어 쓰실 수 있습니다.
 
 **바로가기: https://urihangul.vercel.app/**
 
-이 저장소에는 **고급반**도 함께 있습니다 — 바로가기 **https://urihangul.vercel.app/go/** ,
+이 저장소에는 **한글뚝딱(고급)** 도 함께 있습니다 — 바로가기 **https://urihangul.vercel.app/go/** ,
 소스는 `go/`, 인수인계는 [go/MIGRATION.md](go/MIGRATION.md).
 
 현재 판 **1.1** · [판 목록](https://github.com/hisdream64-commits/hangul/releases)
