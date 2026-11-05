@@ -31,7 +31,10 @@ except Exception:
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRANCH = "main-ta7yke"
 REDO = ["ui_greet"]                      # 글을 고친 안내 말. 다음에 또 고치면 여기에 더하세요.
-OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", "tools/__pycache__/")
+# build.js 가 함께 쓰는 목록 두 개. git 이 한글 이름을 \354… 처럼 따옴표로 감싸 보여 주므로
+# 비교는 core.quotepath=false 로 받은 이름으로 합니다.
+DICT_LISTS = ("tools/dictation/문장목록.json", "tools/dictation/녹음이-필요한-말.txt")
+OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", "tools/__pycache__/") + DICT_LISTS
 PY = sys.executable
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -55,7 +58,7 @@ def run(args, cwd=HERE, what=""):
 
 
 def git(*args):
-    return subprocess.run(["git", *args], cwd=HERE, capture_output=True, text=True,
+    return subprocess.run(["git", "-c", "core.quotepath=false", *args], cwd=HERE, capture_output=True, text=True,
                           encoding="utf-8", errors="replace")
 
 
@@ -150,7 +153,7 @@ def main():
 
     step(8, f"커밋하고 가지({BRANCH})에 올리기")
     git("checkout", "--", "tools/__pycache__")          # 파이썬이 저절로 고친 파일은 되돌린다
-    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html")
+    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", *DICT_LISTS)
     if r.returncode != 0:
         stop("git add 실패:\n" + r.stderr)
     if not git("diff", "--cached", "--quiet").returncode:
