@@ -70,7 +70,8 @@ python -m http.server 8000                    # 그 뒤 http://localhost:8000/ju
 **`v1.2` 태그는 아직 안 붙었습니다.** 글은 `docs/releases/v1.2.txt` 에 있고,
 PC에서 세 줄이면 됩니다 — `docs/releases/README.md` 참고.
 
-남은 일은 **받아쓰기 3단계 생활 문장 소리 12개**뿐입니다 (`docs/DICTATION.md` 5-1절).
+(2026-11-06) 받아쓰기 3단계 생활 문장 소리 12개는 **녹음해서 운영에 나갔습니다**(`tools/pc_record.py`, 판 1.3). 예전 기록:
+받아쓰기 3단계 생활 문장 소리 12개가 남았었습니다 (`docs/DICTATION.md` 5-1절).
 `python tools/regen_audio_edge.py --missing` 로 만듭니다. 인터넷이 막힌 곳에서는
 안 됩니다 — `edge-tts` 가 `speech.platform.bing.com` 에 연결합니다.
 
