@@ -1,8 +1,8 @@
-# 한글 교실 고급반 — 다른 노트북으로 옮기기
+# 한글뚝딱(고급) — 다른 노트북으로 옮기기
 
 이 문서 하나로 **새 노트북에 작업 환경을 깔고, 고급반 웹앱 작업을 이어서** 할 수 있도록 적었습니다.
 
-- 만든 것: **한글 교실 고급반** (기초반 → 중급반 다음 과정)
+- 만든 것: **한글뚝딱(고급)** (기초반 → 중급반 다음 과정. 예전 이름 「한글 교실 고급반」)
 - 운영 주소: **https://urihangul.vercel.app/go/**  (기초반은 같은 주소의 `/`)
 - 쓰던 컴퓨터: Windows 11, 사용자 `Jb`, Git Bash
 - 갱신일: 2026-10-23
@@ -44,7 +44,7 @@ powershell -ExecutionPolicy Bypass -File $HOME\projects\hangul\go\tools\setup-go
 
 그 뒤 Claude 앱 → Code 탭 → 폴더 `~/projects/hangul` 을 열고 첫마디로:
 
-> **"go/MIGRATION.md 를 읽고 한글 교실 고급반 작업을 이어서 해줘."**
+> **"go/MIGRATION.md 를 읽고 한글뚝딱(고급) 작업을 이어서 해줘."**
 
 ### 0-B. 직접 하실 때 — 30분 설치
 

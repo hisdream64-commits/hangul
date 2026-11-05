@@ -94,7 +94,7 @@ POSTER = """<!doctype html>
            font-size: 5mm; line-height: 1.55; color: #4a4a4a; }}
   .note b {{ color: #2E5B9A; }}
 </style></head><body>
-  <h1>한글 교실 고급반</h1>
+  <h1>한글뚝딱(고급)</h1>
   <p class="sub">혼자서 서류를 읽고 쓰기 · 무료</p>
 
   <div class="qr"><img src="qr.png" alt="QR"></div>
