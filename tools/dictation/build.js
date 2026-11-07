@@ -231,9 +231,11 @@ if (process.argv.indexOf('--preview') !== -1) {
   const i = process.argv.indexOf('--preview');
   const gbUrl = process.argv[i + 1] || 'gyeopbatchim.html';
   const jungUrl = process.argv[i + 2] || 'jung.html';
-  const BASIC = 'https://jb9193.github.io/hangul/';
+  /* 미리보기는 저장소 밖에서 혼자 열리므로, 상대경로 링크를 운영 주소로 바꿉니다. */
+  const BASIC = 'https://urihangul.vercel.app/';
+  const GO = 'https://urihangul.vercel.app/go/';
   build('jung.template.html', 'jung-preview.html', inlineAudio(jungData),
-    { 'index.html': BASIC, 'gyeopbatchim.html': gbUrl });
+    { 'index.html': BASIC, 'go/': GO, 'gyeopbatchim.html': gbUrl });
   build('gyeopbatchim.template.html', 'gyeopbatchim-preview.html', inlineAudio(gyeopData),
     { 'index.html': BASIC, 'jung.html': jungUrl });
 }

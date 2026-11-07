@@ -86,6 +86,9 @@
     padding: 0.9rem 1rem; margin-top: 1.2rem; color: var(--ink); text-decoration: none;
   }
   .tool-card:hover { background: var(--card); }
+  /* 다음 과정(고급)으로 넘어가는 칸. 연습 도구(겹받침)와 색을 달리해 구별합니다. */
+  .tool-card.next { background: var(--accent-soft); border-color: var(--accent); }
+  .tool-card + .tool-card { margin-top: 0.6rem; }
   .tool-card .icon { font-size: 1.9rem; }
   .tool-card .label { font-size: 1.1rem; font-weight: 800; display: block; }
   .tool-card .desc { font-size: 0.85rem; color: var(--sub); display: block; margin-top: 0.1rem; }
@@ -230,6 +233,14 @@
       <span><span class="label">겹받침 쓰기 연습</span>
       <span class="desc">닭 · 값 · 많다 … 받침이 두 개인 글자만 따로 익히기</span></span>
       <span style="font-size:1.3rem;color:var(--warm)">▶</span>
+    </a>
+
+    <!-- 다음 과정. 고급은 go/ 폴더의 따로 선 앱이라 주소로 넘어갑니다. -->
+    <a class="tool-card next" href="go/">
+      <span class="icon">📘</span>
+      <span><span class="label">한글뚝딱(고급)으로 가기</span>
+      <span class="desc">중급을 마치셨으면 — 관공서 말, 서식 채워 쓰기, 편지 쓰기</span></span>
+      <span style="font-size:1.3rem;color:var(--accent)">▶</span>
     </a>
   </section>
 
