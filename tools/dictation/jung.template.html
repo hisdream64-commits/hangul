@@ -6,6 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="한글뚝딱(중급)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
+<!-- 중급만 따로 홈 화면에 담을 수 있게. 초급과 start_url 이 달라 별개 앱으로 깔립니다.
+     아이콘은 tools/dictation/make_icons_jung.py 가 만듭니다 (주황 바탕에 「중급」). -->
+<link rel="manifest" href="manifest-jung.webmanifest">
+<link rel="apple-touch-icon" href="icon-jung-180.png">
 <title>한글뚝딱(중급)</title>
 <style>
   :root {
@@ -86,9 +90,6 @@
     padding: 0.9rem 1rem; margin-top: 1.2rem; color: var(--ink); text-decoration: none;
   }
   .tool-card:hover { background: var(--card); }
-  /* 다음 과정(고급)으로 넘어가는 칸. 연습 도구(겹받침)와 색을 달리해 구별합니다. */
-  .tool-card.next { background: var(--accent-soft); border-color: var(--accent); }
-  .tool-card + .tool-card { margin-top: 0.6rem; }
   .tool-card .icon { font-size: 1.9rem; }
   .tool-card .label { font-size: 1.1rem; font-weight: 800; display: block; }
   .tool-card .desc { font-size: 0.85rem; color: var(--sub); display: block; margin-top: 0.1rem; }
@@ -220,6 +221,8 @@
       성우가 읽어 주는 말을 듣고 <strong>낱말</strong>과 <strong>문장</strong>을 직접 써 봅니다.
       종이에 쓰셔도 되고, 화면에서 <strong>글자를 만들어</strong> 쓰셔도 됩니다.</p>
       <p style="margin-top:0.6rem"><a href="index.html">← 🌱 한글뚝딱(초급)으로 돌아가기</a></p>
+      <!-- 다음 과정. 고급은 go/ 폴더의 따로 선 앱이라 주소로 넘어갑니다. -->
+      <p style="margin-top:0.35rem"><a href="go/">📘 한글뚝딱(고급)으로 가기 →</a></p>
     </div>
 
     <h2 class="part-title"><span class="n">1부</span> 낱말 쓰기</h2>
@@ -233,14 +236,6 @@
       <span><span class="label">겹받침 쓰기 연습</span>
       <span class="desc">닭 · 값 · 많다 … 받침이 두 개인 글자만 따로 익히기</span></span>
       <span style="font-size:1.3rem;color:var(--warm)">▶</span>
-    </a>
-
-    <!-- 다음 과정. 고급은 go/ 폴더의 따로 선 앱이라 주소로 넘어갑니다. -->
-    <a class="tool-card next" href="go/">
-      <span class="icon">📘</span>
-      <span><span class="label">한글뚝딱(고급)으로 가기</span>
-      <span class="desc">중급을 마치셨으면 — 관공서 말, 서식 채워 쓰기, 편지 쓰기</span></span>
-      <span style="font-size:1.3rem;color:var(--accent)">▶</span>
     </a>
   </section>
 

@@ -1,5 +1,5 @@
 /* 한글뚝딱(초급) — 오프라인 서비스 워커
-   빌드 때 586ad97140 이 실제 값으로 바뀝니다.
+   빌드 때 040df700f9 이 실제 값으로 바뀝니다.
 
    - 화면(index.html 등)은 인터넷이 되면 새것을 먼저 받고, 안 되면 저장해 둔 것을 씁니다.
    - 소리는 audio/audio.bin 한 덩어리로 저장합니다. 한 번 저장하면 그대로 씁니다.
@@ -11,7 +11,7 @@
 'use strict';
 
 var PREFIX = 'hangul-';
-var SHELL = 'hangul-shell-586ad97140';
+var SHELL = 'hangul-shell-040df700f9';
 var AUDIO = 'hangul-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 
@@ -24,7 +24,12 @@ var SHELL_FILES = [
   './icon-180.png',
   './icon-192.png',
   './icon-512.png',
-  './icon-512-maskable.png'
+  './icon-512-maskable.png',
+  './manifest-jung.webmanifest',   // 중급만 따로 홈 화면에 담을 때
+  './icon-jung-180.png',
+  './icon-jung-192.png',
+  './icon-jung-512.png',
+  './icon-jung-512-maskable.png'
 ];
 
 self.addEventListener('install', function (e) {
