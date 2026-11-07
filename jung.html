@@ -169,7 +169,9 @@
   .feedback.show { display: block; }
   .feedback.ok { background: var(--good-soft); color: var(--good); }
   .feedback.ng { background: var(--bad-soft); color: var(--bad); }
-  .feedback b { font-weight: 900; }
+  /* 정답은 안내 문장 색을 따라가지 않고, 흰 쪽지 위 먹색으로 또렷하게 */
+  .feedback b { font-weight: 900; color: var(--ink); background: var(--card);
+    border-radius: 8px; padding: 0.06em 0.4em; }
 
   .mode-row { display: flex; gap: 0.4rem; margin-bottom: 0.7rem; }
   .mode-btn { flex: 1; font-size: 0.92rem; font-weight: 800; padding: 0.55rem 0.3rem; border-radius: 999px;
