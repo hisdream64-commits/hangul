@@ -411,7 +411,7 @@
       <p class="oc-title" id="ocTitle">📥 인터넷 없이 쓰기</p>
       <p class="oc-desc" id="ocDesc">소리를 미리 받아 두면 인터넷이 없는 곳에서도 쓸 수 있어요.<br>약 10MB · 와이파이에서 받으시길 권합니다.</p>
       <div class="oc-bar" id="ocBar" hidden><span class="oc-fill" id="ocFill"></span></div>
-      <button class="nav-btn primary" id="ocBtn">소리 모두 받기</button>
+      <button class="nav-btn primary" id="ocBtn">📥 소리 모두 받기</button>
       <button class="nav-btn" id="ocInstall" hidden>📱 앱으로 설치하기</button>
     </div>
     <div class="menu">
@@ -514,9 +514,9 @@
       <p class="lesson-sound" id="lvSound"></p>
       <p class="lesson-ex" id="lvEx"></p>
       <div class="lesson-nav">
-        <button class="nav-btn" id="lvPrev">◀ 이전</button>
+        <button class="nav-btn" id="lvPrev">⬅️ 이전</button>
         <button class="nav-btn primary" id="lvSpeak">🔊 다시 듣기</button>
-        <button class="nav-btn" id="lvNext">다음 ▶</button>
+        <button class="nav-btn" id="lvNext">➡️ 다음</button>
       </div>
       <p class="lesson-progress" id="lvProgress"></p>
     </div>
@@ -613,9 +613,9 @@
     <div class="tab-row" id="catRow"></div>
     <div class="grid" id="wordGrid"></div>
     <div class="lesson-nav" id="wordPager" style="margin-top:1.1rem">
-      <button class="nav-btn" id="wpPrev">◀ 이전 쪽</button>
+      <button class="nav-btn" id="wpPrev">⬅️ 이전 쪽</button>
       <span class="lesson-progress" style="margin:0; align-self:center" id="wpInfo"></span>
-      <button class="nav-btn" id="wpNext">다음 쪽 ▶</button>
+      <button class="nav-btn" id="wpNext">➡️ 다음 쪽</button>
     </div>
     <div class="detail" id="wordDetail">
       <span class="wordbig" id="wdWord"></span>
@@ -636,7 +636,7 @@
       <button class="listen-btn" id="qListen">🔊 소리로 듣기</button>
       <div class="choices" id="qChoices"></div>
       <p class="feedback" id="qFeedback"></p>
-      <button class="next-btn" id="qNext">다음 문제 ▶</button>
+      <button class="next-btn" id="qNext">➡️ 다음 문제</button>
     </div>
     <div class="result" id="quizResult" style="display:none">
       <div class="trophy">🏆</div>
@@ -1054,7 +1054,7 @@
       (lessonStep === 'ja' ? ' · 자음' : ' · 모음');
     document.getElementById('lvPrev').disabled = (lessonIdx === 0);
     document.getElementById('lvNext').textContent =
-      (lessonIdx === list.length - 1) ? '다음 단계 ▶' : '다음 ▶';
+      (lessonIdx === list.length - 1) ? '➡️ 다음 단계' : '➡️ 다음';
     // 소리를 내는 호출은 사람이 넘긴 것이므로 그 자리를 진도로 적어 둔다
     if (playSound) { sayLetter(glyph, name, ex, sound); saveBasics(); }
   }
@@ -1582,7 +1582,7 @@
       qFeedback.classList.add('bad');
       say(['p_wrong', 'w_' + item.w], '괜찮아요. 정답은 ' + item.w + '입니다.');
     }
-    qNext.textContent = (qIndex + 1 < QUIZ_LEN) ? '다음 문제 ▶' : '결과 보기 🏆';
+    qNext.textContent = (qIndex + 1 < QUIZ_LEN) ? '➡️ 다음 문제' : '🏆 결과 보기';
     qNext.classList.add('show');
   }
 
@@ -1674,7 +1674,7 @@
 
     function progress(pct) {
       fill.style.width = pct + '%';
-      btn.textContent = '받는 중… ' + pct + '%';
+      btn.textContent = '⏳ 받는 중… ' + pct + '%';
     }
 
     function needDownload() {
@@ -1766,7 +1766,7 @@
       card.classList.remove('oc-warn');
       bar.hidden = false;
       progress(0);
-      title.textContent = '소리를 받고 있습니다';
+      title.textContent = '⏳ 소리를 받고 있습니다';
       desc.innerHTML = '화면을 끄지 마시고 잠시만 기다려 주세요. (약 ' + mb(B.total) + 'MB)';
       tell('ui_n_downloading', true);
 
@@ -1780,14 +1780,14 @@
           btn.hidden = false;
           if (isQuotaError(err)) {
             // 예전에는 이걸 전부 "와이파이 문제"로 잘못 안내했다
-            btn.textContent = '정리한 뒤 다시 받기';
+            btn.textContent = '🔄 정리한 뒤 다시 받기';
             title.textContent = '⚠️ 저장공간이 부족합니다';
             desc.innerHTML = '이 휴대폰에 남은 공간이 모자라 소리를 저장하지 못했습니다.<br>' +
               '사진이나 쓰지 않는 앱을 정리하신 뒤 다시 눌러 주세요. ' +
               '(<b>' + (mb(B.total) + 1) + 'MB</b>쯤 필요합니다)';
             tell('ui_n_quota', true);
           } else {
-            btn.textContent = '다시 받기';
+            btn.textContent = '🔄 다시 받기';
             title.textContent = '⚠️ 아직 받지 못했습니다';
             desc.innerHTML = '소리를 받는 중에 인터넷이 끊겼습니다.<br>' +
               '와이파이를 확인하신 뒤 위 단추를 한 번 더 눌러 주세요.';
