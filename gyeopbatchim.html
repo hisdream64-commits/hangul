@@ -185,8 +185,8 @@
       읽고 써 봅니다.</p>
     </div>
     <div class="menu" id="menu"></div>
-    <a class="back-link" href="jung.html">← 받아쓰기 교실로</a>
-    <a class="back-link" href="index.html" style="margin-left:1rem">← 기초 한글 교실로</a>
+    <a class="back-link" href="jung.html">← 🌿 한글뚝딱(중급)으로</a>
+    <a class="back-link" href="index.html" style="margin-left:1rem">← 🌱 한글뚝딱(초급)으로</a>
   </section>
 
   <!-- 배우기 -->
@@ -196,8 +196,8 @@
     <p class="progress" id="lProgress"></p>
     <div class="panel" id="lCard"></div>
     <div class="btn-row">
-      <button class="nav-btn" id="lPrev">◀ 앞으로</button>
-      <button class="nav-btn primary" id="lNext">다음 ▶</button>
+      <button class="nav-btn" id="lPrev">⬅️ 앞으로</button>
+      <button class="nav-btn primary" id="lNext">➡️ 다음</button>
     </div>
   </section>
 
@@ -215,7 +215,7 @@
       </div>
       <div class="pal six" id="fPal"></div>
       <p class="feedback" id="fFeedback"></p>
-      <div class="btn-row"><button class="nav-btn primary wide" id="fNext" hidden>다음 ▶</button></div>
+      <div class="btn-row"><button class="nav-btn primary wide" id="fNext" hidden>➡️ 다음</button></div>
     </div>
   </section>
 
@@ -252,7 +252,7 @@
       </div>
       <div class="choices" id="qChoices"></div>
       <p class="feedback" id="qFeedback"></p>
-      <div class="btn-row"><button class="nav-btn primary wide" id="qNext" hidden>다음 ▶</button></div>
+      <div class="btn-row"><button class="nav-btn primary wide" id="qNext" hidden>➡️ 다음</button></div>
     </div>
   </section>
 
@@ -368,7 +368,7 @@ function showNotice(msg) {
 }
 function onPlayFail() {
   if (navigator.onLine === false) {
-    showNotice('이 소리는 아직 받지 못했어요.\n와이파이에 연결한 뒤 기초 한글 교실 첫 화면에서\n「소리 모두 받기」를 눌러 주세요.');
+    showNotice('이 소리는 아직 받지 못했어요.\n와이파이에 연결한 뒤 한글뚝딱(초급) 첫 화면에서\n「소리 모두 받기」를 눌러 주세요.');
   } else {
     showNotice('소리를 불러오지 못했습니다.\n잠시 뒤 다시 눌러 주세요.');
   }
@@ -555,7 +555,7 @@ function renderLearn() {
   var cs = $('lCard').querySelectorAll('.wordchip.can');
   for (var i = 0; i < cs.length; i++) cs[i].addEventListener('click', function () { play(this.dataset.w); });
   $('lPrev').disabled = (L === 0);
-  $('lNext').textContent = (L === DATA.G.length - 1) ? '연습하러 가기 ▶' : '다음 ▶';
+  $('lNext').textContent = (L === DATA.G.length - 1) ? '✏️ 연습하러 가기' : '➡️ 다음';
 }
 $('lPrev').addEventListener('click', function () { if (L > 0) { L--; renderLearn(); } });
 $('lNext').addEventListener('click', function () {
@@ -610,7 +610,7 @@ function renderFillDone() {
   fb.className = 'feedback show ok';
   fb.innerHTML = '⭕ 맞습니다! <b>' + it.w + '</b> [' + it.read + ']<br>' + it.g[3];
   $('fNext').hidden = false;
-  $('fNext').textContent = (F.i === F.items.length - 1) ? '결과 보기 ▶' : '다음 ▶';
+  $('fNext').textContent = (F.i === F.items.length - 1) ? '🏆 결과 보기' : '➡️ 다음';
   playFx('praise');
 }
 $('fNext').addEventListener('click', function () {
@@ -653,8 +653,8 @@ function renderWrite(playIt) {
   }
   $('dFeedback').className = 'feedback';
   $('dBtns').innerHTML = D.done
-    ? '<button class="nav-btn primary wide" id="dNext">' + (D.i === D.items.length - 1 ? '결과 보기 ▶' : '다음 낱말 ▶') + '</button>'
-    : '<button class="nav-btn quiet" id="dUndo">◀ 지우기</button><button class="nav-btn" id="dGive">모르겠어요</button>';
+    ? '<button class="nav-btn primary wide" id="dNext">' + (D.i === D.items.length - 1 ? '🏆 결과 보기' : '➡️ 다음 낱말') + '</button>'
+    : '<button class="nav-btn quiet" id="dUndo">🧹 지우기</button><button class="nav-btn" id="dGive">🤷 모르겠어요</button>';
   if ($('dNext')) $('dNext').addEventListener('click', nextWrite);
   if ($('dUndo')) $('dUndo').addEventListener('click', function () {
     if (D.step > 0) D.step--;
@@ -749,7 +749,7 @@ function onQuiz() {
   fb.innerHTML = (ok ? '⭕ 맞습니다! ' : '소리 나는 쪽은 <b>' + it.g[2] + '</b> 입니다. ') +
     '<b>' + it.w + '</b> [' + it.read + ']<br>' + it.g[3];
   $('qNext').hidden = false;
-  $('qNext').textContent = (Q.i === Q.items.length - 1) ? '결과 보기 ▶' : '다음 ▶';
+  $('qNext').textContent = (Q.i === Q.items.length - 1) ? '🏆 결과 보기' : '➡️ 다음';
   if (ok) playFx('praise'); else playFx('wrong', it.audio);
 }
 $('qListen').addEventListener('click', function () { play(Q.items[Q.i].audio); });
