@@ -102,6 +102,11 @@ cd $HOME\projects\hangul; git fetch; git switch main-ta7yke; git pull; python to
 첫 화면 맨 아래 판 번호 줄, 아이폰 홈 화면 이름(`apple-mobile-web-app-title`), `manifest.webmanifest`
 의 `name`·`short_name`. 좁은 화면(320px)에서 제목·「🏠 처음으로」가 낱말 중간에서 끊기지 않게 함.
 첫 화면 인사 글(`UI_SAY.ui_greet`)도 「한글뚝딱입니다」로 고쳤고, **녹음은 위 한 줄에서** 바뀝니다.
+홈 화면 아이콘 글자도 2026-11-07 「한글」→「뚝딱」(초급 청록 · 중급 주황 · 고급 남색, 세 반 모두 「뚝딱」).
+초급은 `tools/make_icons.py`, 중급은 `tools/dictation/make_icons_jung.py`, 고급은 `go/tools/make_icons_go.py`.
+굵은 한글 글꼴이 필요합니다(리눅스 `fonts-noto-cjk`, 윈도우 맑은 고딕). 아이콘·manifest 도 캐시 지문에
+들어가므로(`stamp_sw.py`, 고급은 `build_audio_bundle_go.py` 의 `stamp_sw`) 바꾼 뒤 지문만 다시 찍으면 됩니다.
+이미 홈 화면에 담은 휴대폰은 아이콘이 바로 안 바뀔 수 있어, 지우고 다시 담아야 할 수 있습니다.
 
 옛 이름이 남은 곳(일부러 둠): 이 문서·`CLAUDE.md`·`README.md` 본문, `sw.js` 맨 위 설명 글.
 운영 주소 `urihangul.vercel.app` 은 그대로 둡니다(2026-11-05 사용자 결정, 바꾸면 QR 안내문을 다시 만들어야 함, 8절).
@@ -242,7 +247,7 @@ git switch main-ta7yke            # 여기서 이어갑니다 (= wip/voice-guide
    끝나는 자리에서 넘어가고 「아」는 말소리가 시작하는 자리부터 틉니다. **녹음 파일은 그대로**이고
    자르거나 고치지 않습니다(CLAUDE.md 「소리를 가공하지 마세요」). 말소리 구간은
    `tools/speech_spans.py` 가 재어 `window.SPEECH_SPAN` 에 적습니다. 자음·모음 소리를 다시 녹음하면
-   이것을 다시 돌립니다(`pc_record.py` 가 알아서 함). 4단계 받침 읽기는 그 전 그대로(0.85·0.85·1·3·1배)입니다.
+   이것을 다시 돌립니다(`pc_record.py` 가 알아서 함). 4단계 받침 읽기도 같은 빠르기입니다(「바」→「읍」 1.25배 붙여 읽기, 「바읍」 1배, 2.5배, 「밥」 1배. 2026-11-07, 그 전 0.85·0.85·1·3·1배).
    빠르기를 들어 보며 고른 비교 페이지: https://claude.ai/artifact/ScDQZ24oXTFgzB9oLJwKxW (진민주님만 열림)
 3. **받침은 자음 이름의 끝소리로 읽는다.** 「바」+ 비읍의 끝소리 「읍」 → 「밥」.
    **예외 3개**(ㄱ=윽, ㄷ=읃, ㅅ=읏)는 성우가 "조심하세요!"로 따로 경고한다.
