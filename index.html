@@ -58,6 +58,8 @@
 
   * { box-sizing: border-box; }
   html { font-size: 22px; }
+  /* 「글자 크게」를 누르면 화면 전체가 한 번에 커집니다 (중급·고급과 같은 크기) */
+  html[data-size="big"] { font-size: 26px; }
   body {
     margin: 0;
     background: var(--bg);
@@ -88,6 +90,16 @@
     white-space: nowrap; flex: 0 0 auto;   /* 「처음으 / 로」로 끊기지 않게 */
   }
   .home-btn:hover { background: var(--accent-soft); }
+  /* 머리말 오른쪽 단추들. 「글자 크게」와 「처음으로」가 나란히 놓입니다. */
+  .top-tools { display: flex; gap: 0.4rem; flex: 0 0 auto; }
+  .size-btn {
+    font-size: 1.05rem; font-weight: 700;
+    padding: 0.55rem 1.1rem; border-radius: 14px;
+    border: 3px solid var(--accent); background: var(--card); color: var(--accent);
+    cursor: pointer; font-family: inherit;
+    white-space: nowrap; flex: 0 0 auto;
+  }
+  .size-btn:hover { background: var(--accent-soft); }
 
   button:focus-visible, .card:focus-visible {
     outline: 4px solid var(--accent); outline-offset: 3px;
@@ -397,7 +409,10 @@
 <main>
   <header>
     <h1>📖 한글뚝딱<span class="h1-sub">(초급)</span></h1>
-    <button class="home-btn" id="btnHome" hidden>🏠 처음으로</button>
+    <div class="top-tools">
+      <button class="size-btn" id="btnSize">🔍 글자 크게</button>
+      <button class="home-btn" id="btnHome" hidden>🏠 처음으로</button>
+    </div>
   </header>
 
   <!-- 홈 -->
@@ -915,6 +930,34 @@
     stopAll();
     ttsFallback(uiText(key), next);
   }
+
+  // ---------- 글자 크기 ----------
+  // 네 화면(초급·중급·겹받침·고급)이 열쇠 하나를 함께 쓴다. 전에는 화면마다 따로
+  // 저장해서, 눈이 어두운 분이 과정을 옮길 때마다 다시 키워야 했다.
+  // 예전 열쇠도 읽어 두어, 쓰시던 설정이 사라지지 않게 한다.
+  const SIZE_KEY = 'hangul:size';
+  const SIZE_OLD = ['hangul-dict:size', 'hangul3:size', 'hangul-gb:size'];
+  function readSize() {
+    try {
+      const v = localStorage.getItem(SIZE_KEY);
+      if (v) return v;
+      for (const k of SIZE_OLD) { const o = localStorage.getItem(k); if (o) return o; }
+    } catch (e) {}
+    return 'normal';
+  }
+  if (readSize() === 'big') document.documentElement.dataset.size = 'big';
+  const btnSize = document.getElementById('btnSize');
+  function syncSize() {
+    btnSize.textContent = document.documentElement.dataset.size === 'big' ? '🔍 글자 작게' : '🔍 글자 크게';
+  }
+  btnSize.addEventListener('click', () => {
+    const big = document.documentElement.dataset.size === 'big';
+    if (big) delete document.documentElement.dataset.size;
+    else document.documentElement.dataset.size = 'big';
+    try { localStorage.setItem(SIZE_KEY, big ? 'normal' : 'big'); } catch (e) {}
+    syncSize();
+  });
+  syncSize();
 
   // ---------- 진도 저장 ----------
   // 열 때마다 ㄱ부터 다시 시작하면 혼자 공부하는 분은 늘 같은 자리만 맴돈다.

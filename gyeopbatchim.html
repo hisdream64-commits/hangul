@@ -481,12 +481,27 @@ function stampOf(id) {
   if (p.best / p.total >= 0.8) return '<span class="stamp">✅<span class="score">' + p.best + '/' + p.total + '</span></span>';
   return '<span class="stamp">🔁<span class="score" style="color:var(--sub)">' + p.best + '/' + p.total + '</span></span>';
 }
-try { if (localStorage.getItem('hangul-gb:size') === 'big') document.documentElement.dataset.size = 'big'; } catch (e) {}
+/* 글자 크기는 네 화면(초급·중급·겹받침·고급)이 열쇠 하나를 함께 씁니다.
+   예전 열쇠도 읽어 두어, 쓰시던 설정이 사라지지 않게 합니다. */
+var SIZE_KEY = 'hangul:size';
+var SIZE_OLD = ['hangul-dict:size', 'hangul3:size', 'hangul-gb:size'];
+function readSize() {
+  try {
+    var v = localStorage.getItem(SIZE_KEY);
+    if (v) return v;
+    for (var i = 0; i < SIZE_OLD.length; i++) {
+      var o = localStorage.getItem(SIZE_OLD[i]);
+      if (o) return o;
+    }
+  } catch (e) {}
+  return 'normal';
+}
+if (readSize() === 'big') document.documentElement.dataset.size = 'big';
 function syncSize() { $('btnSize').textContent = document.documentElement.dataset.size === 'big' ? '🔍 글자 작게' : '🔍 글자 크게'; }
 $('btnSize').addEventListener('click', function () {
   var big = document.documentElement.dataset.size === 'big';
   if (big) delete document.documentElement.dataset.size; else document.documentElement.dataset.size = 'big';
-  try { localStorage.setItem('hangul-gb:size', big ? 'normal' : 'big'); } catch (e) {}
+  try { localStorage.setItem(SIZE_KEY, big ? 'normal' : 'big'); } catch (e) {}
   syncSize();
 });
 syncSize();
