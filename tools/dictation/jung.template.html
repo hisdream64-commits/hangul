@@ -219,7 +219,7 @@
       <p><strong>기초를 마치신 분들의 받아쓰기 반입니다.</strong><br>
       성우가 읽어 주는 말을 듣고 <strong>낱말</strong>과 <strong>문장</strong>을 직접 써 봅니다.
       종이에 쓰셔도 되고, 화면에서 <strong>글자를 만들어</strong> 쓰셔도 됩니다.</p>
-      <p style="margin-top:0.6rem"><a href="index.html">← 기초 한글 교실로 돌아가기</a></p>
+      <p style="margin-top:0.6rem"><a href="index.html">← 🌱 한글뚝딱(초급)으로 돌아가기</a></p>
     </div>
 
     <h2 class="part-title"><span class="n">1부</span> 낱말 쓰기</h2>
@@ -401,7 +401,7 @@ function showNotice(msg) {
 }
 function onPlayFail() {
   if (navigator.onLine === false) {
-    showNotice('이 소리는 아직 받지 못했어요.\n와이파이에 연결한 뒤 기초 한글 교실 첫 화면에서\n「소리 모두 받기」를 눌러 주세요.');
+    showNotice('이 소리는 아직 받지 못했어요.\n와이파이에 연결한 뒤 한글뚝딱(초급) 첫 화면에서\n「소리 모두 받기」를 눌러 주세요.');
   } else {
     showNotice('소리를 불러오지 못했습니다.\n잠시 뒤 다시 눌러 주세요.');
   }
@@ -675,12 +675,12 @@ function finishWord(clean) {
 function renderWordBtns() {
   var h = '';
   if (W.done) {
-    h = '<button class="nav-btn primary wide" id="wNext">' + (W.i === W.items.length - 1 ? '결과 보기 ▶' : '다음 낱말 ▶') + '</button>';
+    h = '<button class="nav-btn primary wide" id="wNext">' + (W.i === W.items.length - 1 ? '🏆 결과 보기' : '➡️ 다음 낱말') + '</button>';
   } else if (paperMode) {
-    h = '<button class="nav-btn primary wide" id="wShow">종이에 쓰셨으면 ▶ 정답 보기</button>';
+    h = '<button class="nav-btn primary wide" id="wShow">👀 종이에 쓰셨으면 정답 보기</button>';
   } else {
-    h = '<button class="nav-btn quiet" id="wUndo">◀ 지우기</button>' +
-        '<button class="nav-btn" id="wGiveUp">모르겠어요</button>';
+    h = '<button class="nav-btn quiet" id="wUndo">🧹 지우기</button>' +
+        '<button class="nav-btn" id="wGiveUp">🤷 모르겠어요</button>';
   }
   $('wBtns').innerHTML = h;
   if ($('wNext')) $('wNext').addEventListener('click', nextWord);
@@ -697,7 +697,7 @@ function showPaperAnswer() {
   fb.innerHTML = '바르게 쓴 글자는 <b>' + W.items[W.i] + '</b> 입니다. 쓰신 것과 맞춰 보세요.';
   $('wBtns').innerHTML =
     '<button class="nav-btn" id="pOk">⭕ 맞았어요</button>' +
-    '<button class="nav-btn" id="pNo">✖ 틀렸어요</button>';
+    '<button class="nav-btn" id="pNo">❌ 틀렸어요</button>';
   $('pOk').addEventListener('click', function () { W.right++; nextWord(); });
   $('pNo').addEventListener('click', function () { W.wrong.push(W.items[W.i]); nextWord(); });
   play(W.items[W.i]);
@@ -817,9 +817,9 @@ function renderSent(playIt) {
 
 function renderSentBtns() {
   var h;
-  if (S.done) h = '<button class="nav-btn primary wide" id="sNext">' + (S.i === S.items.length - 1 ? '결과 보기 ▶' : '다음 문장 ▶') + '</button>';
-  else h = '<button class="nav-btn quiet" id="sClear">◀ 다 지우기</button>' +
-           '<button class="nav-btn primary" id="sCheck">✓ 다 됐어요</button>';
+  if (S.done) h = '<button class="nav-btn primary wide" id="sNext">' + (S.i === S.items.length - 1 ? '🏆 결과 보기' : '➡️ 다음 문장') + '</button>';
+  else h = '<button class="nav-btn quiet" id="sClear">🧹 다 지우기</button>' +
+           '<button class="nav-btn primary" id="sCheck">✅ 다 됐어요</button>';
   $('sBtns').innerHTML = h;
   if ($('sNext')) $('sNext').addEventListener('click', nextSent);
   if ($('sClear')) $('sClear').addEventListener('click', function () { S.filled = []; renderSent(false); });

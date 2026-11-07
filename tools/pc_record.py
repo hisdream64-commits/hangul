@@ -7,7 +7,7 @@
 #   1. 준비 확인 — 가지, 다른 작업이 섞였는지, 파이썬 패키지, Node
 #   2. 대본에 있는데 녹음이 없는 말 만들기          regen_audio_edge.py --missing
 #   3. 글을 고친 안내 말 다시 녹음 (첫 화면 인사)   regen_audio_edge.py --redo ui_greet
-#   4. 소리 묶음 다시 만들기                        build_audio_bundle.py
+#   4. 소리 묶음 다시 만들기 · 말소리 구간          build_audio_bundle.py · speech_spans.py
 #   5. 받아쓰기 화면 다시 만들기 (묶음이 바뀌었으므로) tools/dictation/build.js
 #   6. 캐시 지문                                    stamp_sw.py
 #   7. 확인 — 소리 전수(verify.py) · 받아쓰기 오프라인(check_offline.py)
@@ -137,8 +137,9 @@ def main():
     step(3, "글을 고친 안내 말 다시 녹음: " + ", ".join(REDO))
     run([PY, "tools/regen_audio_edge.py", "--redo", *REDO], what="다시 녹음")
 
-    step(4, "소리 묶음 다시 만들기")
+    step(4, "소리 묶음 다시 만들기 · 말소리 구간 다시 재기")
     run([PY, "tools/build_audio_bundle.py"], what="묶음 만들기")
+    run([PY, "tools/speech_spans.py"], what="말소리 구간 재기(3단계 붙여 읽기)")
 
     step(5, "받아쓰기 화면 다시 만들기")
     d = os.path.join(HERE, "tools", "dictation")
