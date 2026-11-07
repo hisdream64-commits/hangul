@@ -1184,15 +1184,15 @@
       ttsFallback(cSound + ', ' + vSound + '. ' + cSound + vSound + '. 빠르게 읽으면, ' + s + '!');
       return;
     }
-    // 2026-11-07 사용자(진민주님) 결정: 1·2번은 1.5배로 「드」「아」를 쉬지 않고 붙여 읽고,
+    // 2026-11-07 사용자(진민주님) 결정: 1·2번은 1.25배로 「드」「아」를 쉬지 않고 붙여 읽고,
     // 4번 「빠르게 읽으면」은 3배 → 2.5배. 녹음 앞뒤 무음은 SPEECH_SPAN 으로 건너뛴다.
     // (구간이 없으면 예전처럼 녹음 끝까지 틀고 넘어간다 — 소리는 그대로 나고 사이만 조금 빈다)
     const SPAN = window.SPEECH_SPAN || {};
     playSteps([
       { fn: cap('첫소리는 「' + cSound + '」') },
-      { key: keyC, rate: 1.5, delay: 300, to: SPAN[keyC] && SPAN[keyC][1] },
+      { key: keyC, rate: 1.25, delay: 300, to: SPAN[keyC] && SPAN[keyC][1] },
       { fn: cap('모음 소리는 「' + vSound + '」') },
-      { key: keyV, rate: 1.5, from: SPAN[keyV] && SPAN[keyV][0] },
+      { key: keyV, rate: 1.25, from: SPAN[keyV] && SPAN[keyV][0] },
       { fn: cap('천천히 이어서… ' + cSound + vSound), delay: 900 },
       { key: keyB, rate: 1.0, delay: 300 },
       { fn: cap('빠르게 읽으면!'), delay: 800 },
