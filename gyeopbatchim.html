@@ -147,6 +147,11 @@
   .feedback.show { display: block; }
   .feedback.ok { background: var(--good-soft); color: var(--good); }
   .feedback.ng { background: var(--bad-soft); color: var(--bad); }
+  /* 정답은 안내 문장 색을 따라가지 않고, 흰 쪽지 위 먹색으로 또렷하게 (중급반과 같은 규칙) */
+  .feedback b { font-weight: 900; color: var(--ink); background: var(--card);
+    border-radius: 8px; padding: 0.06em 0.4em; }
+  /* 학습자가 잘못 고른 받침은 정답이 아니므로 쪽지를 씌우지 않는다 */
+  .feedback b.pick { color: inherit; background: none; border-radius: 0; padding: 0; }
 
   .result { text-align: center; background: var(--card); border: 1px solid var(--line);
     border-radius: 20px; padding: 1.3rem 1rem; box-shadow: var(--shadow); }
@@ -597,7 +602,7 @@ function onFill() {
   if (got !== want) {
     this.classList.add('miss', 'shake');
     fb.className = 'feedback show ng';
-    fb.innerHTML = '<b>' + JONG[got] + '</b> 은 아닙니다. [' + it.read + '] 소리를 생각하며 다시 골라 보세요.';
+    fb.innerHTML = '<b class="pick">' + JONG[got] + '</b> 은 아닙니다. [' + it.read + '] 소리를 생각하며 다시 골라 보세요.';
     return;
   }
   F.done = true; F.right++;
