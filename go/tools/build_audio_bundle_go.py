@@ -20,6 +20,7 @@
 #   3) 잘라낸 조각이 원본과 바이트 단위로 같은지 전수 확인
 
 import datetime
+import glob
 import hashlib
 import json
 import os
@@ -127,7 +128,14 @@ def stamp_sw():
     html = open(IDX, encoding="utf-8").read()
     flat = re.sub(r"const APP_BUILD = '[^']*';", "const APP_BUILD = '';", html)
     flat = re.sub(r"const APP_DATE = '[^']*';", "const APP_DATE = '';", flat)
-    digest = hashlib.md5(flat.encode("utf-8")).hexdigest()[:10]
+    # 홈 화면 아이콘·manifest 도 지문에 넣는다. go/sw.js 가 .png·.webmanifest 를 캐시에서 먼저
+    # 꺼내 주므로, 이것만 바뀐 날에도 판 번호가 바뀌어야 새 아이콘이 나간다 (2026-11-07 아이콘 「뚝딱」).
+    md = hashlib.md5(flat.encode("utf-8"))
+    for p in sorted(glob.glob(os.path.join(os.path.dirname(IDX), "icon*.png")) +
+                    glob.glob(os.path.join(os.path.dirname(IDX), "*.webmanifest"))):
+        md.update(os.path.basename(p).encode("utf-8"))
+        md.update(open(p, "rb").read())
+    digest = md.hexdigest()[:10]
 
     # 첫 화면 맨 아래에 보일 값
     today = datetime.date.today().isoformat()

@@ -102,6 +102,11 @@ cd $HOME\projects\hangul; git fetch; git switch main-ta7yke; git pull; python to
 첫 화면 맨 아래 판 번호 줄, 아이폰 홈 화면 이름(`apple-mobile-web-app-title`), `manifest.webmanifest`
 의 `name`·`short_name`. 좁은 화면(320px)에서 제목·「🏠 처음으로」가 낱말 중간에서 끊기지 않게 함.
 첫 화면 인사 글(`UI_SAY.ui_greet`)도 「한글뚝딱입니다」로 고쳤고, **녹음은 위 한 줄에서** 바뀝니다.
+홈 화면 아이콘 글자도 2026-11-07 「한글」→「뚝딱」(초급 청록 · 중급 주황 · 고급 남색, 세 반 모두 「뚝딱」).
+초급은 `tools/make_icons.py`, 중급은 `tools/dictation/make_icons_jung.py`, 고급은 `go/tools/make_icons_go.py`.
+굵은 한글 글꼴이 필요합니다(리눅스 `fonts-noto-cjk`, 윈도우 맑은 고딕). 아이콘·manifest 도 캐시 지문에
+들어가므로(`stamp_sw.py`, 고급은 `build_audio_bundle_go.py` 의 `stamp_sw`) 바꾼 뒤 지문만 다시 찍으면 됩니다.
+이미 홈 화면에 담은 휴대폰은 아이콘이 바로 안 바뀔 수 있어, 지우고 다시 담아야 할 수 있습니다.
 
 옛 이름이 남은 곳(일부러 둠): 이 문서·`CLAUDE.md`·`README.md` 본문, `sw.js` 맨 위 설명 글.
 운영 주소 `urihangul.vercel.app` 은 그대로 둡니다(2026-11-05 사용자 결정, 바꾸면 QR 안내문을 다시 만들어야 함, 8절).

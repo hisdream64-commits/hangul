@@ -20,6 +20,11 @@ SW = os.path.join(HERE, "sw.js")
 
 # 지문에 넣을 화면들. 중급반만 고친 날에도 캐시 이름이 바뀌어야 하므로 함께 넣는다.
 SCREENS = ["index.html", "jung.html", "gyeopbatchim.html"]
+# 홈 화면 아이콘·manifest 도 넣는다. sw.js 가 .png·.webmanifest 를 캐시에서 먼저 꺼내 주므로,
+# 이것만 바뀐 날에도 캐시 이름이 바뀌어야 휴대폰이 새 아이콘을 받는다 (2026-11-07 아이콘 「뚝딱」).
+import glob as _glob
+SCREENS += sorted(os.path.basename(p) for p in
+                  _glob.glob(os.path.join(HERE, "icon*.png")) + _glob.glob(os.path.join(HERE, "manifest*.webmanifest")))
 
 h = hashlib.sha256()
 for name in SCREENS:
@@ -38,4 +43,4 @@ new = re.sub(r"빌드 때 [0-9a-f]{10} 이", f"빌드 때 {digest} 이", new)
 
 open(SW, "w", encoding="utf-8", newline="").write(new)
 print(f"sw.js 화면 캐시 이름: hangul-shell-{digest} ({n}곳)")
-print("지문에 넣은 화면: " + ", ".join(SCREENS))
+print("지문에 넣은 화면: " + ", ".join(SCREENS[:3]) + f" + 아이콘·manifest {len(SCREENS) - 3}개")
