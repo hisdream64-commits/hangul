@@ -9,7 +9,7 @@
 |---|---|---|
 | 기초반 | `index.html` | `docs/MIGRATION.md` |
 | 받아쓰기 중급반 · 겹받침 | `jung.html`, `gyeopbatchim.html` | `docs/DICTATION.md` |
-| 고급반 | `go/` | `go/MIGRATION.md` |
+| 한글뚝딱(고급) | `go/` | `go/MIGRATION.md` |
 
 고치실 갈래의 문서를 **먼저 읽으세요.** 서로 건드리는 파일이 다릅니다.
 

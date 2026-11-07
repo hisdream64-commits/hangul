@@ -1,6 +1,6 @@
 # 한글뚝딱(고급) — 다른 노트북으로 옮기기
 
-이 문서 하나로 **새 노트북에 작업 환경을 깔고, 고급반 웹앱 작업을 이어서** 할 수 있도록 적었습니다.
+이 문서 하나로 **새 노트북에 작업 환경을 깔고, 한글뚝딱(고급) 웹앱 작업을 이어서** 할 수 있도록 적었습니다.
 
 - 만든 것: **한글뚝딱(고급)** (기초반 → 중급반 다음 과정. 예전 이름 「한글 교실 고급반」)
 - 운영 주소: **https://urihangul.vercel.app/go/**  (기초반은 같은 주소의 `/`)
@@ -8,7 +8,7 @@
 - 갱신일: 2026-10-23
 - 함께 받는 것: `hangul-go.zip` (앱 + 음성 375개 + 도구 + 이 문서)
 
-> ✅ **2026-10-23: 고급반을 저장소에 올렸습니다.** `hisdream64-commits/hangul` 의 `go/` 폴더에
+> ✅ **2026-10-23: 한글뚝딱(고급)을 저장소에 올렸습니다.** `hisdream64-commits/hangul` 의 `go/` 폴더에
 > 앱·음성 375개·도구가 모두 들어 있습니다. 새 노트북에서는 `git clone` 한 번이면 그대로
 > 이어서 작업하실 수 있습니다(5절).
 
@@ -26,20 +26,20 @@
 irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
 powershell -ExecutionPolicy Bypass -File .\setup-newpc.ps1
 
-# 2) 고급반 몫 — 소리가 다 왔는지, 바로 작업할 수 있는지 점검
+# 2) 한글뚝딱(고급) 몫 — 소리가 다 왔는지, 바로 작업할 수 있는지 점검
 powershell -ExecutionPolicy Bypass -File $HOME\projects\hangul\go\tools\setup-go.ps1
 ```
 
 2) 가 이렇게 나오면 준비된 것입니다.
 
 ```
-== 4/4  고급반 점검
+== 4/4  한글뚝딱(고급) 점검
    OK  소리 375개 다 있음 (7.2 MB)
    OK  읽을 말 375 개 — 목록과 앱이 맞습니다
    OK  받아야 할 소리 없음 — 바로 작업하실 수 있습니다
 ```
 
-스크립트가 `go/MIGRATION.md`(이 문서)를 **바탕화면과 Downloads 에 `MIGRATION-고급반.md`**
+스크립트가 `go/MIGRATION.md`(이 문서)를 **바탕화면과 Downloads 에 `MIGRATION-한글뚝딱(고급).md`**
 로 복사해 둡니다. 점검만 다시 하려면 `-NoPull -NoCopy` 를 붙이세요.
 
 그 뒤 Claude 앱 → Code 탭 → 폴더 `~/projects/hangul` 을 열고 첫마디로:
@@ -66,7 +66,7 @@ pip install edge-tts
 
 # 5) 저장소
 mkdir -p ~/projects && cd ~/projects
-git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + 고급반(go/)
+git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + 한글뚝딱(고급)(go/)
 ```
 
 그다음 Claude Code 안에서 `/setup-gbrain` 을 실행해 gbrain(기억)을 연결하고,
@@ -74,7 +74,7 @@ git clone https://github.com/hisdream64-commits/hangul.git      # 기초반 + �
 (0-A 의 스크립트는 **저장소와 앱까지만** 준비합니다. gstack 스킬과 gbrain 기억은
 쓰시던 분이라면 3·4절을 따로 해 주셔야 합니다.)
 
-고급반은 받은 저장소의 `go/` 안에 있습니다. 바로 열어 보려면:
+한글뚝딱(고급)은 받은 저장소의 `go/` 안에 있습니다. 바로 열어 보려면:
 
 ```bash
 cd ~/projects/hangul/go && npx -y http-server -p 8777 -c-1
@@ -96,7 +96,7 @@ cd ~/projects/hangul/go && npx -y http-server -p 8777 -c-1
 | gbrain 기억 | `~/.gbrain/brain.pglite` (로컬 DB) | 4절 — 내보내기 또는 공유 전환 |
 | 외부 도구 | Node 24.20.0 · Python 3.13.14 · Bun 1.4.4 · edge-tts 7.2.8 · gh · Aside CLI | 각각 설치 |
 | 저장소 | `~/projects/hangul` 외 9개 | `git clone` |
-| **고급반 앱** | **임시 폴더에만 있음** | `hangul-go.zip` → 저장소 (5절) |
+| **한글뚝딱(고급) 앱** | **임시 폴더에만 있음** | `hangul-go.zip` → 저장소 (5절) |
 
 **복사하면 안 되는 것**
 
@@ -181,7 +181,7 @@ gbrain migrate --to postgres
 
 ---
 
-## 5. 고급반 앱 — 받아서 이어 하기
+## 5. 한글뚝딱(고급) 앱 — 받아서 이어 하기
 
 기초반과 같은 저장소 `hisdream64-commits/hangul` 의 **`go/`** 폴더에 들어 있습니다
 (2026-10-23 푸시, 커밋 `한글 교실 고급반 추가`). 음성 375개까지 저장소에 함께 있어
@@ -400,20 +400,20 @@ python go/tools/build_audio_bundle_go.py   # ← 묶고 sw.js 판 번호까지 �
 기초반과 **함께** 씁니다. 서비스 워커는 켜질 때 묵은 캐시를 치우는데, 자기 이름표가
 붙은 것만 건드려야 합니다.
 
-| | 기초반 (`/sw.js`) | 고급반 (`/go/sw.js`) |
+| | 기초반 (`/sw.js`) | 한글뚝딱(고급) (`/go/sw.js`) |
 |---|---|---|
 | 맡는 범위 | `/` 전체 | `/go/` 안쪽만 |
 | 화면 칸 | `hangul-shell-<해시>` | `hangul3-shell-<해시>` |
 | 소리 칸 | `hangul-audio` | `hangul3-audio` |
 | 치우는 것 | `hangul-` 로 시작하는 것만 | `hangul3-` 로 시작하는 것만 |
 
-이 이름표 가리기가 없으면 **기초반을 열 때마다 고급반 소리가 통째로 지워집니다**
+이 이름표 가리기가 없으면 **기초반을 열 때마다 한글뚝딱(고급) 소리가 통째로 지워집니다**
 (그 반대도 마찬가지). 2026-10-23 에 뿌리 `sw.js` 에도 같은 가리개를 넣었습니다 —
-고급반 때문에 뿌리 파일을 고친 **유일한** 곳입니다.
+한글뚝딱(고급) 때문에 뿌리 파일을 고친 **유일한** 곳입니다.
 
 실제 브라우저로 확인한 것: 서비스 워커 범위 `/go/`, 묶음 7.23MB 저장, 다시 열었을 때
 `blob:` 주소로 재생, **인터넷을 끊고도 화면과 소리 모두 정상**, 기초반을 열어도
-고급반 묶음 7.23MB 가 그대로 살아 있음.
+한글뚝딱(고급) 묶음 7.23MB 가 그대로 살아 있음.
 
 ---
 
@@ -426,29 +426,29 @@ python go/tools/build_audio_bundle_go.py   # ← 묶고 sw.js 판 번호까지 �
    저장 공간이 달라서, 앱으로 연 뒤 「소리 모두 받기」를 한 번 더 눌러야 합니다.
    앱으로 열었을 때는 안내 칸이 그렇게 알려 줍니다(기초반과 같은 방식).
 3. **중급반에도 같은 CSS 버그가 남아 있습니다.** 비교 상자(`.vs-item`)가 긴 문장에서
-   세로로 찌그러집니다. 고급반은 `flex-wrap: wrap` 과 `.m { flex: 1 1 9rem; min-width: 0 }`
+   세로로 찌그러집니다. 한글뚝딱(고급)은 `flex-wrap: wrap` 과 `.m { flex: 1 1 9rem; min-width: 0 }`
    으로 고쳤으니 중급반 파일에도 같은 수정을 넣으시면 됩니다.
-4. **기초 → 중급 → 고급 링크가 이어져 있지 않습니다.** 고급반 첫 화면에는 기초반으로
+4. **기초 → 중급 → 고급 링크가 이어져 있지 않습니다.** 한글뚝딱(고급) 첫 화면에는 기초반으로
    가는 링크(`../index.html`)만 있습니다. 뿌리 `index.html` 은 다른 세션이 고치는
    중이라 조율이 필요합니다.
-   - 2026-10-23 확인: **고급반이 본뜬 「중급반 웹앱」은 이 저장소에 없습니다.**
+   - 2026-10-23 확인: **한글뚝딱(고급)이 본뜬 「중급반 웹앱」은 이 저장소에 없습니다.**
      저장소에 있는 `jung.html`·`gyeopbatchim.html` 은 이름이 비슷하지만 다른 것으로,
      기초반의 **받아쓰기 연습**입니다(`tools/dictation/` 로 만듦). 중급반 웹앱을
      여기에 들일지부터 정하셔야 세 반 링크를 이을 수 있습니다.
 5. 중급반은 **다른 세션이 이 저장소에서 따로 작업 중**입니다(`jung.html`,
    `gyeopbatchim.html`, `tools/dictation/`, 가지 `wip/voice-guide`). 초급자반·중급반 쪽
    인수인계는 `docs/MIGRATION.md` 와 `docs/DICTATION.md` 에 따로 있습니다.
-   **고급반 작업은 `go/` 안에서만** 하시는 편이 서로 엉키지 않습니다.
+   **한글뚝딱(고급) 작업은 `go/` 안에서만** 하시는 편이 서로 엉키지 않습니다.
 
 ### 치운 것 — 2026-10-23
 
-저장소 **뿌리에 고급반 파일 383개가 풀려 있었습니다**(`hangul-go.zip` 을 `go/` 가 아니라
+저장소 **뿌리에 한글뚝딱(고급) 파일 383개가 풀려 있었습니다**(`hangul-go.zip` 을 `go/` 가 아니라
 저장소 뿌리에 푼 듯합니다). `go/` 안의 것과 바이트까지 같은 중복이어서 지웠습니다.
 뿌리 `audio/` 에 섞여 있던 `v*.mp3` 375개도 함께 지웠습니다 — 기초반 `a*.mp3` 1,226개와
 `audio.bin` 은 그대로입니다. 꾸러미 `hangul-go.zip` 은 지우지 않고 `~/Downloads/` 로
 옮겨 두었습니다.
 
-> 앞으로도 **고급반 파일은 반드시 `go/` 안에** 두세요. 뿌리 `audio/` 에 `v*.mp3` 가
+> 앞으로도 **한글뚝딱(고급) 파일은 반드시 `go/` 안에** 두세요. 뿌리 `audio/` 에 `v*.mp3` 가
 > 섞이면 기초반 도구(`tools/verify.py`, `build_audio_bundle.py`)가 헷갈립니다.
 
 ---
@@ -461,13 +461,13 @@ python go/tools/build_audio_bundle_go.py   # ← 묶고 sw.js 판 번호까지 �
 - [ ] `/setup-gbrain` 후 기억이 불러와지는지 (`gbrain recall`)
 - [ ] `~/.claude/settings.json` 훅 경로가 새 사용자 이름에 맞는지
 - [ ] `pip install edge-tts` 후 `python tools/make_audio.py --dry-run` 이 **「받아야 할 것 0개」**
-- [ ] 로컬 서버로 고급반을 열어 **🔊 다시 듣기가 성우 목소리로** 나오는지
+- [ ] 로컬 서버로 한글뚝딱(고급)을 열어 **🔊 다시 듣기가 성우 목소리로** 나오는지
 - [ ] 소리를 고쳤다면 `python go/tools/build_audio_bundle_go.py` 까지 돌렸는지 (8-2)
 - [ ] 첫 화면 **「소리 모두 받기」** 를 눌러 「✅ 인터넷 없이 쓸 수 있습니다」가 뜨는지
 - [ ] 와이파이를 끄고 다시 열어 **화면과 소리가 모두 나오는지**
-- [ ] 그 뒤 기초반(`/`)을 한 번 열었다가 고급반으로 돌아와도 **여전히 ✅ 인지**
+- [ ] 그 뒤 기초반(`/`)을 한 번 열었다가 한글뚝딱(고급)으로 돌아와도 **여전히 ✅ 인지**
       (캐시 이름표 가리개가 살아 있는지 — 8-2 참고)
-- [x] ~~고급반을 저장소에 넣고 푸시~~ (2026-10-23 완료)
+- [x] ~~한글뚝딱(고급)을 저장소에 넣고 푸시~~ (2026-10-23 완료)
 - [x] ~~오프라인(인터넷 없이 쓰기) 붙이기~~ (2026-10-23 완료, 8-2)
 - [x] ~~QR·인쇄용 안내문~~ (2026-10-23 완료 — `go/qr.png`, `go/poster.pdf`.
       주소가 바뀌면 `python go/tools/regen_qr_poster_go.py <새 주소>`)

@@ -1,4 +1,4 @@
-# make_icons_go.py — 고급반 홈 화면 아이콘을 만든다.
+# make_icons_go.py — 한글뚝딱(고급) 홈 화면 아이콘을 만든다.
 #
 #   python go/tools/make_icons_go.py
 #
@@ -9,7 +9,7 @@
 #   go/icon-512-maskable.png 안드로이드가 동그랗게 잘라 쓰는 그림(가장자리 여백 넉넉히)
 #
 # 왜 따로 만드나: 기초반 아이콘과 나란히 놓이므로 한눈에 구별되어야 합니다.
-#   기초반 = 청록 바탕에 「한글」  ·  고급반 = 남색 바탕에 「고급」
+#   기초반 = 청록 바탕에 「한글」  ·  한글뚝딱(고급) = 남색 바탕에 「고급」
 #
 # 글꼴은 크로미움이 가진 것을 씁니다(안내문 만들 때와 같은 방법).
 
@@ -27,7 +27,7 @@ except Exception:
 
 GO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-NAVY = "#2E5B9A"     # 고급반 바탕색 (화면의 --accent 와 같음)
+NAVY = "#2E5B9A"     # 한글뚝딱(고급) 바탕색 (화면의 --accent 와 같음)
 CREAM = "#FBF7EF"    # 안쪽 네모 색
 
 # pad  = 바깥 여백 비율. maskable 은 동그랗게 잘려 나가므로 넉넉히 둡니다.

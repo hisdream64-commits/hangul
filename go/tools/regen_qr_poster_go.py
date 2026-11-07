@@ -1,4 +1,4 @@
-# regen_qr_poster_go.py — 고급반 주소의 QR 코드와 인쇄용 안내문을 만든다.
+# regen_qr_poster_go.py — 한글뚝딱(고급) 주소의 QR 코드와 인쇄용 안내문을 만든다.
 #
 #   pip install "qrcode[pil]" opencv-python-headless
 #   python go/tools/regen_qr_poster_go.py https://urihangul.vercel.app/go/
@@ -65,7 +65,7 @@ if data != URL:
 print(f"go/qr.png  {qr.modules_count}x{qr.modules_count} 칸, 검증 OK -> {URL}")
 
 # ---------- 안내문 ----------
-# 색은 고급반 화면과 같은 남색(--accent: #2E5B9A)을 씁니다.
+# 색은 한글뚝딱(고급) 화면과 같은 남색(--accent: #2E5B9A)을 씁니다.
 POSTER = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <style>
@@ -93,6 +93,8 @@ POSTER = """<!doctype html>
            border-top: 0.5mm solid #cfc7b6; padding-top: 4mm;
            font-size: 5mm; line-height: 1.55; color: #4a4a4a; }}
   .note b {{ color: #2E5B9A; }}
+  /* 앱 이름이 낱말 중간에서 끊기지 않게 */
+  .nb {{ white-space: nowrap; }}
 </style></head><body>
   <h1>한글뚝딱(고급)</h1>
   <p class="sub">혼자서 서류를 읽고 쓰기 · 무료</p>
@@ -115,7 +117,7 @@ POSTER = """<!doctype html>
     성우 목소리로 배웁니다. 마지막 과에서는 <b>소리 내어 읽은 것을 녹음해
     점수를 알려 드립니다</b>(마이크 「허용」을 한 번 눌러 주세요).<br>
     설치하지 않아도 되고, 요금도 들지 않습니다.
-    한글이 처음이신 분은 기초반 <b>{base}</b> 부터 하십시오.
+    한글이 처음이신 분은 <span class="nb">한글뚝딱(초급)</span> <b>{base}</b> 부터 하십시오.
   </div>
 </body></html>
 """

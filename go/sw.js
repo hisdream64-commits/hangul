@@ -1,5 +1,5 @@
 /* 한글뚝딱(고급) — 오프라인 서비스 워커
-   빌드 때 8f88fad412 이 실제 값으로 바뀝니다(go/tools/build_audio_bundle_go.py).
+   빌드 때 cfe45fc2f8 이 실제 값으로 바뀝니다(go/tools/build_audio_bundle_go.py).
 
    - 이 워커가 맡는 범위는 /go/ 안쪽뿐입니다(파일이 /go/sw.js 에 있어 저절로 그렇게 됩니다).
      기초반(/)은 뿌리의 sw.js 가 따로 맡습니다.
@@ -17,7 +17,7 @@
 'use strict';
 
 var PREFIX = 'hangul3-';
-var SHELL = 'hangul3-shell-8f88fad412';
+var SHELL = 'hangul3-shell-cfe45fc2f8';
 var AUDIO = 'hangul3-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 
@@ -99,7 +99,7 @@ function networkFirst(req) {
       .then(function (res) {
         if (res) return res;
         return c.match(req).then(function (hit) {
-          // './index.html' 은 이 파일 자리(/go/) 기준이라 고급반 화면입니다.
+          // './index.html' 은 이 파일 자리(/go/) 기준이라 한글뚝딱(고급) 화면입니다.
           return hit || c.match('./index.html') || fromNet;
         });
       });
