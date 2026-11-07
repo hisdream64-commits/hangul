@@ -556,7 +556,7 @@ function renderLearn() {
     '</div>' +
     '<p class="order-cap">쓸 때는 <b>왼쪽 먼저, 오른쪽 나중</b>. 두 글자를 받침 칸 안에 나란히 눌러 씁니다.</p>' +
     '<div class="wordlist">' + chips + '</div>' +
-    '<p class="gb-note">' + g[3] + '<br>뒤에 <b>모음</b>이 오면 두 받침이 모두 살아납니다. 값이[갑씨] · 닭을[다글]</p>';
+    '<p class="gb-note">' + g[3] + '<br>뒤에 <b>모음</b>이 오면 두 받침이 모두 살아납니다. 값이[갑씨] · 닭을[달글]</p>';
   var cs = $('lCard').querySelectorAll('.wordchip.can');
   for (var i = 0; i < cs.length; i++) cs[i].addEventListener('click', function () { play(this.dataset.w); });
   $('lPrev').disabled = (L === 0);
@@ -570,7 +570,7 @@ $('lNext').addEventListener('click', function () {
 /* ============ 받침 채워 쓰기 ============ */
 var F = null;
 function startFill() {
-  F = { items: pick(ALL_WORDS, 10), i: 0, right: 0, done: false };
+  F = { items: pick(ALL_WORDS, 10), i: 0, right: 0, done: false, miss: false };
   go('fill'); renderFill();
 }
 function renderFill() {
@@ -603,9 +603,11 @@ function onFill() {
     this.classList.add('miss', 'shake');
     fb.className = 'feedback show ng';
     fb.innerHTML = '<b class="pick">' + JONG[got] + '</b> 은 아닙니다. [' + it.read + '] 소리를 생각하며 다시 골라 보세요.';
+    F.miss = true;                 // 다시 골라 맞혀도, 처음에 틀린 문제는 맞힌 개수에 넣지 않는다
     return;
   }
-  F.done = true; F.right++;
+  F.done = true;
+  if (!F.miss) F.right++;
   renderFillDone();
 }
 function renderFillDone() {
@@ -620,7 +622,7 @@ function renderFillDone() {
 }
 $('fNext').addEventListener('click', function () {
   if (F.i === F.items.length - 1) { finish('fill', F.right, F.items.length, startFill); return; }
-  F.i++; F.done = false; renderFill();
+  F.i++; F.done = false; F.miss = false; renderFill();
 });
 $('fListen').addEventListener('click', function () { play(F.items[F.i].audio); });
 $('fSlow').addEventListener('click', function () { play(F.items[F.i].audio, true); });

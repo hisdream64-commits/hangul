@@ -1,5 +1,5 @@
 /* 한글뚝딱(초급) — 오프라인 서비스 워커
-   빌드 때 9bfee8c2bc 이 실제 값으로 바뀝니다.
+   빌드 때 581af0384a 이 실제 값으로 바뀝니다.
 
    - 화면(index.html 등)은 인터넷이 되면 새것을 먼저 받고, 안 되면 저장해 둔 것을 씁니다.
    - 소리는 audio/audio.bin 한 덩어리로 저장합니다. 한 번 저장하면 그대로 씁니다.
@@ -11,7 +11,7 @@
 'use strict';
 
 var PREFIX = 'hangul-';
-var SHELL = 'hangul-shell-9bfee8c2bc';
+var SHELL = 'hangul-shell-581af0384a';
 var AUDIO = 'hangul-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 
