@@ -19,6 +19,7 @@
 #   2) go/index.html 끝에 <script>window.AUDIO_BIN = {...}</script> 삽입(있으면 교체)
 #   3) 잘라낸 조각이 원본과 바이트 단위로 같은지 전수 확인
 
+import datetime
 import hashlib
 import json
 import os
@@ -111,15 +112,31 @@ def main():
 
 
 def stamp_sw():
-    """go/sw.js 의 판 번호를 go/index.html 내용에서 뽑아 박는다.
+    """판 번호를 go/index.html 내용에서 뽑아 화면과 go/sw.js 에 박는다.
 
     화면이 바뀌면 판 번호가 바뀌어 저장해 둔 옛 화면이 밀려난다.
     소리 묶음 칸('hangul3-audio')은 판이 바뀌어도 그대로 두므로 다시 받지 않는다.
+
+    번호를 셀 때는 화면에 적어 넣을 APP_BUILD·APP_DATE 를 빈 값으로 돌려놓고 센다.
+    그러지 않으면 "번호를 적으면 내용이 바뀌고, 내용이 바뀌면 번호가 또 바뀌는" 맴돌이가 된다.
     """
     if not os.path.exists(SW):
         print("go/sw.js 가 없어 판 번호 박기는 건너뜁니다.")
         return
-    digest = hashlib.md5(open(IDX, "rb").read()).hexdigest()[:10]
+
+    html = open(IDX, encoding="utf-8").read()
+    flat = re.sub(r"const APP_BUILD = '[^']*';", "const APP_BUILD = '';", html)
+    flat = re.sub(r"const APP_DATE = '[^']*';", "const APP_DATE = '';", flat)
+    digest = hashlib.md5(flat.encode("utf-8")).hexdigest()[:10]
+
+    # 첫 화면 맨 아래에 보일 값
+    today = datetime.date.today().isoformat()
+    new_html = re.sub(r"const APP_BUILD = '[^']*';", f"const APP_BUILD = '{digest[:6]}';", html)
+    new_html = re.sub(r"const APP_DATE = '[^']*';", f"const APP_DATE = '{today}';", new_html)
+    if new_html != html:
+        open(IDX, "w", encoding="utf-8", newline="").write(new_html)
+    print(f"go/index.html 화면 판 번호 -> {digest[:6]} ({today})")
+
     src = open(SW, encoding="utf-8").read()
     new = re.sub(r"hangul3-shell-[0-9a-f]{10}", "hangul3-shell-" + digest, src)
     new = re.sub(r"빌드 때 [0-9a-f]{10} 이", "빌드 때 " + digest + " 이", new)
