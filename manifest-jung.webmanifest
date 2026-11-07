@@ -1,0 +1,19 @@
+{
+  "id": "/jung",
+  "name": "한글뚝딱(중급)",
+  "short_name": "한글뚝딱 중급",
+  "description": "한글 기초를 마치신 어르신을 위한 받아쓰기 과정. 낱말 쓰기 4단계와 문장 쓰기 3단계를 성우 음성으로 듣고 직접 써 봅니다.",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "jung.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF7EF",
+  "theme_color": "#14646E",
+  "icons": [
+    { "src": "icon-jung-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-jung-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-jung-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
