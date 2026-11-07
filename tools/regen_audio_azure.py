@@ -318,7 +318,7 @@ def _write_compare_page(labels, c):
         rows.append(f"<tr><td class=k>{k}<br><small>{rate}</small></td>"
                     f"<td class=t>{text}</td>{cells}</tr>")
     html = f"""<!doctype html><html lang=ko><meta charset=utf-8>
-<title>음성 비교 — 우리 한글 교실</title>
+<title>음성 비교 — 한글뚝딱</title>
 <style>
  body{{font-family:'Malgun Gothic',sans-serif;margin:24px;background:#FBF7EF;color:#1b1b1b}}
  h1{{color:#14646E}} table{{border-collapse:collapse;width:100%}}

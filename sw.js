@@ -1,5 +1,5 @@
-/* 우리 한글 교실 — 오프라인 서비스 워커
-   빌드 때 68924246d7 이 실제 값으로 바뀝니다.
+/* 한글뚝딱(초급) — 오프라인 서비스 워커
+   빌드 때 d59a8460cb 이 실제 값으로 바뀝니다.
 
    - 화면(index.html 등)은 인터넷이 되면 새것을 먼저 받고, 안 되면 저장해 둔 것을 씁니다.
    - 소리는 audio/audio.bin 한 덩어리로 저장합니다. 한 번 저장하면 그대로 씁니다.
@@ -10,7 +10,8 @@
 */
 'use strict';
 
-var SHELL = 'hangul-shell-68924246d7';
+var PREFIX = 'hangul-';
+var SHELL = 'hangul-shell-d59a8460cb';
 var AUDIO = 'hangul-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 
@@ -40,7 +41,11 @@ self.addEventListener('activate', function (e) {
     caches.keys()
       .then(function (names) {
         return Promise.all(names.map(function (n) {
-          return KEEP.indexOf(n) === -1 ? caches.delete(n) : null;
+          // 캐시 저장소는 주소 하나를 고급반(/go/)과 함께 씁니다.
+          // 그래서 제 이름표('hangul-')가 붙은 것 가운데 묵은 것만 치웁니다.
+          // 이 조건이 없으면 고급반 소리 묶음('hangul3-audio')까지 지워집니다.
+          var mine = n.indexOf(PREFIX) === 0;
+          return (mine && KEEP.indexOf(n) === -1) ? caches.delete(n) : null;
         }));
       })
       .then(function () { return self.clients.claim(); })

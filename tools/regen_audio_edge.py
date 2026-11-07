@@ -201,11 +201,45 @@ def do_missing(raw):
     print("  python tools/stamp_sw.py")
 
 
+def do_redo(keys, raw):
+    """이미 녹음이 있는 조각을 대본의 지금 글로 다시 만든다 (번호·파일 이름은 그대로).
+
+    안내 말의 글을 고쳤을 때 씁니다. 예) 앱 이름이 바뀌어 첫 화면 인사(ui_greet)를 다시 녹음.
+    --missing 은 색인에 없는 키만 만들기 때문에, 글만 고친 조각은 이걸로 해야 합니다.
+    """
+    c = clips.build()
+    html = open(IDX, encoding="utf-8", newline="").read()
+    amap = json.loads(re.search(r'window\.AUDIO = (\{.*?\});</script>', html, re.S).group(1))
+    bad = [k for k in keys if k not in c or k not in amap]
+    if bad:
+        sys.exit(f"대본이나 녹음 색인에 없는 이름: {bad}\n새 말이면 --missing 을 쓰세요.")
+    bitrate, rate_hz, note = settings(raw)
+    print(f"다시 녹음 {len(keys)}개 ({note})")
+    for k in keys:
+        print(f"  {k:22} {amap[k]:16} {c[k][1]:>5}  {c[k][0][:40]}{'…' if len(c[k][0]) > 40 else ''}")
+
+    got = asyncio.run(fetch([(k, c[k][0], c[k][1]) for k in keys]))
+    failed = [k for k in keys if not got.get(k)]
+    if failed:
+        sys.exit(f"{len(failed)}개를 만들지 못했습니다: {failed}\n아무것도 바꾸지 않았습니다.")
+
+    for k in keys:
+        open(os.path.join(HERE, amap[k]), "wb").write(az.shrink(got[k], bitrate, rate_hz))
+    # 조각 길이가 바뀌어 옛 묶음 색인은 더 이상 맞지 않는다. 묶음을 다시 만들 때까지 떼어 둔다.
+    html = re.sub(r"\n?<script>window\.AUDIO_BIN = \{.*?\};</script>\n?", "\n", html, flags=re.S)
+    open(IDX, "w", encoding="utf-8", newline="").write(html)
+    print(f"\n{len(keys)}개를 다시 녹음했습니다. 이어서:")
+    print("  python tools/build_audio_bundle.py")
+    print("  python tools/stamp_sw.py")
+
+
 def main():
     ap = argparse.ArgumentParser(description="edge-tts 로 소리를 다시 만든다 (무료)")
     ap.add_argument("--sample", action="store_true", help="시험 음성만 (권장 첫 단계)")
     ap.add_argument("--missing", action="store_true",
                     help="대본에 새로 생긴 조각만 만들어 뒤에 붙인다 (기존 소리는 그대로)")
+    ap.add_argument("--redo", nargs="+", metavar="KEY",
+                    help="이미 있는 조각을 지금 대본 글로 다시 녹음 (예: --redo ui_greet)")
     ap.add_argument("--all", action="store_true", help="1,226개 전부 다시 만들기")
     ap.add_argument("--raw", action="store_true",
                     help="다시 담지 않고 받은 그대로 (48kbps, 15.1MB, 재압축 손실 0)")
@@ -215,6 +249,8 @@ def main():
         do_sample(a.raw)
     elif a.missing:
         do_missing(a.raw)
+    elif a.redo:
+        do_redo(a.redo, a.raw)
     elif a.all:
         do_all(a.raw, a.yes)
     else:

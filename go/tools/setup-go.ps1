@@ -1,10 +1,10 @@
-﻿# setup-go.ps1 — 새 PC에서 「한글 교실 고급반」 작업을 이어갈 준비를 마친다.
+﻿# setup-go.ps1 — 새 PC에서 「한글뚝딱(고급)」 작업을 이어갈 준비를 마친다.
 #
 # 쓰는 법 (새 PC 의 PowerShell 에서, 순서대로):
 #   1) 공통 준비 — 프로그램 설치와 저장소 받기까지 한 번에:
 #        irm https://raw.githubusercontent.com/hisdream64-commits/hangul/main/tools/setup-newpc.ps1 -OutFile setup-newpc.ps1
 #        powershell -ExecutionPolicy Bypass -File .\setup-newpc.ps1
-#   2) 고급반 몫 — 이 스크립트:
+#   2) 한글뚝딱(고급) 몫 — 이 스크립트:
 #        powershell -ExecutionPolicy Bypass -File $HOME\projects\hangul\go\tools\setup-go.ps1
 #
 #   이미 git·python 이 깔려 있고 저장소만 없다면, 2)만 해도 저장소를 받아 옵니다.
@@ -12,7 +12,7 @@
 # 하는 일
 #   - 저장소를 받거나 최신으로 맞춘다
 #   - 도구가 쓰는 파이썬 패키지(edge-tts 등) 확인
-#   - 고급반 전수 점검: 소리 375개가 다 왔는지, 「받아야 할 것 0개」인지
+#   - 한글뚝딱(고급) 전수 점검: 소리 375개가 다 왔는지, 「받아야 할 것 0개」인지
 #   - go/MIGRATION.md 를 바탕화면과 Downloads 에 복사
 #   - 미리보기 띄우는 법과 Claude 에게 건넬 첫마디를 알려 준다
 #
@@ -63,7 +63,7 @@ if (Test-Path (Join-Path $Dest '.git')) {
 } else {
     New-Item -ItemType Directory -Force (Split-Path $Dest) | Out-Null
     git clone --quiet $Repo $Dest
-    Ok "받았음: $Dest (기초반 소리 1,226개 + 고급반 375개, 약 29MB)"
+    Ok "받았음: $Dest (기초반 소리 1,226개 + 한글뚝딱(고급) 375개, 약 29MB)"
 }
 if (-not (Test-Path $Go)) { Warn "go\ 폴더가 없습니다. 저장소가 옛 판인지 확인해 주세요."; exit 1 }
 
@@ -79,7 +79,7 @@ if ($hasEdge) {
     Ok "edge-tts 설치됨"
 }
 
-Say "4/4  고급반 점검"
+Say "4/4  한글뚝딱(고급) 점검"
 $mp3 = @(Get-ChildItem (Join-Path $Go 'audio') -Filter *.mp3 -ErrorAction SilentlyContinue)
 # PowerShell 5.1 은 BOM 없는 UTF-8 을 ANSI 로 읽어 한글이 깨집니다. -Encoding UTF8 이 꼭 필요합니다.
 $want = (Get-Content (Join-Path $Go 'tools\used.json') -Raw -Encoding UTF8 | ConvertFrom-Json).Count
@@ -112,7 +112,7 @@ Pop-Location
 if (-not $NoCopy) {
     $doc = Join-Path $Go 'MIGRATION.md'
     foreach ($d in @([Environment]::GetFolderPath('Desktop'), (Join-Path $HOME 'Downloads'))) {
-        if (Test-Path $d) { Copy-Item $doc (Join-Path $d 'MIGRATION-고급반.md') -Force; Ok (Join-Path $d 'MIGRATION-고급반.md') }
+        if (Test-Path $d) { Copy-Item $doc (Join-Path $d 'MIGRATION-한글뚝딱-고급.md') -Force; Ok (Join-Path $d 'MIGRATION-한글뚝딱-고급.md') }
     }
 }
 
@@ -121,7 +121,7 @@ Write-Host "준비 끝. 이어서 할 일:" -ForegroundColor Cyan
 Write-Host "  1) 시작 메뉴에서 Claude 앱을 열고 같은 계정으로 로그인"
 Write-Host "  2) Code 탭 → 폴더 선택 → $Dest"
 Write-Host "  3) 첫마디로 이렇게 말하세요:" -ForegroundColor Gray
-Write-Host '     "go/MIGRATION.md 를 읽고 한글 교실 고급반 작업을 이어서 해줘."' -ForegroundColor Yellow
+Write-Host '     "go/MIGRATION.md 를 읽고 한글뚝딱(고급) 작업을 이어서 해줘."' -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  화면을 보려면:  cd $Go ; python -m http.server 8000"
 Write-Host "    그 뒤 브라우저에서  http://localhost:8000/index.html"

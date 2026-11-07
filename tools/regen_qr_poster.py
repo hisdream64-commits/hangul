@@ -16,6 +16,7 @@
 #     (지금 주소는 29x29 — 짧은 주소일수록 칸이 커져 잘 읽힙니다)
 #   - 여백(quiet zone) 4칸 유지, 인쇄물에는 70mm 이상.
 
+import glob
 import os
 import re
 import shutil
@@ -88,7 +89,7 @@ POSTER = """<!doctype html>
            border-top: 0.5mm solid #cfc7b6; padding-top: 4mm;
            font-size: 5.2mm; line-height: 1.55; color: #4a4a4a; }}
 </style></head><body>
-  <h1>우리 한글 교실</h1>
+  <h1>한글뚝딱(초급)</h1>
   <p class="sub">휴대폰으로 배우는 기초 한글 · 무료</p>
 
   <div class="qr"><img src="qr.png" alt="QR"></div>
@@ -112,10 +113,14 @@ POSTER = """<!doctype html>
 """
 
 chrome = None
-for c in (r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-          r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-          shutil.which("google-chrome"), shutil.which("chromium")):
+candidates = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+              r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+              "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+              shutil.which("google-chrome"), shutil.which("chromium"),
+              shutil.which("chromium-browser")]
+# 클라우드 세션에는 Playwright 가 받아 둔 크로미움만 있습니다.
+candidates += sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"))
+for c in candidates:
     if c and os.path.exists(c):
         chrome = c
         break
@@ -130,7 +135,7 @@ html_path = os.path.join(tmp, "poster.html")
 open(html_path, "w", encoding="utf-8").write(POSTER.format(short=SHORT))
 out = os.path.join(tmp, "poster.pdf")
 
-subprocess.run([chrome, "--headless", "--disable-gpu", "--no-pdf-header-footer",
+subprocess.run([chrome, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer",
                 f"--print-to-pdf={out}", "file:///" + html_path.replace("\\", "/")],
                check=True, capture_output=True, timeout=120)
 shutil.copy(out, os.path.join(HERE, "poster.pdf"))
