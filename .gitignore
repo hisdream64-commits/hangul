@@ -3,3 +3,8 @@
 tools/samples/
 tools/_newaudio/
 tools/_oldaudio/
+
+# 파이썬이 저절로 만드는 캐시 — 저장소에 넣지 않습니다.
+# (들어 있으면 tools/ 의 도구를 돌릴 때마다 「고칠 것이 남았다」고 알립니다)
+__pycache__/
+*.pyc
