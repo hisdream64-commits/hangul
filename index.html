@@ -654,6 +654,7 @@
 <!-- 화면 안내를 읽어 줄 말. 글을 못 읽는 분을 위해, 보이는 글은 모두 소리로도 나와야 한다.
      tools/clips.py 가 이 블록을 그대로 읽어 같은 성우 목소리로 녹음한다(키 ui_*).
      녹음이 아직 없으면 앱이 브라우저 음성으로 같은 말을 한다. -->
+<script>window.SPEECH_SPAN = {"s_그": [0.288, 0.745], "s_느": [0.266, 0.746], "s_드": [0.266, 0.621], "s_르": [0.267, 0.723], "s_므": [0.264, 0.718], "s_브": [0.307, 0.777], "s_스": [0.261, 0.863], "s_즈": [0.268, 0.745], "s_츠": [0.273, 0.781], "s_크": [0.292, 0.751], "s_트": [0.299, 0.726], "s_프": [0.314, 0.722], "s_흐": [0.282, 0.747], "s_아": [0.275, 0.757], "s_야": [0.276, 0.744], "s_어": [0.266, 0.7], "s_여": [0.272, 0.636], "s_오": [0.26, 0.717], "s_요": [0.27, 0.679], "s_우": [0.263, 0.738], "s_유": [0.26, 0.705], "s_으": [0.261, 0.657], "s_이": [0.266, 0.757]};</script>
 <script>window.UI_SAY = {
   "ui_greet": "어서 오세요, 한글뚝딱입니다. 단추를 누르면 제가 소리로 읽어 드려요. 처음이시면, 초록 새싹 그림이 있는 첫 번째 단추, 기초 학습을 누르세요. 자음부터 차례대로 배울 수 있어요. 단추 옆의 작은 스피커를 누르면, 그 단추가 무엇인지 알려 드려요.",
   "ui_greet_offline": "맨 아래, 소리 모두 받기 단추를 한 번 눌러 두시면, 인터넷이 없어도 쓸 수 있어요.",
@@ -786,6 +787,10 @@
   document.addEventListener('touchstart', unlockAudio, { capture: true, once: true });
   document.addEventListener('click', unlockAudio, { capture: true, once: true });
 
+  // from: 이 자리(초)부터 튼다 — 녹음 앞의 무음 건너뛰기.
+  // to:   이 자리(초)에 이르면 끝까지 기다리지 않고 다음 단계로 — 녹음 뒤의 무음 건너뛰기.
+  // 녹음 파일은 그대로 두고 틀 자리만 정한다 (3단계 1·2번 붙여 읽기, window.SPEECH_SPAN).
+  let cutting = false, playSeq = 0;
   function advanceStep() {
     const st = stepQueue.shift();
     if (!st) { player.playbackRate = 1; clearSpeaking(); return; }
@@ -793,14 +798,28 @@
       if (st.fn) st.fn();
       if (st.key) {
         setSrc(window.AUDIO[st.key]);
-        player.playbackRate = st.rate || 1;
-        player.play().catch(onPlayFail);
+        const rate = st.rate || 1, seq = playSeq;
+        const go = () => {
+          if (seq !== playSeq) return;           // 그 사이 다른 소리를 눌렀으면 틀지 않는다
+          if (st.from) { try { player.currentTime = st.from; } catch (e) {} }
+          player.playbackRate = rate;
+          player.play().then(() => {
+            if (st.to && seq === playSeq) {
+              cutting = true;
+              stepTimer = setTimeout(() => { cutting = false; advanceStep(); },
+                                     (st.to - (st.from || 0)) / rate * 1000);
+            }
+          }).catch(onPlayFail);
+        };
+        // 틀 자리를 옮기려면 소리 길이를 안 뒤여야 한다
+        if (st.from) player.addEventListener('loadedmetadata', go, { once: true });
+        else go();
       } else {
         advanceStep();
       }
     }, st.delay || 0);
   }
-  player.addEventListener('ended', advanceStep);
+  player.addEventListener('ended', () => { if (!cutting) advanceStep(); });
 
   // 소리가 안 나면 그냥 넘기지 말고 이유를 알려 준다
   var noticeTimer = null, lastNotice = 0;
@@ -837,6 +856,8 @@
   function stopAll() {
     stepQueue = [];
     clearTimeout(stepTimer);
+    cutting = false;
+    playSeq++;
     player.pause();
     player.playbackRate = 1;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -1163,15 +1184,19 @@
       ttsFallback(cSound + ', ' + vSound + '. ' + cSound + vSound + '. 빠르게 읽으면, ' + s + '!');
       return;
     }
+    // 2026-11-07 사용자(진민주님) 결정: 1·2번은 1.5배로 「드」「아」를 쉬지 않고 붙여 읽고,
+    // 4번 「빠르게 읽으면」은 3배 → 2.5배. 녹음 앞뒤 무음은 SPEECH_SPAN 으로 건너뛴다.
+    // (구간이 없으면 예전처럼 녹음 끝까지 틀고 넘어간다 — 소리는 그대로 나고 사이만 조금 빈다)
+    const SPAN = window.SPEECH_SPAN || {};
     playSteps([
       { fn: cap('첫소리는 「' + cSound + '」') },
-      { key: keyC, rate: 0.85, delay: 300 },
-      { fn: cap('모음 소리는 「' + vSound + '」'), delay: 800 },
-      { key: keyV, rate: 0.85, delay: 300 },
+      { key: keyC, rate: 1.5, delay: 300, to: SPAN[keyC] && SPAN[keyC][1] },
+      { fn: cap('모음 소리는 「' + vSound + '」') },
+      { key: keyV, rate: 1.5, from: SPAN[keyV] && SPAN[keyV][0] },
       { fn: cap('천천히 이어서… ' + cSound + vSound), delay: 900 },
       { key: keyB, rate: 1.0, delay: 300 },
       { fn: cap('빠르게 읽으면!'), delay: 800 },
-      { key: keyB, rate: 3.0, delay: 250 },
+      { key: keyB, rate: 2.5, delay: 250 },
       { fn: () => { cap('합치면 — 「' + s + '」!')(); popMade(); }, delay: 800 },
       { key: 's_' + s, delay: 250 }
     ]);
