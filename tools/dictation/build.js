@@ -101,108 +101,6 @@ const SENT3 = [
 const SENT3_TEXT = SENT3.map(s => s.map(p => p[0]).join(' '));
 const SENT_KEY = s => 'd_' + s;
 
-
-/* ================= 3부 · 짧은 글 읽고 이해하기 =================
-   읽기는 받아쓰기와 달리 「보고 고르기」입니다. 그래서 화면에 숫자(10월 15일)를
-   그대로 두고, 읽어 줄 때만 「시월 십오일」로 말합니다. 줄마다 say 를 적어 두면
-   그 말을 녹음합니다(없으면 줄 글 그대로). 받아쓰기 쪽 규칙(보이는 말 = 들리는 말)은
-   그대로 둡니다 - 거기서 어긋나면 학습자가 틀리게 쓰지만, 읽기에서는 숫자를
-   눈으로 읽어 내는 것이 바로 배울 거리이기 때문입니다.
-
-   q: [묻는 말, [보기...], 정답 자리]
-   showOnly: true 면 그 줄은 소리를 내지 않습니다(숫자를 눈으로 봐야 하는 단계). */
-const READ_STAGES = [
-  { id: 'r1', icon: '🔢', title: '1단계 · 숫자와 날짜 읽기',
-    tip: '고지서와 안내문에 나오는 숫자를 어떻게 읽는지 익힙니다. 글을 눈으로 보고 고르세요.',
-    texts: [
-      { title: '병원 시간', showOnly: true, lines: ['아침 9시에 문을 엽니다.', '점심시간은 12시 30분부터입니다.'],
-        q: [['「9시」를 바르게 읽은 것은 무엇일까요?', ['아홉 시', '구 시', '아홉 날'], 0],
-            ['「30분」을 바르게 읽은 것은 무엇일까요?', ['삼십 분', '서른 분', '세 분'], 0]] },
-      { title: '검진 날짜', showOnly: true, lines: ['검진 날짜는 10월 15일입니다.', '11월 25일까지 신청하세요.'],
-        q: [['「10월」을 바르게 읽은 것은 무엇일까요?', ['시월', '십월', '열 달'], 0],
-            ['「15일」을 바르게 읽은 것은 무엇일까요?', ['십오일', '열다섯 일', '십오 날'], 0]] },
-      { title: '경로당 알림', showOnly: true, lines: ['점심은 목요일에 드립니다.', '일요일은 쉽니다.'],
-        q: [['토요일 다음 날은 무슨 요일일까요?', ['일요일', '금요일', '월요일'], 0],
-            ['경로당에서 점심을 드리는 날은 언제일까요?', ['목요일', '일요일', '토요일'], 0]] },
-      { title: '고지서 금액', showOnly: true, lines: ['관리비는 32,000원입니다.', '약값은 9,120원입니다.'],
-        q: [['「32,000원」을 바르게 읽은 것은 무엇일까요?', ['삼만 이천 원', '삼십이 원', '삼백이십 원'], 0],
-            ['「9,120원」을 바르게 읽은 것은 무엇일까요?', ['구천백이십 원', '구만 백이십 원', '구백십이 원'], 0]] },
-      { title: '약 먹는 횟수', showOnly: true, lines: ['하루에 3번 드세요.', '모두 5일 치입니다.'],
-        q: [['「3번」을 바르게 읽은 것은 무엇일까요?', ['세 번', '삼 번', '세 개'], 0],
-            ['「5일 치」는 며칠 치일까요?', ['닷새 치', '사흘 치', '이레 치'], 0]] }
-    ] },
-
-  { id: 'r2', icon: '📝', title: '2단계 · 쪽지와 짧은 편지',
-    tip: '가족이나 이웃이 남긴 짧은 글입니다. 읽고 무슨 말인지 알아봅니다.',
-    texts: [
-      { title: '딸이 남긴 쪽지',
-        lines: ['어머니, 저녁에 국수를 끓여 놓았어요.', '냉장고에 김치도 있어요.', '약은 꼭 드시고 주무세요.'],
-        q: [['저녁에 무엇을 먹으면 될까요?', ['국수', '빵', '고기'], 0],
-            ['자기 전에 무엇을 해야 할까요?', ['약을 먹는다', '빨래를 한다', '시장에 간다'], 0]] },
-      { title: '이웃이 남긴 쪽지',
-        lines: ['택배가 왔습니다.', '경비실에 맡겨 두었어요.', '오후에 찾아가세요.'],
-        q: [['택배는 어디에 있을까요?', ['경비실', '우체국', '시장'], 0],
-            ['언제 찾으러 가면 될까요?', ['오후', '아침', '내일'], 0]] },
-      { title: '손자가 보낸 편지',
-        lines: ['할머니, 저는 학교에 잘 다니고 있어요.', '다음 주에 할머니 집에 갈 거예요.', '그때 사진도 같이 찍어요.'],
-        q: [['이 글은 누가 썼을까요?', ['손자', '딸', '이웃'], 0],
-            ['다음 주에 무엇을 할까요?', ['할머니 집에 간다', '병원에 간다', '시장에 간다'], 0]] }
-    ] },
-
-  { id: 'r3', icon: '📢', title: '3단계 · 마을 알림 글',
-    tip: '경로당이나 마을에 붙는 알림입니다. 날짜와 할 일을 찾아봅니다.',
-    texts: [
-      { title: '경로당 알림',
-        lines: ['이번 주 목요일에 경로당에서 점심을 드립니다.', '열두 시까지 오세요.', '오시기 전에 총무님께 말씀해 주세요.'],
-        q: [['언제 점심을 드릴까요?', ['목요일', '월요일', '토요일'], 0],
-            ['오기 전에 무엇을 해야 할까요?', ['총무님께 말한다', '돈을 낸다', '그냥 간다'], 0]] },
-      { title: '물 끊김 안내',
-        lines: ['내일 아침 아홉 시부터 열한 시까지', '물이 나오지 않습니다.', '미리 물을 받아 두세요.'],
-        q: [['내일 무슨 일이 있을까요?', ['물이 나오지 않는다', '불이 꺼진다', '길이 막힌다'], 0],
-            ['미리 무엇을 해야 할까요?', ['물을 받아 둔다', '집에 있는다', '시장에 간다'], 0]] },
-      { title: '건강 검진 알림',
-        lines: ['마을 회관에서 건강 검진을 합니다.', '날짜는 시월 십오일입니다.', '신분증을 가지고 오세요.'],
-        q: [['어디에서 검진을 할까요?', ['마을 회관', '병원', '약국'], 0],
-            ['무엇을 가지고 가야 할까요?', ['신분증', '통장', '우산'], 0]] }
-    ] },
-
-  { id: 'r4', icon: '📄', title: '4단계 · 생활 서류 읽기',
-    tip: '약 봉투, 병원 안내문처럼 꼭 읽어야 하는 글입니다. 숫자를 눈으로 읽어 보세요.',
-    texts: [
-      { title: '약 봉투',
-        lines: [['하루에 3번 드세요.', '하루에 세 번 드세요.'],
-                ['밥을 먹고 30분 뒤에 드세요.', '밥을 먹고 삼십 분 뒤에 드세요.'],
-                ['모두 5일 치입니다.', '모두 닷새 치입니다.']],
-        q: [['하루에 몇 번 먹을까요?', ['세 번', '한 번', '두 번'], 0],
-            ['언제 먹을까요?', ['밥을 먹은 뒤', '밥을 먹기 전', '잠자기 전'], 0]] },
-      { title: '병원 진료 시간',
-        lines: [['아침 9시부터 저녁 6시까지 합니다.', '아침 아홉 시부터 저녁 여섯 시까지 합니다.'],
-                ['점심시간은 12시부터 1시까지입니다.', '점심시간은 열두 시부터 한 시까지입니다.'],
-                ['토요일은 1시까지만 합니다.', '토요일은 한 시까지만 합니다.']],
-        q: [['토요일은 몇 시까지 할까요?', ['한 시', '여섯 시', '아홉 시'], 0],
-            ['열두 시 반에 가면 어떻게 될까요?', ['점심시간이라 기다려야 한다', '바로 진료를 받는다', '문을 닫았다'], 0]] },
-      { title: '관리비 고지서',
-        lines: [['11월 관리비입니다.', '십일월 관리비입니다.'],
-                ['모두 32,000원입니다.', '모두 삼만 이천 원입니다.'],
-                ['내는 날은 11월 25일입니다.', '내는 날은 십일월 이십오일입니다.'],
-                ['늦으면 돈을 더 내야 합니다.', '늦으면 돈을 더 내야 합니다.']],
-        q: [['얼마를 내야 할까요?', ['삼만 이천 원', '이만 삼천 원', '삼천 이백 원'], 0],
-            ['이십오일이 지나면 어떻게 될까요?', ['돈을 더 낸다', '안 내도 된다', '반만 낸다'], 0]] }
-    ] }
-];
-
-/* 읽기에서 소리로 읽어 줄 말 모두 - 줄(say 가 있으면 그것), 묻는 말, 보기.
-   숫자를 눈으로 봐야 하는 1단계의 줄(showOnly)은 뺍니다. */
-const READ_SAY = [];
-READ_STAGES.forEach(function (st) {
-  st.texts.forEach(function (t) {
-    if (!t.showOnly) t.lines.forEach(function (l) { READ_SAY.push(Array.isArray(l) ? l[1] : l); });
-    t.q.forEach(function (q) { READ_SAY.push(q[0]); q[1].forEach(function (c) { READ_SAY.push(c); }); });
-  });
-});
-const READ_TEXT = READ_SAY.filter(function (s, i) { return READ_SAY.indexOf(s) === i; });
-const READ_KEY = function (s) { return 'rd_' + s; };
-
 /* ================= 겹받침 쓰기 연습 ================= */
 /* [겹받침, 이름, 소리 나는 쪽, 설명, 낱말들 [낱말, 읽기, 녹음낱말]] */
 const GYEOP = [
@@ -269,18 +167,9 @@ SENT3_TEXT.forEach(s => {
   if (f) SENT_AUDIO[s] = f; else sentMissing.push(s);
 });
 
-/* 읽기(3부)에서 읽어 줄 말의 녹음. 아직 없는 것은 readMissing 에 모읍니다. */
-const READ_AUDIO = {};
-const readMissing = [];
-READ_TEXT.forEach(function (t) {
-  const f = AUDIO[READ_KEY(t)];
-  if (f) READ_AUDIO[t] = f; else readMissing.push(t);
-});
-
 /* 두 화면이 쓰는 소리 파일 전부 — 묶음 자리표를 이 목록만큼만 넣는다 */
 const USED_PATHS = Object.keys(used).map(k => used[k])
   .concat(Object.keys(SENT_AUDIO).map(k => SENT_AUDIO[k]))
-  .concat(Object.keys(READ_AUDIO).map(k => READ_AUDIO[k]))
   .concat(Object.keys(FX).map(k => FX[k]))
   .concat(SC);
 const BIN = binFor(USED_PATHS);
@@ -288,8 +177,7 @@ const BIN = binFor(USED_PATHS);
 const jungData = {
   A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO,
   W: WORD_STAGES,
-  S1: SENT1, S2: SENT2, S3: SENT3,
-  R: READ_STAGES, READ_AUDIO: READ_AUDIO
+  S1: SENT1, S2: SENT2, S3: SENT3
 };
 const gyeopData = { A: used, FX: FX, SC: SC, BIN: BIN, G: GYEOP };
 
@@ -316,7 +204,6 @@ function inlineAudio(data, links) {
   out.BIN = null;                                       // 미리보기는 소리가 파일 안에 있으므로 묶음을 안 씁니다
   Object.keys(out.A).forEach(k => { out.A[k] = toData(out.A[k]); });
   if (out.SENT_AUDIO) Object.keys(out.SENT_AUDIO).forEach(k => { out.SENT_AUDIO[k] = toData(out.SENT_AUDIO[k]); });
-  if (out.READ_AUDIO) Object.keys(out.READ_AUDIO).forEach(k => { out.READ_AUDIO[k] = toData(out.READ_AUDIO[k]); });
   Object.keys(out.FX).forEach(k => { out.FX[k] = toData(out.FX[k]); });
   out.SC = out.SC.map(toData);
   out.LINKS = links;
@@ -359,11 +246,6 @@ fs.writeFileSync('문장목록.json',
   JSON.stringify({ rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT }, null, 1) + '\n',
   'utf8');
 
-/* 3부 읽기에서 읽어 줄 말. 같은 방식으로 tools/clips.py 가 읽어 rd_<말> 키로 만듭니다. */
-fs.writeFileSync('읽기목록.json',
-  JSON.stringify({ rate: '-10%', keyPrefix: 'rd_', sentences: READ_TEXT }, null, 1) + '\n',
-  'utf8');
-
 /* 녹음이 아직 없는 말 - 기초반 만들 때 쓰신 성우 음성으로 뽑으시면 그대로 붙습니다 */
 const needSent = sentMissing.slice();
 const needWord = missing.slice();
@@ -373,7 +255,6 @@ const txt =
   '만드는 방법은 아래 ※ 를 보세요. 손으로 적어 넣을 것은 없습니다.\n\n' +
   '[낱말 ' + needWord.length + '개]\n' + (needWord.join('\n') || '(없음)') + '\n\n' +
   '[문장 ' + needSent.length + '개 - 3단계 생활 문장]\n' + (needSent.join('\n') || '(없음)') + '\n\n' +
-  '[읽기 ' + readMissing.length + '개 - 3부 짧은 글 읽기]\n' + (readMissing.join('\n') || '(없음)') + '\n\n' +
   '※ 손으로 적어 넣을 것은 없습니다. 문장 목록은 문장목록.json 으로 나가 있고,\n' +
   '   tools/clips.py 가 그것을 읽어 d_<문장> 키로 소리를 만듭니다.\n' +
   '   인터넷이 되는 PC에서 이 세 줄이면 끝납니다.\n' +

@@ -21,8 +21,6 @@ IDX = os.path.join(HERE, "index.html")
 # 여기서 베껴 적지 않는 까닭: 화면에 보이는 문장과 들리는 소리가 어긋나면
 # 학습자가 틀린 답을 쓰게 됩니다. 원본은 build.js 의 SENT3 하나뿐입니다.
 SENT_JSON = os.path.join(HERE, "tools", "dictation", "문장목록.json")
-# 3부 짧은 글 읽기의 글·묻는 말·보기. 원본은 build.js 의 READ_STAGES 하나뿐입니다.
-READ_JSON = os.path.join(HERE, "tools", "dictation", "읽기목록.json")
 
 
 def dictation_sentences():
@@ -31,15 +29,6 @@ def dictation_sentences():
         return []
     d = json.load(open(SENT_JSON, encoding="utf-8"))
     pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
-    return [(pre + s, s, rate) for s in d.get("sentences", [])]
-
-
-def reading_texts():
-    """[(소리 키, 말, 말하기 속도)] — 목록 파일이 없으면 빈 목록."""
-    if not os.path.exists(READ_JSON):
-        return []
-    d = json.load(open(READ_JSON, encoding="utf-8"))
-    pre, rate = d.get("keyPrefix", "rd_"), d.get("rate", "-10%")
     return [(pre + s, s, rate) for s in d.get("sentences", [])]
 
 
@@ -127,8 +116,6 @@ def build(html=None):
 
     for key, text, rate in dictation_sentences():       # 받아쓰기 중급반 3단계 생활 문장
         c[key] = (text, rate)
-    for key, text, rate in reading_texts():             # 중급반 3부 짧은 글 읽기
-        c[key] = (text, rate)
     return c
 
 
@@ -153,9 +140,6 @@ if __name__ == "__main__":
     sents = dictation_sentences()
     print(f"  그 가운데 받아쓰기 생활 문장 {len(sents)}개"
           + ("" if sents else " (tools/dictation/문장목록.json 이 없습니다)"))
-    reads = reading_texts()
-    print(f"  그 가운데 3부 짧은 글 읽기 {len(reads)}개"
-          + ("" if reads else " (tools/dictation/읽기목록.json 이 없습니다)"))
     for k in SAMPLE_KEYS:
         t, r = c[k]
         print(f"  {k:12} {r:>5}  {t}")
