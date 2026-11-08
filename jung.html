@@ -83,6 +83,14 @@
   }
   .menu-item .menu-btn { flex: 1 1 auto; min-width: 0; width: auto; }
   .menu-btn:hover { background: var(--accent-soft); }
+  /* 단계 「하는 방법」 읽어 주기 (2026-11-08). 녹음이 있을 때만 보인다 */
+  .tip-row { display: flex; align-items: flex-start; gap: 0.5rem; }
+  .tip-row .hint { flex: 1 1 auto; min-width: 0; }
+  .tip-spk { flex: 0 0 auto; font: inherit; font-size: 1rem; font-weight: 800; padding: 0.35rem 0.7rem;
+             border-radius: 12px; border: 2px solid var(--accent); background: var(--card); color: var(--accent); cursor: pointer; }
+  .tip-spk.speaking { background: var(--accent-soft); }
+  .wrong-say { font: inherit; font-weight: 800; padding: 0.15rem 0.5rem; margin: 0.15rem; border-radius: 10px;
+               border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
   .menu-spk {
     flex: 0 0 3.4rem; min-width: 56px;
     font-size: 1.7rem; font-family: inherit; cursor: pointer;
@@ -320,7 +328,7 @@
   <!-- 낱말 받아쓰기 -->
   <section class="screen" id="scr-word">
     <h2 class="section-title" id="wTitle"></h2>
-    <p class="hint" id="wTip"></p>
+    <div class="tip-row"><p class="hint" id="wTip"></p><button class="tip-spk" id="wTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="wProgress"></p>
     <div class="panel">
       <div class="mode-row">
@@ -344,7 +352,7 @@
   <!-- 문장 쓰기 -->
   <section class="screen" id="scr-sent">
     <h2 class="section-title" id="sTitle"></h2>
-    <p class="hint" id="sTip"></p>
+    <div class="tip-row"><p class="hint" id="sTip"></p><button class="tip-spk" id="sTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="sProgress"></p>
     <div class="panel">
       <div class="listen-row" id="sListenRow">
@@ -363,7 +371,7 @@
   <!-- 글 읽기 (3부). 글은 답할 때까지 그대로 두어, 찾아 읽을 수 있게 합니다. -->
   <section class="screen" id="scr-read">
     <h2 class="section-title" id="rdTitle"></h2>
-    <p class="hint" id="rdTip"></p>
+    <div class="tip-row"><p class="hint" id="rdTip"></p><button class="tip-spk" id="rdTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="rdProgress"></p>
     <div class="panel">
       <div class="read-doc" id="rdDoc"></div>
@@ -380,7 +388,7 @@
   <!-- 내 이야기 쓰기 (4부). 정답이 없으므로 채점하지 않습니다. -->
   <section class="screen" id="scr-write">
     <h2 class="section-title" id="mTitle"></h2>
-    <p class="hint" id="mTip"></p>
+    <div class="tip-row"><p class="hint" id="mTip"></p><button class="tip-spk" id="mTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="mProgress"></p>
     <div class="panel">
       <p class="write-ask" id="mAsk"></p>
@@ -612,6 +620,33 @@ function clearSpeaking() {
    대신 멈추는 길목인 stopAll() 에서 끈다. */
 player.addEventListener('ended', function () { if (!stepQueue.length) clearSpeaking(); });
 function uiSrc(key) { return (DATA.UI && DATA.UI[key]) || null; }
+
+/* 단계 「하는 방법」과 틀린 이유 읽어 주기 (2026-11-08, docs/CURRICULUM_REVIEW 6번).
+   녹음 글(index.html UI_SAY 의 ui_jung_tip_* · ui_jung_x_*)은 화면 글과 글자 하나까지 같아야 하고,
+   build.js 가 다르면 일부러 실패합니다(규칙 3). 녹음이 없으면 지금처럼 글만 보입니다(규칙 2). */
+var tipTold = {};
+function showTipSpk(btnId, stageId) {
+  var b = $(btnId), k = 'ui_jung_tip_' + stageId;
+  b.hidden = !uiSrc(k);
+  b.onclick = function () { sayUI(k, b); };
+}
+// 단계에 처음 들어올 때(앱을 연 뒤 한 번) 하는 방법을 읽고, 이어서 그 단계의 첫 소리를 튼다
+function tipThen(stageId, texts) {
+  var src = uiSrc('ui_jung_tip_' + stageId);
+  if (!src || tipTold[stageId]) return;
+  tipTold[stageId] = true;
+  var steps = [{ src: src }];
+  (texts || []).map(fileOf).filter(Boolean).forEach(function (f, i) { steps.push({ src: f, delay: i ? 0 : 500 }); });
+  playSteps(steps);
+}
+// 틀린 이유를 읽고(녹음이 있으면) 이어서 그 낱말을 다시 들려준다
+function sayWhy(key, texts) {
+  var src = uiSrc(key);
+  if (!src) { if (texts && texts.length) play(texts); return; }
+  var steps = [{ src: src }];
+  (texts || []).map(fileOf).filter(Boolean).forEach(function (f) { steps.push({ src: f, delay: 300 }); });
+  playSteps(steps);
+}
 function sayUI(key, el) {
   var src = uiSrc(key);
   if (!src) return;
@@ -707,7 +742,7 @@ var SENT_STAGES = [
   { id: 's2', icon: '🗨️', title: '2단계 · 띄어 쓰는 인사말', unit: 'word',
     tip: '낱말 카드를 골라 문장을 만듭니다. 어디서 띄어 쓰는지도 함께 익힙니다.', pool: DATA.S2 },
   { id: 's3', icon: '📃', title: '3단계 · 생활 문장 쓰기', unit: 'given',
-    tip: '소리 나는 대로 쓴 말과 바르게 쓴 말을 가려 문장을 만듭니다. 낱말 소리는 들어 보실 수 있습니다.', pool: DATA.S3 }
+    tip: '소리 나는 대로 쓴 말과 바르게 쓴 말을 가려 문장을 만듭니다.', pool: DATA.S3 }
 ];
 
 /* 메뉴 한 줄. 안내 녹음이 있으면 그 줄에 🔊 를 달고, 없으면 단추만 내보냅니다. */
@@ -791,6 +826,7 @@ function startWord(si, retry) {
         i: 0, right: 0, wrong: [], slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
   go('word');
   renderWord(true);
+  tipThen(st.id, [W.items[0]]);
 }
 
 function setMode(paper) {
@@ -809,6 +845,7 @@ function renderWord(playIt) {
   $('mdPaper').classList.toggle('on', paperMode);
   $('wTitle').textContent = W.st.icon + ' ' + W.st.title;
   $('wTip').textContent = W.st.tip;
+  showTipSpk('wTipSpk', W.st.id);
   $('wProgress').textContent = (W.i + 1) + ' / ' + W.items.length + ' · 맞힌 낱말 ' + W.right + '개';
   var slots = '';
   for (var i = 0; i < it.length; i++) {
@@ -854,11 +891,12 @@ function onPal() {
   if (want && got !== want[W.step]) {
     this.classList.add('miss', 'shake');
     W.miss = true;
-    var names = ['첫소리', '가운뎃소리', '받침'];
+    var why = ['첫소리가 다릅니다. 다시 한 번 들어 보세요.', '가운뎃소리가 다릅니다. 다시 한 번 들어 보세요.',
+               '받침이 다릅니다. 다시 한 번 들어 보세요.'];
     var fb = $('wFeedback');
     fb.className = 'feedback show ng';
-    fb.innerHTML = names[W.step] + '가 다릅니다. 다시 한 번 들어 보세요.';
-    play(it);
+    fb.innerHTML = why[W.step];
+    sayWhy(['ui_jung_x_cho', 'ui_jung_x_jung', 'ui_jung_x_jong'][W.step], [it]);
     return;
   }
   W.cur[W.step] = got;
@@ -953,6 +991,7 @@ function startSent(si, retry) {
   S = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, filled: [], done: false, fillers: fillers };
   go('sent');
   renderSent(true);
+  tipThen(st.id, [items[0].text]);
 }
 
 function sentTokens(it) {
@@ -982,6 +1021,7 @@ function renderSent(playIt) {
   if (!it.cards) it.cards = sentTokens(it);
   $('sTitle').textContent = S.st.icon + ' ' + S.st.title;
   $('sTip').textContent = S.st.tip;
+  showTipSpk('sTipSpk', S.st.id);
   $('sProgress').textContent = (S.i + 1) + ' / ' + S.items.length + ' · 맞힌 문장 ' + S.right + '개';
 
   var whole = fileOf(it.text);
@@ -1043,6 +1083,7 @@ function checkSent() {
   for (var i = 0; i < it.toks.length; i++) if (S.filled[i] == null) {
     var f = $('sFeedback'); f.className = 'feedback show ng';
     f.innerHTML = '빈 칸이 남아 있습니다. 카드를 모두 채워 주세요.';
+    sayWhy('ui_jung_x_empty');
     return;
   }
   var ok = it.toks.every(function (t, k) { return S.filled[k] === t; });
@@ -1088,6 +1129,7 @@ function startRead(si, retry) {
   R = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, done: false };
   go('read');
   renderRead();
+  tipThen(st.id, []);
 }
 
 function renderRead() {
@@ -1096,6 +1138,7 @@ function renderRead() {
   var src = DATA.READ_AUDIO && DATA.READ_AUDIO[full];
   $('rdTitle').textContent = R.st.icon + ' ' + R.st.title;
   $('rdTip').textContent = R.st.tip;
+  showTipSpk('rdTipSpk', R.st.id);
   $('rdProgress').textContent = (R.i + 1) + ' / ' + R.items.length + ' · 맞힌 물음 ' + R.right + '개';
   $('rdDoc').innerHTML = it.text.lines.map(function (l) { return '<p>' + l + '</p>'; }).join('');
   $('rdListenRow').hidden = !src;
@@ -1178,6 +1221,7 @@ function startWrite(si) {
   M = { st: DATA.M[si], si: si, i: 0 };
   go('write');
   renderWrite();
+  tipThen(M.st.id, []);
 }
 
 function renderWrite() {
@@ -1185,6 +1229,7 @@ function renderWrite() {
   var src = DATA.WRITE_AUDIO && DATA.WRITE_AUDIO[it.ask];
   $('mTitle').textContent = st.icon + ' ' + st.title;
   $('mTip').textContent = st.tip;
+  showTipSpk('mTipSpk', st.id);
   $('mProgress').textContent = (M.i + 1) + ' / ' + st.items.length + ' · 쓰신 것 ' + writtenCount(st) + '개';
   $('mAsk').textContent = it.ask;
   $('mListenRow').hidden = !src;
@@ -1221,6 +1266,7 @@ function doneWrite() {
     var f = $('mFeedback');
     f.className = 'feedback show ng';
     f.innerHTML = '아직 아무것도 쓰지 않으셨습니다. 한 낱말이라도 좋으니 써 보세요.';
+    sayWhy('ui_jung_x_nothing');
     return;
   }
   if (M.i === st.items.length - 1) { finishWrite(); return; }
@@ -1274,12 +1320,19 @@ function finishStage(id, right, total, wrong, again, retry, isRetry) {
   $('rDesc').textContent = (isRetry ? '다시 푼 ' : '') + total + '개 가운데 ' + right + '개를 바르게 쓰셨습니다.';
   if (wrong && wrong.length) {
     $('rWrong').hidden = false;
-    $('rWrong').innerHTML = '한 번 더 써 보실 말<br>' + wrong.map(function (w) { return '<b>' + w + '</b>'; }).join(' · ');
+    // 녹음이 있는 말은 눌러서 들어 볼 수 있게 (글을 못 읽어도 무엇을 틀렸는지 알 수 있게)
+    $('rWrong').innerHTML = '한 번 더 써 보실 말<br>' + wrong.filter(function (w, k, a) { return a.indexOf(w) === k; }).map(function (w) {
+      return fileOf(w) ? '<button class="wrong-say" data-say="' + encodeURIComponent(w) + '">🔊 ' + w + '</button>' : '<b>' + w + '</b>';
+    }).join(' · ');
   } else { $('rWrong').hidden = true; }
   playSrcs(isRetry ? [DATA.FX[grade]] : [DATA.SC[right], DATA.FX[grade]]);
 }
 $('rAgain').addEventListener('click', function () { if (againFn) againFn(); });
 $('rRetry').addEventListener('click', function () { if (retryFn) retryFn(); });
+$('rWrong').addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.wrong-say');
+  if (b) play(decodeURIComponent(b.dataset.say));
+});
 $('rHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ============ 시작 ============ */
