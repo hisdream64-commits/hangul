@@ -9,9 +9,9 @@
 #   icon-jung-512-maskable.png 안드로이드가 동그랗게 잘라 쓰는 그림(가장자리 여백 넉넉히)
 #
 # 왜 따로 만드나: 홈 화면에 세 아이콘이 나란히 놓이므로 한눈에 구별되어야 합니다.
-#   한글뚝딱(초급) = 청록 바탕에 「한글」
-#   한글뚝딱(중급) = 주황 바탕에 「중급」   ← 이 파일
-#   한글뚝딱(고급) = 남색 바탕에 「고급」
+#   한글뚝딱(초급) = 청록 바탕에 「뚝딱」
+#   한글뚝딱(중급) = 주황 바탕에 「뚝딱」   ← 이 파일 (2026-11-07 「중급」→「뚝딱」, 사용자 결정)
+#   한글뚝딱(고급) = 남색 바탕에 「뚝딱」
 #
 # 초급과 중급은 화면 강조색이 같은 청록이라, 아이콘까지 청록으로 하면 어르신이
 # 구별하지 못하십니다. 그래서 중급은 앱 안에서 쓰는 주황(--warm)을 바탕으로 씁니다.
@@ -44,11 +44,11 @@ TPL = """<!doctype html><html><head><meta charset="utf-8"><style>
   .box {{ width: {inner}px; height: {inner}px; background: {cream};
           border-radius: {round}px; display: flex; flex-direction: column;
           align-items: center; justify-content: center; }}
-  .box span {{ font-family: 'Noto Sans KR', 'Malgun Gothic', 'WenQuanYi Zen Hei', sans-serif;
+  .box span {{ font-family: 'Noto Sans CJK KR', 'Noto Sans KR', 'Malgun Gothic', 'WenQuanYi Zen Hei', sans-serif;
                font-weight: 800; color: {warm}; font-size: {font}px;
                line-height: 0.98; letter-spacing: -0.02em; }}
 </style></head><body>
-  <div class="box"><span>중</span><span>급</span></div>
+  <div class="box"><span>뚝</span><span>딱</span></div>
 </body></html>
 """
 

@@ -17,7 +17,9 @@ if (!block) { console.error('index.html 에서 MODULES 를 찾지 못했습니�
 
 const ctx = { console };
 vm.createContext(ctx);
-vm.runInContext(block + ';globalThis.MM=MODULES;', ctx);
+/* MODULES 가 아니라 ALL 을 봅니다. 졸업 시험(FINAL)은 MODULES 밖에 있어서,
+   MODULES 만 보면 졸업 시험의 메뉴 안내 말이 녹음되지 않습니다. */
+vm.runInContext(block + ';globalThis.MM=ALL;', ctx);
 const M = ctx.MM;
 
 const plain = s => String(s || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -28,6 +30,7 @@ const used = new Set();
 const use = t => { const k = key(t); if (k) used.add(k); };
 
 M.forEach(m => {
+  if (m.guide) use(m.guide);                       // 첫 화면 메뉴의 🔊 안내
   (m.cards || []).forEach(c => {
     if (c.say) c.say.forEach(use);                 // 배우기 카드가 읽어 주는 말
     else if (c.doc) use(plain(c.doc.body));        // say 가 없으면 문서를 통째로 읽습니다

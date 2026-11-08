@@ -45,6 +45,8 @@ const ok = (c, m) => c ? console.log('ok   ' + m) : fail(m);
   // 놀이: 10문제를 아무거나 눌러 끝낸다
   await page.click('.menu-btn[data-go="quiz"]');
   for (let i = 0; i < 10; i++) {
+    // 2026-11-08 부터 보기는 한 번 누르면 소리, 한 번 더 누르면 고르기
+    await page.click('#qChoices .choice >> nth=0');
     await page.click('#qChoices .choice >> nth=0');
     await page.click('#qNext');
   }

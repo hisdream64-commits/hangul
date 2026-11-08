@@ -4,10 +4,10 @@
 #
 # 왜: 녹음 앞뒤에 무음이 0.3초·1.1초씩 붙어 있어, 기초 학습 3단계 「천천히 합쳐 듣기」의
 # 1·2번(「드」·「아」)을 이어 틀어도 사이가 1초쯤 빕니다. 2026-11-07 사용자 결정으로 1·2번을
-# 붙여 읽게 하면서, 앱은 이 구간만 틉니다. 녹음 파일은 그대로이고 자르거나 고치지 않습니다.
+# 붙여 읽게 하면서, 앱은 이 구간만 틉니다. 4단계 받침 읽기(「바」→「읍」)도 같습니다. 녹음 파일은 그대로이고 자르거나 고치지 않습니다.
 # 틀기 시작하는 자리(currentTime)와 다음으로 넘어가는 자리만 정합니다.
 #
-# 자음·모음 소리(s_그…s_흐, s_아…s_이)를 다시 녹음했다면 이것을 다시 돌리고 stamp_sw.py.
+# 자음·모음 소리(s_그…s_흐, s_아…s_이)나 받침 소리(s_바, t_읍 …)를 다시 녹음했다면 이것을 다시 돌리고 stamp_sw.py.
 # (tools/pc_record.py 가 녹음 뒤에 알아서 돌립니다)
 
 import json
@@ -30,6 +30,18 @@ FF = imageio_ffmpeg.get_ffmpeg_exe()
 # 3단계에서 쓰는 소리: 자음 소리(자음+ㅡ, ㅇ 은 소리 없음)와 모음 소리
 CONS = "그 느 드 르 므 브 스 즈 츠 크 트 프 흐".split()
 VOWS = "아 야 어 여 오 요 우 유 으 이".split()
+
+
+def batchim_keys(html):
+    """4단계 받침 읽기에서 붙여 읽는 소리: 앞글자(s_바)와 끝소리(t_읍). index.html 의 BATCHIM 이 원본."""
+    block = re.search(r"const BATCHIM = \{(.*?)\n  \};", html, re.S).group(1)
+    bases = re.findall(r"\['.','(.)','[^']*'\]", block)
+    tails = re.findall(r"tail: '(.)'", block)
+    keys = []
+    for k in ["s_" + b for b in bases] + ["t_" + t for t in tails]:
+        if k not in keys:
+            keys.append(k)
+    return keys
 PAD_START, PAD_END = 0.02, 0.04     # 말소리 앞뒤로 남겨 둘 여유(초). 첫소리·끝소리가 잘리지 않게
 NOISE = "-40dB"
 
@@ -51,8 +63,9 @@ def main():
     html = open(IDX, encoding="utf-8", newline="").read()
     amap = json.loads(re.search(r'window\.AUDIO = (\{.*?\});</script>', html, re.S).group(1))
     out = {}
-    for ch in CONS + VOWS:
-        k = "s_" + ch
+    for k in ["s_" + ch for ch in CONS + VOWS] + batchim_keys(html):
+        if k in out:
+            continue
         if k not in amap:
             sys.exit(f"{k} 녹음이 없습니다.")
         out[k] = span(os.path.join(HERE, amap[k]))
