@@ -193,8 +193,14 @@
   /* 낱말 카드: 그림 없이 낱말만, 높이와 줄간격을 똑같이 맞춘다 */
   .word-card {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.3rem; min-height: 5.5rem; padding: 0.8rem 0.6rem;
+    gap: 0.3rem; min-height: 5.5rem; padding: 0.8rem 0.6rem; position: relative;
   }
+  /* 낱말 차례 표시 (2026-11-09): 🌱 받침 없음 · 🌿 받침 있음 · 🌳 더 배우는 글자 */
+  .word-card .lv { position: absolute; top: 0.25rem; left: 0.4rem; font-size: 0.95rem; line-height: 1; }
+  .words-order { display: flex; align-items: flex-start; gap: 0.5rem; margin: -0.4rem 0 0.9rem; }
+  .words-order p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 1rem; color: var(--sub); }
+  .words-order button { flex: 0 0 auto; font: inherit; font-size: 1rem; font-weight: 800; padding: 0.35rem 0.7rem;
+    border-radius: 12px; border: 2px solid var(--accent); background: var(--card); color: var(--accent); cursor: pointer; }
   .word-card .word {
     margin: 0; line-height: 1.35;
     word-break: keep-all; overflow-wrap: anywhere;
@@ -650,6 +656,7 @@
   <section class="screen" id="scr-words">
     <h2 class="section-title">낱말 배우기</h2>
     <p class="hint" id="wordsHint">낱말을 누르면 소리 내어 읽어 드립니다.</p>
+    <div class="words-order"><p id="wordsOrder">🌱 새싹은 받침 없는 낱말, 🌿 잎은 받침 있는 낱말, 🌳 나무는 더 배우는 글자가 든 낱말이에요. 쉬운 낱말부터 차례로 놓았어요.</p><button id="wordsOrderSpk" aria-label="낱말 차례 설명 듣기">🔊</button></div>
     <div class="tab-row" id="catRow"></div>
     <div class="grid" id="wordGrid"></div>
     <div class="lesson-nav" id="wordPager" style="margin-top:1.1rem">
@@ -749,7 +756,8 @@
   "ui_step5_g1": "이제 자주 나오는 모음 두 개를 배워요. 「애」와 「에」는 소리가 거의 같아요.",
   "ui_step5_g2": "같은 자음을 두 개 나란히 쓰면, 더 세게 소리 나요. 이것을 쌍자음이라고 해요.",
   "ui_step5_g3": "두 모음을 합친 모음이에요. 두 소리를 빠르게 이어 읽으면 돼요. 3단계 소리 합치기와 같아요.",
-  "ui_step5_g4": "드물게 쓰는 모음이에요. 모양만 알아 두셔도 충분해요."
+  "ui_step5_g4": "드물게 쓰는 모음이에요. 모양만 알아 두셔도 충분해요.",
+  "ui_words_order": "새싹은 받침 없는 낱말, 잎은 받침 있는 낱말, 나무는 더 배우는 글자가 든 낱말이에요. 쉬운 낱말부터 차례로 놓았어요."
 };</script>
 <script>
   // ---------- 음성: 내장 성우 녹음 우선, 없으면 브라우저 음성 ----------
@@ -1082,6 +1090,24 @@
   EXTRA.forEach(([g,,,snd]) => { SOUND[g] = snd; });
 
   // 낱말 자료는 조립 단계에서 window.WORDS_DATA로 심어진다 (words_data.py가 원본).
+  // 낱말의 쉬운 정도 (2026-11-09, 콘텐츠 2번): 1 받침 없음(1·2단계 글자만) · 2 받침 있음(1~4단계 글자만)
+  // · 3 더 배우는 글자(5단계 쌍자음·모음)나 겹받침·ㄲㅆ받침이 있음. 낱말 자료는 그대로 두고 보여 줄 때만 차례를 바꾼다.
+  const LV_ICON = ['', '🌱', '🌿', '🌳'];
+  const LV_NAME = ['', '받침 없는 낱말', '받침 있는 낱말', '더 배우는 글자가 든 낱말'];
+  function wordLevel(w) {
+    const BASIC_V = [0, 2, 4, 6, 8, 12, 13, 17, 18, 20];        // ㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ
+    const DOUBLE_C = [1, 4, 8, 10, 13];                          // ㄲㄸㅃㅆㅉ
+    const SIMPLE_J = [1, 4, 7, 8, 16, 17, 19, 21, 22, 23, 24, 25, 26, 27];   // 받침 ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ
+    let lv = 1;
+    for (const ch of w) {
+      const o = ch.charCodeAt(0) - 0xAC00;
+      if (o < 0 || o > 11171) continue;
+      const c = Math.floor(o / 588), v = Math.floor((o % 588) / 28), j = o % 28;
+      if (DOUBLE_C.includes(c) || !BASIC_V.includes(v) || (j && !SIMPLE_J.includes(j))) return 3;
+      if (j) lv = 2;
+    }
+    return lv;
+  }
   const WORDS = window.WORDS_DATA || {
     '가족': [['어머니','👩'], ['아버지','👨'], ['할머니','👵'], ['할아버지','👴']]
   };
@@ -1110,7 +1136,7 @@
   // ---------- 화면 전환 ----------
   const screens = document.querySelectorAll('.screen');
   const btnHome = document.getElementById('btnHome');
-  let quizHowTold = false;
+  let quizHowTold = false, wordsOrderTold = false;
   function render(id) {
     screens.forEach(s => s.classList.toggle('active', s.id === 'scr-' + id));
     btnHome.hidden = (id === 'home');
@@ -1123,6 +1149,7 @@
     // 메뉴를 누른 것이 사용자 동작이라 소리를 바로 낼 수 있다. 조용히 들어가면
     // 글을 못 읽는 분은 「다시 듣기」가 무엇인지 몰라 그대로 멈춘다.
     if (id === 'basics') enterBasics();
+    if (id === 'words' && !wordsOrderTold) { wordsOrderTold = true; say(['ui_words_order'], uiText('ui_words_order')); }
     if (id === 'home') updateHomeProgress();
     window.scrollTo(0, 0);
   }
@@ -1614,7 +1641,7 @@
     curWord = word;
     wordGrid.querySelectorAll('.word-card').forEach(c => c.classList.toggle('playing', c === btn));
     document.getElementById('wdWord').textContent = word;
-    document.getElementById('wdCat').textContent = curCat;
+    document.getElementById('wdCat').textContent = curCat + ' · ' + LV_ICON[wordLevel(word)] + ' ' + LV_NAME[wordLevel(word)];
     wordDetail.classList.add('show');
     say(['w_' + word], word);
   }
@@ -1622,9 +1649,18 @@
     if (curWord) say(['w_' + curWord], curWord);
   });
 
+  // 갈래 안에서 쉬운 낱말부터 (같은 단계 안에서는 원래 차례 그대로)
+  const sortedCache = {};
+  function sortedWords(cat) {
+    if (!sortedCache[cat]) {
+      sortedCache[cat] = WORDS[cat].map((x, i) => [x, wordLevel(x[0]), i])
+        .sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(t => t[0]);
+    }
+    return sortedCache[cat];
+  }
   function renderWords(cat, page) {
     curCat = cat;
-    const items = WORDS[cat];
+    const items = sortedWords(cat);
     const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
     curPage = Math.min(Math.max(page || 0, 0), pages - 1);
     wordGrid.innerHTML = '';
@@ -1633,7 +1669,10 @@
     items.slice(curPage * PAGE_SIZE, curPage * PAGE_SIZE + PAGE_SIZE).forEach(([word]) => {
       const b = document.createElement('button');
       b.className = 'card word-card';
-      b.innerHTML = '<span class="word' + (word.length >= 6 ? ' long' : '') + '">' + word +
+      const lv = wordLevel(word);
+      b.title = LV_NAME[lv];
+      b.innerHTML = '<span class="lv" aria-hidden="true">' + LV_ICON[lv] + '</span>' +
+                    '<span class="word' + (word.length >= 6 ? ' long' : '') + '">' + word +
                     '</span><span class="spk">🔊</span>';
       b.addEventListener('click', () => playWord(word, b));
       wordGrid.appendChild(b);
@@ -1645,6 +1684,7 @@
     saveProgress('words', { cat: cat, page: curPage });
   }
   document.getElementById('wpPrev').addEventListener('click', () => renderWords(curCat, curPage - 1));
+  document.getElementById('wordsOrderSpk').addEventListener('click', () => say(['ui_words_order'], uiText('ui_words_order')));
   document.getElementById('wpNext').addEventListener('click', () => renderWords(curCat, curPage + 1));
 
   // 지난번에 보던 갈래와 쪽에서 다시 시작한다
