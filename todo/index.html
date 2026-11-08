@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 할 일</title>
+<style>
+  :root {
+    --bg: #fdf8f0;
+    --card: #ffffff;
+    --text: #222222;
+    --muted: #666666;
+    --line: #ddd5c8;
+    --accent: #1f6f43;
+    --accent-text: #ffffff;
+    --danger: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1a18;
+      --card: #262522;
+      --text: #f2f2f2;
+      --muted: #b0aca5;
+      --line: #3d3a35;
+      --accent: #5cc48a;
+      --accent-text: #10241a;
+      --danger: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: 22px;
+    line-height: 1.5;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 34px; margin: 0 0 4px; }
+  .date { color: var(--muted); margin: 0 0 20px; }
+
+  form { display: flex; gap: 10px; margin-bottom: 20px; }
+  input[type=text] {
+    flex: 1; min-width: 0;
+    font: inherit; padding: 14px 16px;
+    border: 2px solid var(--line); border-radius: 12px;
+    background: var(--card); color: var(--text);
+  }
+  input[type=text]:focus { outline: 3px solid var(--accent); border-color: var(--accent); }
+  button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    border: 0; border-radius: 12px; padding: 14px 20px;
+    min-height: 56px;
+  }
+  .add { background: var(--accent); color: var(--accent-text); }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .check {
+    width: 52px; height: 52px; min-height: 52px; padding: 0; flex: none;
+    border: 3px solid var(--accent); background: transparent; color: var(--accent);
+    font-size: 30px; line-height: 1;
+  }
+  li.done .check { background: var(--accent); color: var(--accent-text); }
+  .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  li.done .text { color: var(--muted); text-decoration: line-through; }
+  .del {
+    background: transparent; color: var(--danger);
+    border: 2px solid var(--danger); padding: 8px 12px; min-height: 48px; flex: none;
+    font-size: 18px;
+  }
+
+  .empty { color: var(--muted); text-align: center; padding: 32px 0; }
+  .summary { color: var(--muted); margin: 16px 0 10px; }
+  .clear {
+    background: transparent; color: var(--muted);
+    border: 2px solid var(--line); width: 100%;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>오늘 할 일</h1>
+  <p class="date" id="date"></p>
+
+  <form id="form">
+    <input type="text" id="input" placeholder="할 일을 적어 주세요" autocomplete="off" aria-label="할 일">
+    <button type="submit" class="add">넣기</button>
+  </form>
+
+  <ul id="list"></ul>
+  <p class="empty" id="empty">아직 할 일이 없습니다.</p>
+
+  <p class="summary" id="summary"></p>
+  <button type="button" class="clear" id="clear" hidden>다 한 일 지우기</button>
+</main>
+
+<script>
+'use strict';
+
+var KEY = 'todo-list';
+var todos = load();
+
+var form = document.getElementById('form');
+var input = document.getElementById('input');
+var list = document.getElementById('list');
+var empty = document.getElementById('empty');
+var summary = document.getElementById('summary');
+var clearBtn = document.getElementById('clear');
+
+document.getElementById('date').textContent =
+  new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
+
+// 휴대폰에 저장 (사생활 보호 창 등에서 막혀도 앱은 그대로 동작)
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch (e) { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(todos)); } catch (e) {}
+}
+
+function render() {
+  list.innerHTML = '';
+  todos.forEach(function (t, i) {
+    var li = document.createElement('li');
+    if (t.done) li.className = 'done';
+
+    var check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'check';
+    check.textContent = t.done ? '✓' : '';
+    check.setAttribute('aria-label', t.done ? '다 함 표시 풀기' : '다 했어요');
+    check.onclick = function () { t.done = !t.done; save(); render(); };
+
+    var text = document.createElement('span');
+    text.className = 'text';
+    text.textContent = t.text;
+
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'del';
+    del.textContent = '지우기';
+    del.onclick = function () {
+      if (confirm('「' + t.text + '」을(를) 지울까요?')) {
+        todos.splice(i, 1); save(); render();
+      }
+    };
+
+    li.append(check, text, del);
+    list.appendChild(li);
+  });
+
+  var doneCount = todos.filter(function (t) { return t.done; }).length;
+  empty.hidden = todos.length > 0;
+  summary.textContent = todos.length ? todos.length + '개 중 ' + doneCount + '개 했어요' : '';
+  clearBtn.hidden = doneCount === 0;
+}
+
+form.onsubmit = function (e) {
+  e.preventDefault();
+  var v = input.value.trim();
+  if (!v) { input.focus(); return; }
+  todos.push({ text: v, done: false });
+  input.value = '';
+  save(); render();
+  input.focus();
+};
+
+clearBtn.onclick = function () {
+  if (confirm('다 한 일을 모두 지울까요?')) {
+    todos = todos.filter(function (t) { return !t.done; });
+    save(); render();
+  }
+};
+
+render();
+</script>
+</body>
+</html>
