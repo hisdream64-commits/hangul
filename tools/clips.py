@@ -37,6 +37,10 @@ def dictation_sentences():
     r = d.get("reading") or {}
     rpre, rrate = r.get("keyPrefix", "r_"), r.get("rate", rate)
     out += [(rpre + t, t, rrate) for t in r.get("texts", [])]
+    # 물음과 보기. 글을 못 읽는 분이 듣고 고를 수 있어야 하므로 이것도 읽어 줍니다.
+    a = d.get("readingAsks") or {}
+    apre, arate = a.get("keyPrefix", "ra_"), a.get("rate", rate)
+    out += [(apre + t, t, arate) for t in a.get("texts", [])]
     return out
 
 
