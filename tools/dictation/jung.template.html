@@ -239,6 +239,24 @@
   .choice.no { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
   .choice:disabled { cursor: default; }
 
+  /* 4부 내 이야기 쓰기 — 쓰는 칸을 크고 넉넉하게. 정답이 없으니 채점 색을 쓰지 않습니다. */
+  .write-ask { font-size: 1.2rem; font-weight: 800; margin: 0 0 0.5rem; word-break: keep-all; line-height: 1.5; }
+  .write-hint { font-size: 0.9rem; color: var(--sub); margin: 0 0 0.6rem; }
+  .write-box {
+    width: 100%; font-family: inherit; font-size: 1.25rem; line-height: 1.7;
+    padding: 0.8rem 0.9rem; border-radius: 14px; color: var(--ink);
+    border: 3px solid var(--line); background: var(--paper); resize: vertical;
+  }
+  .write-box:focus { outline: none; border-color: var(--accent); }
+  .write-bank-label { font-size: 0.88rem; color: var(--sub); margin: 0.8rem 0 0.4rem; }
+  .mine-item {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 0.75rem 0.9rem; margin-bottom: 0.6rem;
+  }
+  .mine-item .q { font-size: 0.92rem; color: var(--sub); margin: 0 0 0.25rem; }
+  .mine-item .a { font-size: 1.15rem; font-weight: 700; margin: 0; line-height: 1.6; word-break: keep-all; }
+  .mine-item.empty .a { color: var(--sub); font-weight: 400; }
+
   .notice { position: fixed; left: 0.7rem; right: 0.7rem; bottom: 0.9rem; max-width: 500px; margin: 0 auto;
     background: var(--bad-soft); color: var(--bad); border: 3px solid var(--bad); border-radius: 16px;
     padding: 0.9rem 1rem; font-size: 1rem; font-weight: 700; line-height: 1.5;
@@ -283,6 +301,9 @@
 
     <h2 class="part-title"><span class="n">3부</span> 글 읽기</h2>
     <div class="menu" id="menuRead"></div>
+
+    <h2 class="part-title"><span class="n">4부</span> 내 이야기 쓰기</h2>
+    <div class="menu" id="menuWrite"></div>
 
     <div class="menu-item warm" id="gbRow" style="margin-top:1.2rem">
       <a class="tool-card" href="gyeopbatchim.html" style="margin-top:0">
@@ -353,6 +374,38 @@
       <div class="choices" id="rdChoices"></div>
       <p class="feedback" id="rdFeedback"></p>
       <div class="btn-row" id="rdBtns"></div>
+    </div>
+  </section>
+
+  <!-- 내 이야기 쓰기 (4부). 정답이 없으므로 채점하지 않습니다. -->
+  <section class="screen" id="scr-write">
+    <h2 class="section-title" id="mTitle"></h2>
+    <p class="hint" id="mTip"></p>
+    <p class="progress" id="mProgress"></p>
+    <div class="panel">
+      <p class="write-ask" id="mAsk"></p>
+      <div class="listen-row" id="mListenRow" hidden>
+        <button class="listen-btn" id="mListen">🔊 물음 읽어 주기</button>
+      </div>
+      <p class="write-hint" id="mHint"></p>
+      <textarea id="mBox" class="write-box" rows="3" placeholder="여기에 써 보세요"></textarea>
+      <p class="write-bank-label">눌러서 넣어 보세요</p>
+      <div class="tokens" id="mBank"></div>
+      <p class="feedback" id="mFeedback"></p>
+      <div class="btn-row" id="mBtns"></div>
+    </div>
+  </section>
+
+  <!-- 내가 쓴 이야기 모아 보기 -->
+  <section class="screen" id="scr-mine">
+    <h2 class="section-title" id="mnTitle"></h2>
+    <p class="hint">쓰신 글은 이 휴대폰에만 저장됩니다. 언제든 다시 열어 보실 수 있습니다.</p>
+    <div class="panel">
+      <div id="mnList"></div>
+      <div class="btn-row">
+        <button class="nav-btn primary wide" id="mnAgain">✏️ 다시 쓰기</button>
+        <button class="nav-btn wide" id="mnHome">🏠 처음으로</button>
+      </div>
     </div>
   </section>
 
@@ -693,8 +746,21 @@ function renderHome() {
   var r = $('menuRead').querySelectorAll('.menu-btn');
   for (var n = 0; n < r.length; n++) r[n].addEventListener('click', function () { startRead(+this.dataset.r); });
 
+  $('menuWrite').innerHTML = (DATA.M || []).map(function (s, i) {
+    var done = writtenCount(s);
+    return menuRow(s, '<button class="menu-btn warm" data-m="' + i + '">' +
+      '<span class="icon">' + s.icon + '</span><span class="mid">' +
+      '<span class="label">' + s.title + '</span>' +
+      '<span class="desc">물음 ' + s.items.length + '개에 내 생각을 써 봅니다.' +
+      (done ? ' (쓴 것 ' + done + '개)' : '') + '</span></span>' +
+      stampOf(s.id) + '</button>', true);
+  }).join('');
+  var m = $('menuWrite').querySelectorAll('.menu-btn');
+  for (var q = 0; q < m.length; q++) m[q].addEventListener('click', function () { startWrite(+this.dataset.m); });
+
   /* 🔊 는 같은 줄(.menu-item)을 밝히며 읽습니다 */
-  var spks = document.querySelectorAll('#menuWord .menu-spk, #menuSent .menu-spk, #menuRead .menu-spk');
+  var spks = document.querySelectorAll('#menuWord .menu-spk, #menuSent .menu-spk,' +
+                                       ' #menuRead .menu-spk, #menuWrite .menu-spk');
   for (var k = 0; k < spks.length; k++) spks[k].addEventListener('click', function () {
     sayUI(this.dataset.say, this.parentNode);
   });
@@ -1070,6 +1136,107 @@ $('rdListen').addEventListener('click', function () {
   var src = DATA.READ_AUDIO && DATA.READ_AUDIO[full];
   if (src) playSrcs([src]);
 });
+
+/* ============ 4부 · 내 이야기 쓰기 ============
+   정답이 없는 활동입니다. 맞고 틀림을 따지지 않고, 쓰셨는지만 셉니다.
+   쓰신 글은 이 휴대폰 안(localStorage)에만 둡니다 — 어디로도 보내지 않습니다.
+   저장이 안 되는 기기(사생활 보호 모드)에서는 조용히 넘어갑니다. */
+var MY_STORE = 'hangul-dict:mywrite';
+var mine = {};
+try { mine = JSON.parse(localStorage.getItem(MY_STORE) || '{}') || {}; } catch (e) { mine = {}; }
+function myKey(st, i) { return st.id + '-' + i; }
+function saveMine(st, i, text) {
+  var k = myKey(st, i);
+  if (text) mine[k] = text; else delete mine[k];
+  try { localStorage.setItem(MY_STORE, JSON.stringify(mine)); } catch (e) {}
+}
+function writtenCount(st) {
+  var n = 0;
+  st.items.forEach(function (_it, i) { if (mine[myKey(st, i)]) n++; });
+  return n;
+}
+
+var M = null;
+
+function startWrite(si) {
+  M = { st: DATA.M[si], si: si, i: 0 };
+  go('write');
+  renderWrite();
+}
+
+function renderWrite() {
+  var st = M.st, it = st.items[M.i];
+  var src = DATA.WRITE_AUDIO && DATA.WRITE_AUDIO[it.ask];
+  $('mTitle').textContent = st.icon + ' ' + st.title;
+  $('mTip').textContent = st.tip;
+  $('mProgress').textContent = (M.i + 1) + ' / ' + st.items.length + ' · 쓰신 것 ' + writtenCount(st) + '개';
+  $('mAsk').textContent = it.ask;
+  $('mListenRow').hidden = !src;
+  $('mHint').textContent = it.hint || '';
+  $('mHint').hidden = !it.hint;
+  $('mBox').value = mine[myKey(st, M.i)] || '';
+
+  $('mBank').innerHTML = it.bank.map(function (w) {
+    return '<button class="token" data-w="' + w + '">' + w + '</button>';
+  }).join('');
+  var bs = $('mBank').querySelectorAll('.token');
+  for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function () {
+    var box = $('mBox');
+    box.value = (box.value ? box.value.replace(/\s+$/, '') + ' ' : '') + this.dataset.w;
+    box.focus();
+    play(this.dataset.w);          /* 넣은 낱말을 들려 줍니다 (녹음이 있으면) */
+  });
+
+  $('mFeedback').className = 'feedback';
+  $('mFeedback').innerHTML = '';
+  $('mBtns').innerHTML =
+    '<button class="nav-btn quiet" id="mClear">🧹 지우기</button>' +
+    '<button class="nav-btn primary" id="mDone">' +
+    (M.i === st.items.length - 1 ? '✅ 다 썼어요' : '✅ 다 썼어요 ▶') + '</button>';
+  $('mClear').addEventListener('click', function () { $('mBox').value = ''; $('mBox').focus(); });
+  $('mDone').addEventListener('click', doneWrite);
+}
+
+function doneWrite() {
+  var st = M.st;
+  var text = $('mBox').value.replace(/\s+/g, ' ').trim();
+  saveMine(st, M.i, text);
+  if (!text) {
+    var f = $('mFeedback');
+    f.className = 'feedback show ng';
+    f.innerHTML = '아직 아무것도 쓰지 않으셨습니다. 한 낱말이라도 좋으니 써 보세요.';
+    return;
+  }
+  if (M.i === st.items.length - 1) { finishWrite(); return; }
+  M.i++;
+  renderWrite();
+}
+
+/* 채점하지 않습니다. 몇 개를 쓰셨는지만 남기고, 쓰신 글을 모아 보여 드립니다. */
+function finishWrite() {
+  var st = M.st, n = writtenCount(st);
+  saveScore(st.id, n, st.items.length);
+  showMine(st);
+  playFx('praise');
+}
+
+function showMine(st) {
+  go('mine');
+  $('mnTitle').textContent = '📖 ' + st.title + ' — 내가 쓴 이야기';
+  $('mnList').innerHTML = st.items.map(function (it, i) {
+    var a = mine[myKey(st, i)];
+    return '<div class="mine-item' + (a ? '' : ' empty') + '">' +
+      '<p class="q">' + it.ask + '</p>' +
+      '<p class="a">' + (a ? a : '아직 쓰지 않으셨습니다') + '</p></div>';
+  }).join('');
+}
+
+$('mListen').addEventListener('click', function () {
+  var src = DATA.WRITE_AUDIO && DATA.WRITE_AUDIO[M.st.items[M.i].ask];
+  if (src) playSrcs([src]);
+});
+$('mnAgain').addEventListener('click', function () { startWrite(M.si); });
+$('mnHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ============ 결과 ============ */
 var againFn = null;

@@ -34,9 +34,10 @@ def dictation_sentences():
     d = json.load(open(SENT_JSON, encoding="utf-8"))
     pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
     out = [(pre + s, s, rate) for s in d.get("sentences", [])]
-    r = d.get("reading") or {}
-    rpre, rrate = r.get("keyPrefix", "r_"), r.get("rate", rate)
-    out += [(rpre + t, t, rrate) for t in r.get("texts", [])]
+    for name, default in (("reading", "r_"), ("writing", "m_")):
+        g = d.get(name) or {}
+        gpre, grate = g.get("keyPrefix", default), g.get("rate", rate)
+        out += [(gpre + t, t, grate) for t in g.get("texts", [])]
     return out
 
 
@@ -148,7 +149,8 @@ if __name__ == "__main__":
     sents = dictation_sentences()
     d_n = sum(1 for k, _t, _r in sents if k.startswith("d_"))
     r_n = sum(1 for k, _t, _r in sents if k.startswith("r_"))
-    print(f"  그 가운데 받아쓰기 생활 문장 {d_n}개 · 3부 글 읽기 {r_n}편"
+    m_n = sum(1 for k, _t, _r in sents if k.startswith("m_"))
+    print(f"  그 가운데 받아쓰기 생활 문장 {d_n}개 · 3부 글 읽기 {r_n}편 · 4부 물음 {m_n}개"
           + ("" if sents else " (tools/dictation/문장목록.json 이 없습니다)"))
     for k in SAMPLE_KEYS:
         t, r = c[k]
