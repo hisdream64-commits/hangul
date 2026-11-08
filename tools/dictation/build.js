@@ -101,6 +101,67 @@ const SENT3 = [
 const SENT3_TEXT = SENT3.map(s => s.map(p => p[0]).join(' '));
 const SENT_KEY = s => 'd_' + s;
 
+/* ================= 3부 · 글 읽기 =================
+   읽고 뜻을 알아보는 활동입니다. 1·2부는 듣고 쓰는 것이고, 여기는 읽는 것입니다.
+   글에 쓰는 낱말은 모두 기초반 낱말 761개 안에서 골랐습니다. 중급에서 처음 보는
+   낱말이 나오면 읽기가 아니라 낱말 공부가 되어 버립니다.
+   (쓰지 않은 말: 하루·혼자·찍다·보내다·부치다 — 기초반에 없습니다)
+
+   글 하나에 물음 셋. 한 단계는 글 셋이라 아홉 문제입니다.
+   아홉으로 맞춘 까닭: 칭찬 소리(sc_0 … sc_10)가 열 문제까지뿐입니다.
+
+   녹음 키는 r_<글 전체>. 글을 통째로 한 번에 읽어 줍니다.
+   녹음이 없으면 🔊 를 내보내지 않습니다 — 읽기 활동이라 소리 없이도 됩니다. */
+const READ_STAGES = [
+  { id: 'r1', icon: '📖', title: '1단계 · 생활 이야기',
+    tip: '글을 소리 내어 읽어 보신 뒤, 아래 물음에 답해 보세요. 글은 그대로 두고 찾아 읽으셔도 됩니다.',
+    texts: [
+      { lines: ['오늘 아침에 병원에 갔습니다.',
+                '의사 선생님이 혈압이 높다고 하셨습니다.',
+                '약을 받아서 아침과 저녁에 먹습니다.'],
+        q: [['오늘 어디에 갔습니까?', ['병원', '약국', '시장'], 0],
+            ['무엇이 높다고 하셨습니까?', ['혈압', '열', '값'], 0],
+            ['약은 언제 먹습니까?', ['아침과 저녁', '점심에만', '저녁에만'], 0]] },
+      { lines: ['어제 시장에 갔습니다.',
+                '배추와 고추를 샀습니다.',
+                '김치를 담그려고 삽니다.'],
+        q: [['어제 어디에 갔습니까?', ['시장', '가게', '은행'], 0],
+            ['무엇을 샀습니까?', ['배추와 고추', '감자와 무', '떡과 밥'], 0],
+            ['무엇을 하려고 샀습니까?', ['김치를 담그려고', '국수를 먹으려고', '선물하려고'], 0]] },
+      { lines: ['내일 경로당에 갑니다.',
+                '친구들과 이야기하고 노래합니다.',
+                '집에 있으면 심심합니다.'],
+        q: [['내일 어디에 갑니까?', ['경로당', '공원', '병원'], 0],
+            ['경로당에서 무엇을 합니까?', ['이야기하고 노래합니다', '밥을 먹습니다', '운동을 합니다'], 0],
+            ['집에 있으면 어떻습니까?', ['심심합니다', '즐겁습니다', '따뜻합니다'], 0]] }
+    ] },
+  { id: 'r2', icon: '📗', title: '2단계 · 가족과 이웃',
+    tip: '글을 읽고, 누가 무엇을 했는지 찾아보세요. 모르면 글을 한 번 더 읽어 보셔도 됩니다.',
+    texts: [
+      { lines: ['손자가 어제 전화를 했습니다.',
+                '추석에 온다고 했습니다.',
+                '떡을 사 놓고 기다립니다.'],
+        q: [['누가 전화를 했습니까?', ['손자', '딸', '친구'], 0],
+            ['언제 온다고 했습니까?', ['추석', '설날', '생일'], 0],
+            ['무엇을 사 놓았습니까?', ['떡', '국수', '김치'], 0]] },
+      { lines: ['오늘 날씨가 참 좋습니다.',
+                '공원에 단풍이 많이 들었습니다.',
+                '딸과 함께 걸었습니다.'],
+        q: [['오늘 날씨가 어떻습니까?', ['참 좋습니다', '춥습니다', '비가 옵니다'], 0],
+            ['공원에 무엇이 들었습니까?', ['단풍', '꽃', '눈'], 0],
+            ['누구와 걸었습니까?', ['딸', '손자', '친구'], 0]] },
+      { lines: ['어제 택배가 왔습니다.',
+                '딸이 겨울 목도리를 주었습니다.',
+                '전화해서 고맙다고 했습니다.'],
+        q: [['어제 무엇이 왔습니까?', ['택배', '편지', '소포'], 0],
+            ['딸이 무엇을 주었습니까?', ['겨울 목도리', '장갑', '모자'], 0],
+            ['전화해서 무슨 말을 했습니까?', ['고맙다고', '미안하다고', '반갑다고'], 0]] }
+    ] }
+];
+const READ_TEXTS = [];
+READ_STAGES.forEach(s => s.texts.forEach(t => READ_TEXTS.push(t.lines.join(' '))));
+const READ_KEY = t => 'r_' + t;
+
 /* ================= 겹받침 쓰기 연습 ================= */
 /* [겹받침, 이름, 소리 나는 쪽, 설명, 낱말들 [낱말, 읽기, 녹음낱말]] */
 const GYEOP = [
@@ -175,22 +236,34 @@ SENT3_TEXT.forEach(s => {
    녹음이 아직 없는 말은 여기에 담기지 않으므로 🔊 단추도 나오지 않습니다 — 규칙 2.
    (안내 녹음이 없는데 단추만 내보내면 눌러도 아무 일이 없어 어르신이 고장인 줄 아십니다) */
 const UI_KEYS = ['ui_jung_greet', 'ui_jung_w1', 'ui_jung_w2', 'ui_jung_w3', 'ui_jung_w4',
-                 'ui_jung_s1', 'ui_jung_s2', 'ui_jung_s3', 'ui_jung_gb'];
+                 'ui_jung_s1', 'ui_jung_s2', 'ui_jung_s3', 'ui_jung_gb',
+                 'ui_jung_r1', 'ui_jung_r2'];
 const UI = {};
 UI_KEYS.forEach(k => { if (AUDIO[k]) UI[k] = AUDIO[k]; });
+
+/* 3부 글 읽기 — 글을 통째로 읽어 주는 녹음이 들어온 것만 모은다.
+   없으면 🔊 를 내보내지 않는다. 읽기 활동이라 소리가 없어도 공부가 됩니다. */
+const READ_AUDIO = {};
+const readMissing = [];
+READ_TEXTS.forEach(t => {
+  const f = AUDIO[READ_KEY(t)];
+  if (f) READ_AUDIO[t] = f; else readMissing.push(t);
+});
 
 /* 두 화면이 쓰는 소리 파일 전부 — 묶음 자리표를 이 목록만큼만 넣는다 */
 const USED_PATHS = Object.keys(used).map(k => used[k])
   .concat(Object.keys(SENT_AUDIO).map(k => SENT_AUDIO[k]))
   .concat(Object.keys(FX).map(k => FX[k]))
   .concat(Object.keys(UI).map(k => UI[k]))
+  .concat(Object.keys(READ_AUDIO).map(k => READ_AUDIO[k]))
   .concat(SC);
 const BIN = binFor(USED_PATHS);
 
 const jungData = {
   A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO, UI: UI,
   W: WORD_STAGES,
-  S1: SENT1, S2: SENT2, S3: SENT3
+  S1: SENT1, S2: SENT2, S3: SENT3,
+  R: READ_STAGES, READ_AUDIO: READ_AUDIO
 };
 const gyeopData = { A: used, FX: FX, SC: SC, BIN: BIN, G: GYEOP };
 
@@ -256,7 +329,11 @@ if (process.argv.indexOf('--preview') !== -1) {
 /* 소리 만드는 쪽(tools/clips.py)이 읽어 갈 문장 목록.
    이 파일이 있으면 regen_audio_edge.py 가 d_<문장> 키로 함께 만들어 줍니다. */
 fs.writeFileSync('문장목록.json',
-  JSON.stringify({ rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT }, null, 1) + '\n',
+  JSON.stringify({
+    rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT,
+    /* 3부 글 읽기. 글 한 편을 통째로 한 조각으로 읽어 줍니다. */
+    reading: { keyPrefix: 'r_', rate: '-10%', texts: READ_TEXTS }
+  }, null, 1) + '\n',
   'utf8');
 
 /* 녹음이 아직 없는 말 - 기초반 만들 때 쓰신 성우 음성으로 뽑으시면 그대로 붙습니다 */
@@ -294,6 +371,8 @@ const txt =
 fs.writeFileSync('녹음이-필요한-말.txt', txt, 'utf8');
 console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needSent.length, '개');
 console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
+console.log('글 읽기 소리   ' + Object.keys(READ_AUDIO).length + ' / ' + READ_TEXTS.length + ' 편'
+  + (readMissing.length ? '  (없어도 읽기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
 console.log('메뉴 안내 🔊   ' + Object.keys(UI).length + ' / ' + UI_KEYS.length + ' 개'
   + (Object.keys(UI).length < UI_KEYS.length
      ? '  (없는 것은 단추를 안 내보냅니다 — PC에서 --missing)' : ''));

@@ -34,6 +34,9 @@
   }
 
   * { box-sizing: border-box; }
+  /* hidden 을 붙인 것은 반드시 숨는다. display 를 지정한 칸(.listen-row 는 flex)은
+     브라우저 기본값 display:none 을 눌러 버려서, hidden 을 붙여도 그대로 보였습니다. */
+  [hidden] { display: none !important; }
   html { font-size: 22px; }
   html[data-size="big"] { font-size: 26px; }
   body { margin: 0; background: var(--bg); color: var(--ink);
