@@ -162,6 +162,55 @@ const READ_TEXTS = [];
 READ_STAGES.forEach(s => s.texts.forEach(t => READ_TEXTS.push(t.lines.join(' '))));
 const READ_KEY = t => 'r_' + t;
 
+/* ================= 4부 · 내 이야기 쓰기 =================
+   정답이 없는 활동입니다. 자기 생각과 겪은 일을 문장으로 써 보는 것이 목적이라
+   맞고 틀림을 따지지 않습니다. 쓰신 글은 이 휴대폰 안에만 저장되고, 끝에 모아
+   다시 읽어 드립니다.
+
+   쓰는 길을 둘로 두었습니다 — 보기 낱말을 눌러 넣거나, 글자판으로 직접 쓰거나.
+   글자판이 어려운 분도 낱말만 눌러 문장을 만드실 수 있습니다.
+   보기 낱말은 모두 기초반 낱말 761개 안에서 골랐습니다
+   (쓰지 않은 말: 고향·한글·글씨·책·노래 — 기초반에 없습니다).
+
+   물음 녹음 키는 m_<물음>. 없으면 🔊 를 내보내지 않습니다. */
+const WRITE_STAGES = [
+  { id: 'm1', icon: '✏️', title: '1단계 · 오늘 하루 이야기',
+    tip: '오늘 있었던 일을 한 문장으로 써 보세요. 정답은 없습니다. 보기 낱말을 눌러 넣으셔도 되고, 직접 쓰셔도 됩니다.',
+    items: [
+      { ask: '오늘 아침에 무엇을 드셨어요?', hint: '보기: 밥 · 국 · 김치 …',
+        bank: ['밥', '국', '김치', '반찬', '된장', '국수', '떡', '우유', '커피', '먹다'] },
+      { ask: '오늘 어디에 가셨어요?', hint: '안 나가셨으면 집이라고 쓰셔도 됩니다.',
+        bank: ['집', '시장', '병원', '경로당', '공원', '가게', '은행', '가다'] },
+      { ask: '오늘 날씨가 어땠어요?', hint: '',
+        bank: ['좋다', '춥다', '덥다', '따뜻하다', '시원하다', '비', '눈', '바람', '날씨'] },
+      { ask: '오늘 누구를 만나셨어요?', hint: '전화로 이야기한 분도 좋습니다.',
+        bank: ['친구', '이웃', '딸', '아들', '손자', '손녀', '며느리', '만나다', '전화하다'] },
+      { ask: '오늘 무엇을 하셨어요?', hint: '',
+        bank: ['운동', '산책', '텔레비전', '라디오', '일하다', '쉬다', '요리하다', '보다'] },
+      { ask: '오늘 기분이 어떠셨어요?', hint: '',
+        bank: ['기쁘다', '즐겁다', '행복하다', '심심하다', '피곤하다', '고맙다', '반갑다'] }
+    ] },
+  { id: 'm2', icon: '📝', title: '2단계 · 나를 소개하기',
+    tip: '나에 대해 한 문장씩 써 보세요. 쓰신 글은 이 휴대폰에 저장되어, 나중에 다시 읽어 보실 수 있습니다.',
+    items: [
+      { ask: '내가 좋아하는 음식은 무엇인가요?', hint: '',
+        bank: ['김치', '국수', '떡', '된장', '나물', '고구마', '사과', '포도', '좋다'] },
+      { ask: '내가 가고 싶은 곳은 어디인가요?', hint: '',
+        bank: ['바다', '산', '강', '공원', '시장', '절', '교회', '여행', '가다'] },
+      { ask: '내가 좋아하는 계절은 언제인가요?', hint: '왜 좋은지도 써 보세요.',
+        bank: ['봄', '여름', '가을', '겨울', '꽃', '단풍', '따뜻하다', '시원하다'] },
+      { ask: '우리 가족을 소개해 주세요.', hint: '',
+        bank: ['남편', '아내', '아들', '딸', '손자', '손녀', '며느리', '사위', '가족'] },
+      { ask: '요즘 배우고 싶은 것이 있으세요?', hint: '',
+        bank: ['운동', '요리하다', '노래하다', '춤추다', '전화기', '사진', '읽다', '쓰다'] },
+      { ask: '나에게 고마운 사람은 누구인가요?', hint: '',
+        bank: ['어머니', '아버지', '남편', '아내', '딸', '아들', '친구', '이웃', '선생님', '고맙다'] }
+    ] }
+];
+const WRITE_ASKS = [];
+WRITE_STAGES.forEach(s => s.items.forEach(it => WRITE_ASKS.push(it.ask)));
+const WRITE_KEY = a => 'm_' + a;
+
 /* ================= 겹받침 쓰기 연습 ================= */
 /* [겹받침, 이름, 소리 나는 쪽, 설명, 낱말들 [낱말, 읽기, 녹음낱말]] */
 const GYEOP = [
@@ -237,7 +286,7 @@ SENT3_TEXT.forEach(s => {
    (안내 녹음이 없는데 단추만 내보내면 눌러도 아무 일이 없어 어르신이 고장인 줄 아십니다) */
 const UI_KEYS = ['ui_jung_greet', 'ui_jung_w1', 'ui_jung_w2', 'ui_jung_w3', 'ui_jung_w4',
                  'ui_jung_s1', 'ui_jung_s2', 'ui_jung_s3', 'ui_jung_gb',
-                 'ui_jung_r1', 'ui_jung_r2'];
+                 'ui_jung_r1', 'ui_jung_r2', 'ui_jung_m1', 'ui_jung_m2'];
 const UI = {};
 UI_KEYS.forEach(k => { if (AUDIO[k]) UI[k] = AUDIO[k]; });
 
@@ -250,12 +299,21 @@ READ_TEXTS.forEach(t => {
   if (f) READ_AUDIO[t] = f; else readMissing.push(t);
 });
 
+/* 4부 내 이야기 쓰기 — 물음을 읽어 주는 녹음. 없으면 🔊 를 안 내보낸다. */
+const WRITE_AUDIO = {};
+const writeMissing = [];
+WRITE_ASKS.forEach(a => {
+  const f = AUDIO[WRITE_KEY(a)];
+  if (f) WRITE_AUDIO[a] = f; else writeMissing.push(a);
+});
+
 /* 두 화면이 쓰는 소리 파일 전부 — 묶음 자리표를 이 목록만큼만 넣는다 */
 const USED_PATHS = Object.keys(used).map(k => used[k])
   .concat(Object.keys(SENT_AUDIO).map(k => SENT_AUDIO[k]))
   .concat(Object.keys(FX).map(k => FX[k]))
   .concat(Object.keys(UI).map(k => UI[k]))
   .concat(Object.keys(READ_AUDIO).map(k => READ_AUDIO[k]))
+  .concat(Object.keys(WRITE_AUDIO).map(k => WRITE_AUDIO[k]))
   .concat(SC);
 const BIN = binFor(USED_PATHS);
 
@@ -263,7 +321,8 @@ const jungData = {
   A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO, UI: UI,
   W: WORD_STAGES,
   S1: SENT1, S2: SENT2, S3: SENT3,
-  R: READ_STAGES, READ_AUDIO: READ_AUDIO
+  R: READ_STAGES, READ_AUDIO: READ_AUDIO,
+  M: WRITE_STAGES, WRITE_AUDIO: WRITE_AUDIO
 };
 const gyeopData = { A: used, FX: FX, SC: SC, BIN: BIN, G: GYEOP };
 
@@ -332,7 +391,9 @@ fs.writeFileSync('문장목록.json',
   JSON.stringify({
     rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT,
     /* 3부 글 읽기. 글 한 편을 통째로 한 조각으로 읽어 줍니다. */
-    reading: { keyPrefix: 'r_', rate: '-10%', texts: READ_TEXTS }
+    reading: { keyPrefix: 'r_', rate: '-10%', texts: READ_TEXTS },
+    /* 4부 내 이야기 쓰기. 물음을 읽어 줍니다. */
+    writing: { keyPrefix: 'm_', rate: '-10%', texts: WRITE_ASKS }
   }, null, 1) + '\n',
   'utf8');
 
@@ -373,6 +434,8 @@ console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needS
 console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
 console.log('글 읽기 소리   ' + Object.keys(READ_AUDIO).length + ' / ' + READ_TEXTS.length + ' 편'
   + (readMissing.length ? '  (없어도 읽기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
+console.log('내 이야기 물음 ' + Object.keys(WRITE_AUDIO).length + ' / ' + WRITE_ASKS.length + ' 개'
+  + (writeMissing.length ? '  (없어도 쓰기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
 console.log('메뉴 안내 🔊   ' + Object.keys(UI).length + ' / ' + UI_KEYS.length + ' 개'
   + (Object.keys(UI).length < UI_KEYS.length
      ? '  (없는 것은 단추를 안 내보냅니다 — PC에서 --missing)' : ''));
