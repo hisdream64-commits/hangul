@@ -270,6 +270,7 @@
       <h2 id="rTitle"></h2>
       <p id="rDesc"></p>
       <div class="btn-row">
+        <button class="nav-btn primary wide" id="rRetry" hidden>🔁 틀린 것만 다시</button>
         <button class="nav-btn primary wide" id="rAgain">🔄 한 번 더 하기</button>
         <button class="nav-btn wide" id="rHome">🏠 처음으로</button>
       </div>
@@ -587,8 +588,10 @@ $('lNext').addEventListener('click', function () {
 
 /* ============ 받침 채워 쓰기 ============ */
 var F = null;
-function startFill() {
-  F = { items: pick(ALL_WORDS, 10), i: 0, right: 0, done: false, miss: false };
+// retry: 틀린 것만 다시 풀 때 그 문제 목록 (2026-11-08)
+function startFill(retry) {
+  F = { items: retry ? pick(retry, retry.length) : pick(ALL_WORDS, 10), retry: !!retry, wrong: [],
+        i: 0, right: 0, done: false, miss: false };
   go('fill'); renderFill();
 }
 function renderFill() {
@@ -625,7 +628,7 @@ function onFill() {
     return;
   }
   F.done = true;
-  if (!F.miss) F.right++;
+  if (!F.miss) F.right++; else F.wrong.push(it);
   renderFillDone();
 }
 function renderFillDone() {
@@ -639,7 +642,7 @@ function renderFillDone() {
   playFx('praise');
 }
 $('fNext').addEventListener('click', function () {
-  if (F.i === F.items.length - 1) { finish('fill', F.right, F.items.length, startFill); return; }
+  if (F.i === F.items.length - 1) { var fw = F.wrong; finish('fill', F.right, F.items.length, function () { startFill(); }, function () { startFill(fw); }, fw.length, F.retry); return; }
   F.i++; F.done = false; F.miss = false; renderFill();
 });
 $('fListen').addEventListener('click', function () { play(F.items[F.i].audio); });
@@ -647,9 +650,10 @@ $('fSlow').addEventListener('click', function () { play(F.items[F.i].audio, true
 
 /* ============ 듣고 쓰기 ============ */
 var D = null;
-function startWrite() {
+function startWrite(retry) {
   if (!HEARD.length) { showNotice('아직 소리가 있는 겹받침 낱말이 없습니다.'); return; }
-  D = { items: pick(HEARD, 10), i: 0, right: 0, slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
+  D = { items: retry ? pick(retry, retry.length) : pick(HEARD, 10), retry: !!retry, wrong: [],
+        i: 0, right: 0, slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
   go('write'); renderWrite(true);
 }
 function renderWrite(playIt) {
@@ -717,7 +721,7 @@ function onWritePal() {
 function doneWrite() {
   var it = D.items[D.i];
   D.done = true;
-  if (!D.miss) D.right++;
+  if (!D.miss) D.right++; else D.wrong.push(it);
   renderWrite(false);
   var fb = $('dFeedback');
   fb.className = 'feedback show ' + (D.miss ? 'ng' : 'ok');
@@ -726,7 +730,7 @@ function doneWrite() {
   if (D.miss) playFx('wrong', it.audio); else playFx('praise');
 }
 function nextWrite() {
-  if (D.i === D.items.length - 1) { finish('write', D.right, D.items.length, startWrite); return; }
+  if (D.i === D.items.length - 1) { var dw = D.wrong; finish('write', D.right, D.items.length, function () { startWrite(); }, function () { startWrite(dw); }, dw.length, D.retry); return; }
   D.i++; D.slot = 0; D.step = 0; D.cur = [0, 0, 0]; D.miss = false; D.done = false;
   renderWrite(true);
 }
@@ -735,12 +739,12 @@ $('dSlow').addEventListener('click', function () { play(D.items[D.i].audio, true
 
 /* ============ 어느 쪽이 소리 날까요 ============ */
 var Q = null;
-function startQuiz() {
+function startQuiz(retry) {
   var items = DATA.G.map(function (g) {
     var w = g[4][0];
     return { g: g, w: w[0], read: w[1], audio: w[2] };
   });
-  Q = { items: pick(items, 10), i: 0, right: 0, done: false };
+  Q = { items: retry ? pick(retry, retry.length) : pick(items, 10), retry: !!retry, wrong: [], i: 0, right: 0, done: false };
   go('quiz'); renderQuiz();
 }
 function renderQuiz() {
@@ -762,7 +766,7 @@ function onQuiz() {
   if (Q.done) return;
   Q.done = true;
   var it = Q.items[Q.i], ok = (this.dataset.c === it.g[2]);
-  if (ok) Q.right++;
+  if (ok) Q.right++; else Q.wrong.push(it);
   var bs = $('qChoices').querySelectorAll('.choice');
   for (var i = 0; i < bs.length; i++) {
     bs[i].disabled = true;
@@ -779,25 +783,31 @@ function onQuiz() {
 }
 $('qListen').addEventListener('click', function () { play(Q.items[Q.i].audio); });
 $('qNext').addEventListener('click', function () {
-  if (Q.i === Q.items.length - 1) { finish('quiz', Q.right, Q.items.length, startQuiz); return; }
+  if (Q.i === Q.items.length - 1) { var qw = Q.wrong; finish('quiz', Q.right, Q.items.length, function () { startQuiz(); }, function () { startQuiz(qw); }, qw.length, Q.retry); return; }
   Q.i++; renderQuiz();
 });
 
 /* ============ 결과 ============ */
-var againFn = null;
-function finish(id, right, total, again) {
-  saveScore(id, right, total);
+var againFn = null, retryFn = null;
+// retry: 틀린 것만 다시 시작하는 함수, nWrong: 틀린 개수, isRetry: 끝난 판이 다시 풀기였는가.
+// 다시 풀기는 최고 점수에 넣지 않고, 「10문제 가운데」 점수 녹음 대신 평가 소리만 튼다.
+function finish(id, right, total, again, retry, nWrong, isRetry) {
+  if (!isRetry) saveScore(id, right, total);
   againFn = again;
+  retryFn = nWrong ? retry : null;
+  $('rRetry').hidden = !retryFn;
+  $('rRetry').textContent = '🔁 틀린 것만 다시 (' + (nWrong || 0) + '개)';
   go('result');
   var ratio = right / total, trophy = '🌱', title = '천천히 한 번 더 해 볼까요?', grade = 'ok';
   if (ratio === 1) { trophy = '🏆'; title = '만점입니다!'; grade = 'perfect'; }
   else if (ratio >= 0.7) { trophy = '🎉'; title = '아주 잘하셨어요!'; grade = 'good'; }
   $('rTrophy').textContent = trophy;
   $('rTitle').textContent = title;
-  $('rDesc').textContent = total + '개 가운데 ' + right + '개를 맞히셨습니다.';
-  playSrcs([DATA.SC[right], DATA.FX[grade]]);
+  $('rDesc').textContent = (isRetry ? '다시 푼 ' : '') + total + '개 가운데 ' + right + '개를 맞히셨습니다.';
+  playSrcs(isRetry ? [DATA.FX[grade]] : [DATA.SC[right], DATA.FX[grade]]);
 }
 $('rAgain').addEventListener('click', function () { if (againFn) againFn(); });
+$('rRetry').addEventListener('click', function () { if (retryFn) retryFn(); });
 $('rHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 renderHome();
