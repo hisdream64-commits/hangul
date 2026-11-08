@@ -24,12 +24,20 @@ SENT_JSON = os.path.join(HERE, "tools", "dictation", "문장목록.json")
 
 
 def dictation_sentences():
-    """[(소리 키, 문장, 말하기 속도)] — 목록 파일이 없으면 빈 목록."""
+    """[(소리 키, 문장, 말하기 속도)] — 목록 파일이 없으면 빈 목록.
+
+    3단계 받아쓰기 문장과, 3부 글 읽기의 글을 함께 돌려줍니다.
+    글 읽기는 글 한 편을 통째로 한 조각으로 읽어 줍니다(키 r_<글>).
+    """
     if not os.path.exists(SENT_JSON):
         return []
     d = json.load(open(SENT_JSON, encoding="utf-8"))
     pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
-    return [(pre + s, s, rate) for s in d.get("sentences", [])]
+    out = [(pre + s, s, rate) for s in d.get("sentences", [])]
+    r = d.get("reading") or {}
+    rpre, rrate = r.get("keyPrefix", "r_"), r.get("rate", rate)
+    out += [(rpre + t, t, rrate) for t in r.get("texts", [])]
+    return out
 
 
 def _grab(html, pat):
@@ -138,7 +146,9 @@ if __name__ == "__main__":
     c = build()
     print(f"조각 {len(c):,}개, 글자 {sum(len(t) for t, _r in c.values()):,}자")
     sents = dictation_sentences()
-    print(f"  그 가운데 받아쓰기 생활 문장 {len(sents)}개"
+    d_n = sum(1 for k, _t, _r in sents if k.startswith("d_"))
+    r_n = sum(1 for k, _t, _r in sents if k.startswith("r_"))
+    print(f"  그 가운데 받아쓰기 생활 문장 {d_n}개 · 3부 글 읽기 {r_n}편"
           + ("" if sents else " (tools/dictation/문장목록.json 이 없습니다)"))
     for k in SAMPLE_KEYS:
         t, r = c[k]
