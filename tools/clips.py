@@ -34,13 +34,13 @@ def dictation_sentences():
     d = json.load(open(SENT_JSON, encoding="utf-8"))
     pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
     out = [(pre + s, s, rate) for s in d.get("sentences", [])]
-    r = d.get("reading") or {}
-    rpre, rrate = r.get("keyPrefix", "r_"), r.get("rate", rate)
-    out += [(rpre + t, t, rrate) for t in r.get("texts", [])]
-    # 물음과 보기. 글을 못 읽는 분이 듣고 고를 수 있어야 하므로 이것도 읽어 줍니다.
-    a = d.get("readingAsks") or {}
-    apre, arate = a.get("keyPrefix", "ra_"), a.get("rate", rate)
-    out += [(apre + t, t, arate) for t in a.get("texts", [])]
+    # 3부 글(reading) · 물음과 보기(readingAsks) · 4부 쓰기(writing).
+    # 물음과 보기도 읽어 주는 까닭: 글을 못 읽는 분이 「듣고 고를」 수 있어야
+    # 교사 없이 혼자 할 수 있습니다.
+    for name, default in (("reading", "r_"), ("readingAsks", "ra_"), ("writing", "m_")):
+        g = d.get(name) or {}
+        gpre, grate = g.get("keyPrefix", default), g.get("rate", rate)
+        out += [(gpre + t, t, grate) for t in g.get("texts", [])]
     return out
 
 
@@ -152,7 +152,8 @@ if __name__ == "__main__":
     sents = dictation_sentences()
     d_n = sum(1 for k, _t, _r in sents if k.startswith("d_"))
     r_n = sum(1 for k, _t, _r in sents if k.startswith("r_"))
-    print(f"  그 가운데 받아쓰기 생활 문장 {d_n}개 · 3부 글 읽기 {r_n}편"
+    m_n = sum(1 for k, _t, _r in sents if k.startswith("m_"))
+    print(f"  그 가운데 받아쓰기 생활 문장 {d_n}개 · 3부 글 읽기 {r_n}편 · 4부 물음 {m_n}개"
           + ("" if sents else " (tools/dictation/문장목록.json 이 없습니다)"))
     for k in SAMPLE_KEYS:
         t, r = c[k]

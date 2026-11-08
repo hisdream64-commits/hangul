@@ -9,7 +9,7 @@
 #   3. 글을 고친 안내 말 다시 녹음 (첫 화면 인사)   regen_audio_edge.py --redo ui_greet
 #   4. 소리 묶음 다시 만들기 · 말소리 구간          build_audio_bundle.py · speech_spans.py
 #   5. 받아쓰기 화면 다시 만들기 (묶음이 바뀌었으므로) tools/dictation/build.js
-#   6. 캐시 지문                                    stamp_sw.py
+#   6. 고급 녹음(빠진 것만)·묶음 · 캐시 지문          go/tools/*.py · stamp_sw.py
 #   7. 확인 — 소리 전수(verify.py) · 받아쓰기 오프라인(check_offline.py)
 #   8. 커밋하고 가지(main-ta7yke)에 올리기. main(운영)에는 올리지 않습니다.
 #
@@ -30,11 +30,16 @@ except Exception:
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRANCH = "main-ta7yke"
-REDO = ["ui_greet"]                      # 글을 고친 안내 말. 다음에 또 고치면 여기에 더하세요.
+# 글을 고친 안내 말. 고친 키를 넣고 한 번 돌린 뒤에는 **다시 비워 두세요** — 남겨 두면 돌릴 때마다
+# 다시 녹음해 묶음이 바뀌고, 휴대폰이 소리를 매번 다시 받습니다. (ui_greet 는 2026-11-06 녹음 끝)
+REDO = []
 # build.js 가 함께 쓰는 목록 두 개. git 이 한글 이름을 \354… 처럼 따옴표로 감싸 보여 주므로
 # 비교는 core.quotepath=false 로 받은 이름으로 합니다.
 DICT_LISTS = ("tools/dictation/문장목록.json", "tools/dictation/녹음이-필요한-말.txt")
-OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", "tools/__pycache__/") + DICT_LISTS
+# 한글뚝딱(고급)도 같은 한 줄에서 녹음한다 (2026-11-08). 고급은 녹음 도구가 따로라 go/ 아래 파일이 바뀐다.
+GO_FILES = ("go/audio", "go/index.html", "go/sw.js", "go/tools/used.json", "go/tools/audio_map.json")
+OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", "tools/__pycache__/", "go/audio/",
+        "go/index.html", "go/sw.js", "go/tools/used.json", "go/tools/audio_map.json", "go/tools/__pycache__/") + DICT_LISTS
 PY = sys.executable
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -134,8 +139,9 @@ def main():
     step(2, "녹음이 없는 말 만들기")
     run([PY, "tools/regen_audio_edge.py", "--missing"], what="새 말 녹음")
 
-    step(3, "글을 고친 안내 말 다시 녹음: " + ", ".join(REDO))
-    run([PY, "tools/regen_audio_edge.py", "--redo", *REDO], what="다시 녹음")
+    step(3, "글을 고친 안내 말 다시 녹음: " + (", ".join(REDO) if REDO else "없음"))
+    if REDO:
+        run([PY, "tools/regen_audio_edge.py", "--redo", *REDO], what="다시 녹음")
 
     step(4, "소리 묶음 다시 만들기 · 말소리 구간 다시 재기")
     run([PY, "tools/build_audio_bundle.py"], what="묶음 만들기")
@@ -147,14 +153,21 @@ def main():
     for name in ("jung.html", "gyeopbatchim.html"):
         os.replace(os.path.join(d, name), os.path.join(HERE, name))   # 윈도우에서도 덮어쓰기
 
-    step(6, "캐시 지문")
+    step(6, "한글뚝딱(고급) 녹음 · 캐시 지문")
+    g = os.path.join(HERE, "go")
+    run(["node", os.path.join("tools", "extract_used.js"), "index.html", os.path.join("tools", "used.json")],
+        cwd=g, what="고급 읽을 말 뽑기")
+    run([PY, os.path.join("tools", "make_audio.py")], cwd=g, what="고급 녹음")
+    run([PY, os.path.join("tools", "inject_map.py")], cwd=g, what="고급 소리 지도 넣기")
+    run([PY, os.path.join("tools", "build_audio_bundle_go.py")], cwd=g, what="고급 소리 묶음")
     run([PY, "tools/stamp_sw.py"], what="캐시 지문")
 
     check()
 
     step(8, f"커밋하고 가지({BRANCH})에 올리기")
     git("checkout", "--", "tools/__pycache__")          # 파이썬이 저절로 고친 파일은 되돌린다
-    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", *DICT_LISTS)
+    git("checkout", "--", "go/tools/__pycache__")
+    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", *DICT_LISTS, *GO_FILES)
     if r.returncode != 0:
         stop("git add 실패:\n" + r.stderr)
     if not git("diff", "--cached", "--quiet").returncode:
