@@ -87,6 +87,13 @@ def build(html=None):
         c["l1_" + g] = (f"이 글자의 이름은, {name}.", "-15%")
         c["l2_" + g] = (f"소리도 그대로, {name}.", "-15%")
         c["l3_" + g] = (f"예를 들면, {ex}.", "-15%")
+    # 5단계 · 더 배우는 글자 (2026-11-09). 쌍자음은 「소리는, 끄.」, 모음은 「소리도 그대로, 애.」
+    m5 = re.search(r"const EXTRA = \[(.*?)\n  \];", html, re.S)
+    for g, name, ex, snd, _grp, _desc in re.findall(r"\['(.)','(.*?)','(.*?)','(.*?)',(\d),'(.*?)'\]",
+                                                     m5.group(1) if m5 else ""):
+        c["l1_" + g] = (f"이 글자의 이름은, {name}.", "-15%")
+        c["l2_" + g] = (f"소리도 그대로, {name}." if snd == name else f"소리는, {snd}.", "-15%")
+        c["l3_" + g] = (f"예를 들면, {ex}.", "-15%")
 
     for cho, ci in CHO.items():
         for jung, ji in JUNG.items():
