@@ -8,6 +8,8 @@ import json
 import os
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -44,16 +46,24 @@ if len(AUDIO) != EXPECT:
 
 
 def head(u):
-    try:
-        r = urllib.request.urlopen(urllib.request.Request(BASE + u, method="HEAD"), timeout=30)
-        return u, r.status, int(r.headers.get("content-length") or 0)
-    except Exception as e:
-        return u, "ERR", str(e)[:60]
+    # 연결이 잠깐 끊기는 일은 세 번까지 다시 해 본다. 윈도우 PC 안의 임시 서버(python -m http.server)는
+    # 한꺼번에 요청이 몰리면 하나씩 놓치는 일이 있어(WinError), 멀쩡한 파일이 「문제」로 나왔다 (2026-11-09).
+    last = ""
+    for attempt in range(4):
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(BASE + u, method="HEAD"), timeout=30)
+            return u, r.status, int(r.headers.get("content-length") or 0)
+        except urllib.error.HTTPError as e:
+            return u, e.code, 0                     # 404 처럼 서버가 답한 것은 진짜 문제 — 다시 하지 않는다
+        except Exception as e:
+            last = str(e)[:60]
+            time.sleep(0.5 * (attempt + 1))
+    return u, "ERR", last
 
 
 # 1) 낱개 mp3 — 묶음을 받기 전에 인터넷으로 듣는 용도라 전부 있어야 한다
 bad = []
-with ThreadPoolExecutor(max_workers=16) as ex:
+with ThreadPoolExecutor(max_workers=8) as ex:     # 16 → 8: 임시 서버가 덜 놓치게
     for u, st, n in ex.map(head, sorted(set(AUDIO.values()))):
         if st != 200 or (isinstance(n, int) and n < 500):
             bad.append((u, st, n))

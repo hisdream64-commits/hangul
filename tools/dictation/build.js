@@ -318,6 +318,21 @@ SENT3_TEXT.forEach(s => {
 const UI_KEYS = ['ui_jung_greet', 'ui_jung_w1', 'ui_jung_w2', 'ui_jung_w3', 'ui_jung_w4',
                  'ui_jung_s1', 'ui_jung_s2', 'ui_jung_s3', 'ui_jung_gb',
                  'ui_jung_r1', 'ui_jung_r2', 'ui_jung_m1', 'ui_jung_m2'];
+/* 단계 「하는 방법」(ui_jung_tip_<단계>)과 틀린 이유(ui_jung_x_*) — 2026-11-08.
+   화면에 보이는 글과 녹음 글이 글자 하나까지 같아야 한다(규칙 3). 다르면 일부러 실패한다. */
+const TIP_IDS = ['w1', 'w2', 'w3', 'w4', 's1', 's2', 's3', 'r1', 'r2', 'm1', 'm2'];
+const WHY_KEYS = ['ui_jung_x_cho', 'ui_jung_x_jung', 'ui_jung_x_jong', 'ui_jung_x_empty', 'ui_jung_x_nothing'];
+const GUIDE_KEYS = TIP_IDS.map(id => 'ui_jung_tip_' + id).concat(WHY_KEYS);
+UI_KEYS.push.apply(UI_KEYS, GUIDE_KEYS);
+{
+  const say = JSON.parse(html.match(/window\.UI_SAY = (\{[\s\S]*?\});<\/script>/)[1]);
+  const shown = fs.readFileSync(__filename, 'utf8') + fs.readFileSync('jung.template.html', 'utf8');
+  const bad = GUIDE_KEYS.filter(k => !say[k] || shown.indexOf("'" + say[k] + "'") === -1);
+  if (bad.length) {
+    console.error('안내 녹음 글이 화면 글과 다릅니다 (index.html UI_SAY ↔ 화면): ' + bad.join(', '));
+    process.exit(1);
+  }
+}
 const UI = {};
 UI_KEYS.forEach(k => { if (AUDIO[k]) UI[k] = AUDIO[k]; });
 
