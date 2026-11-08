@@ -227,6 +227,25 @@
     margin: 0 0 0.9rem; font-size: 1rem; line-height: 1.8; }
   .wrong-list b { font-weight: 900; color: var(--ink); }
 
+  /* 앱으로 담기 — 어르신이 브라우저 점 세 개 메뉴를 찾지 않아도 되게 */
+  .install-card {
+    margin-bottom: 1rem; padding: 0.9rem 1rem;
+    background: var(--card); border: 3px solid var(--accent);
+    border-radius: 18px; box-shadow: var(--shadow);
+  }
+  .install-card .it { font-size: 1.1rem; font-weight: 800; margin: 0 0 0.3rem; }
+  .install-card .id { font-size: 0.92rem; color: var(--sub); margin: 0 0 0.7rem; line-height: 1.5; }
+  .install-btn {
+    width: 100%; font-size: 1.15rem; font-weight: 800; font-family: inherit;
+    padding: 0.8rem 1rem; border-radius: 14px; cursor: pointer;
+    border: 3px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  .ios-help { margin-top: 0.6rem; padding: 0.8rem 0.9rem; background: var(--accent-soft); border-radius: 14px; }
+  .ios-help .ih { font-size: 1rem; font-weight: 800; margin: 0 0 0.4rem; color: var(--accent); }
+  .ios-help ol { margin: 0; padding-left: 1.3rem; font-size: 1rem; line-height: 1.7; }
+  .ios-help li { margin-bottom: 0.3rem; }
+  .ios-help li:last-child { margin-bottom: 0; }
+
   /* 3부 글 읽기 — 글은 크고 줄 사이를 넉넉히. 종이에 쓴 글처럼 보이게 합니다. */
   .read-doc {
     background: var(--paper); border: 3px solid var(--line); border-radius: 16px;
@@ -309,6 +328,21 @@
       <p style="margin-top:0.35rem"><a href="go/">📘 한글뚝딱(고급)으로 가기 →</a></p>
       <!-- 안내 녹음이 있을 때만 보입니다 (renderHome 에서 켭니다) -->
       <button class="greet-spk" id="greetSpk" hidden>🔊 소리로 안내 듣기</button>
+    </div>
+
+    <!-- 앱으로 담기. 담을 수 있을 때만 보입니다 (이미 담았거나 못 담는 곳에서는 안 보임) -->
+    <div class="install-card" id="instCard" hidden>
+      <p class="it">📲 앱으로 담기</p>
+      <p class="id">홈 화면에 아이콘을 만들어 두면, 주소를 찾지 않고 바로 열 수 있어요.</p>
+      <button class="install-btn" id="instBtn">📲 앱으로 담기</button>
+      <div class="ios-help" id="instIos" hidden>
+        <p class="ih">홈 화면에 담는 방법</p>
+        <ol>
+          <li>화면 <b>아래쪽</b>의 <b>공유 단추</b>를 누르세요 — 네모에 화살표 <b>⬆️</b></li>
+          <li>쭉 내려서 <b>「홈 화면에 추가」</b>를 누르세요</li>
+          <li>오른쪽 위 <b>「추가」</b>를 누르면 끝입니다</li>
+        </ol>
+      </div>
     </div>
 
     <h2 class="part-title"><span class="n">1부</span> 낱말 쓰기</h2>
@@ -1362,6 +1396,41 @@ $('rWrong').addEventListener('click', function (e) {
   if (b) play(decodeURIComponent(b.dataset.say));
 });
 $('rHome').addEventListener('click', function () { go('home'); renderHome(); });
+
+/* ============ 앱으로 담기 ============
+   어르신이 브라우저의 점 세 개 메뉴를 찾아 들어가기는 어렵습니다. 그래서 첫 화면에
+   단추를 둡니다.
+     안드로이드: 브라우저가 「설치할 수 있다」고 알려 줄 때(beforeinstallprompt)만 켜고,
+                 누르면 설치 창을 바로 띄웁니다.
+     아이폰:     사파리는 그 신호를 주지 않습니다. 그래서 아이폰이면 단추를 바로 켜고,
+                 누르면 담는 방법을 글로 보여 줍니다.
+     이미 담아서 앱으로 열었으면 단추를 내보내지 않습니다. */
+(function () {
+  var card = $('instCard'), btn = $('instBtn'), help = $('instIos');
+  var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                   || window.navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+              || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   /* 아이패드 */
+  var deferred = null;
+
+  if (standalone || location.protocol.indexOf('http') !== 0) return;   /* 이미 앱이거나 파일로 연 경우 */
+  if (isIOS) card.hidden = false;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    card.hidden = false;
+  });
+  btn.addEventListener('click', function () {
+    if (deferred) {
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; card.hidden = true; });
+      return;
+    }
+    help.hidden = !help.hidden;          /* 아이폰: 방법을 펼쳐 보여 준다 */
+  });
+  window.addEventListener('appinstalled', function () { card.hidden = true; });
+})();
 
 /* ============ 시작 ============ */
 renderHome();

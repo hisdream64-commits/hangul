@@ -237,6 +237,15 @@
     border: 1px solid var(--line); padding: 0.75rem 1rem;
   }
   .oc-done .oc-desc { margin-bottom: 0; }
+  /* 아이폰에서 홈 화면에 담는 방법 안내 (사파리는 설치 창을 띄워 주지 않습니다) */
+  .oc-ios {
+    margin-top: 0.6rem; padding: 0.8rem 0.9rem;
+    background: var(--accent-soft); border-radius: 14px;
+  }
+  .oc-ios-title { font-size: 1rem; font-weight: 800; margin: 0 0 0.4rem; color: var(--accent); }
+  .oc-ios-steps { margin: 0; padding-left: 1.3rem; font-size: 1rem; line-height: 1.7; }
+  .oc-ios-steps li { margin-bottom: 0.3rem; }
+  .oc-ios-steps li:last-child { margin-bottom: 0; }
   .oc-title { font-size: 1.15rem; font-weight: 800; margin: 0 0 0.35rem; }
   .oc-desc { font-size: 0.95rem; color: var(--sub); margin: 0 0 0.85rem; line-height: 1.5; }
   .oc-bar {
@@ -432,7 +441,16 @@
       <p class="oc-desc" id="ocDesc">소리를 미리 받아 두면 인터넷이 없는 곳에서도 쓸 수 있어요.<br>약 10MB · 와이파이에서 받으시길 권합니다.</p>
       <div class="oc-bar" id="ocBar" hidden><span class="oc-fill" id="ocFill"></span></div>
       <button class="nav-btn primary" id="ocBtn">📥 소리 모두 받기</button>
-      <button class="nav-btn" id="ocInstall" hidden>📱 앱으로 설치하기</button>
+      <button class="nav-btn" id="ocInstall" hidden>📲 앱으로 담기</button>
+      <!-- 아이폰 안내. 사파리는 설치 창을 띄워 주지 않아 손으로 하셔야 합니다. -->
+      <div class="oc-ios" id="ocIos" hidden>
+        <p class="oc-ios-title">홈 화면에 담는 방법</p>
+        <ol class="oc-ios-steps">
+          <li>화면 <b>아래쪽</b>의 <b>공유 단추</b>를 누르세요 — 네모에 화살표 <b>⬆️</b></li>
+          <li>쭉 내려서 <b>「홈 화면에 추가」</b>를 누르세요</li>
+          <li>오른쪽 위 <b>「추가」</b>를 누르면 끝입니다</li>
+        </ol>
+      </div>
     </div>
     <div class="menu">
       <div class="menu-item">
@@ -1968,18 +1986,40 @@
         });
     });
 
-    // 안드로이드: 설치 단추를 띄운다
+    // ---------- 앱으로 담기 ----------
+    // 어르신이 브라우저의 점 세 개 메뉴를 찾아 들어가기는 어렵습니다. 그래서 첫 화면에
+    // 단추를 둡니다.
+    //   안드로이드: 브라우저가 "설치할 수 있다"고 알려 줄 때(beforeinstallprompt)만 켜고,
+    //               누르면 설치 창을 바로 띄웁니다.
+    //   아이폰:     사파리는 그 신호를 주지 않습니다. 그래서 아이폰이면 단추를 바로 켜고,
+    //               누르면 담는 방법을 글로 보여 줍니다. 전에는 이 단추가 아이폰에서
+    //               영영 나오지 않아, 아이폰 쓰시는 분은 담을 길이 없었습니다.
+    //   이미 담아서 앱으로 열었으면 단추를 내보내지 않습니다.
     var deferred = null;
     var install = document.getElementById('ocInstall');
+    var iosHelp = document.getElementById('ocIos');
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);  // 아이패드
+
+    if (!standalone && isIOS) install.hidden = false;
+
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferred = e;
-      install.hidden = false;
+      if (!standalone) install.hidden = false;
     });
     install.addEventListener('click', function () {
-      if (!deferred) return;
-      deferred.prompt();
-      deferred.userChoice.then(function () { deferred = null; install.hidden = true; });
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { deferred = null; install.hidden = true; });
+        return;
+      }
+      iosHelp.hidden = !iosHelp.hidden;      // 아이폰: 방법을 펼쳐 보여 준다
+    });
+    // 담고 나면 단추와 안내를 치운다
+    window.addEventListener('appinstalled', function () {
+      install.hidden = true;
+      iosHelp.hidden = true;
     });
   })();
 
