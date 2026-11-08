@@ -417,6 +417,7 @@
       <p id="rDesc"></p>
       <div class="wrong-list" id="rWrong" hidden></div>
       <div class="btn-row">
+        <button class="nav-btn primary wide" id="rRetry" hidden>🔁 틀린 것만 다시</button>
         <button class="nav-btn primary wide" id="rAgain">🔄 한 번 더 하기</button>
         <button class="nav-btn wide" id="rHome">🏠 처음으로</button>
       </div>
@@ -783,9 +784,11 @@ var W = null;
 var paperMode = false;
 try { paperMode = localStorage.getItem('hangul-dict:paper') === '1'; } catch (e) {}
 
-function startWord(si) {
+// retry: 틀린 것만 다시 풀 때 그 문제 목록 (2026-11-08). 없으면 새로 10문제를 뽑는다.
+function startWord(si, retry) {
   var st = DATA.W[si];
-  W = { st: st, items: pick(st.words, 10), i: 0, right: 0, wrong: [], slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
+  W = { st: st, items: retry ? pick(retry, retry.length) : pick(st.words, 10), retry: !!retry,
+        i: 0, right: 0, wrong: [], slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
   go('word');
   renderWord(true);
 }
@@ -914,7 +917,12 @@ function undoWord() {
 }
 
 function nextWord() {
-  if (W.i === W.items.length - 1) { finishStage(W.st.id, W.right, W.items.length, W.wrong, function () { startWord(DATA.W.indexOf(W.st)); }); return; }
+  if (W.i === W.items.length - 1) {
+    var wi = DATA.W.indexOf(W.st), ww = W.wrong.filter(function (w, k, a) { return a.indexOf(w) === k; });
+    finishStage(W.st.id, W.right, W.items.length, W.wrong, function () { startWord(wi); },
+                function () { startWord(wi, ww); }, W.retry);
+    return;
+  }
   W.i++; W.slot = 0; W.step = 0; W.cur = [0, 0, 0]; W.miss = false; W.done = false;
   renderWord(true);
 }
@@ -925,9 +933,9 @@ $('wSlow').addEventListener('click', function () { play(W.items[W.i], true); });
 /* ============ 2부 · 문장 쓰기 ============ */
 var S = null;
 
-function startSent(si) {
+function startSent(si, retry) {
   var st = SENT_STAGES[si];
-  var items = pick(st.pool, 10).map(function (raw) {
+  var items = retry ? pick(retry, retry.length) : pick(st.pool, 10).map(function (raw) {
     if (st.unit === 'given') {
       return { text: raw.map(function (p) { return p[0]; }).join(' '),
                toks: raw.map(function (p) { return p[0]; }),
@@ -942,7 +950,7 @@ function startSent(si) {
   });
   var fillers = [];
   items.forEach(function (x) { x.toks.forEach(function (t) { if (fillers.indexOf(t) === -1) fillers.push(t); }); });
-  S = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], filled: [], done: false, fillers: fillers };
+  S = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, filled: [], done: false, fillers: fillers };
   go('sent');
   renderSent(true);
 }
@@ -1039,7 +1047,7 @@ function checkSent() {
   }
   var ok = it.toks.every(function (t, k) { return S.filled[k] === t; });
   S.done = true;
-  if (ok) S.right++; else S.wrong.push(it.text);
+  if (ok) S.right++; else { S.wrong.push(it.text); S.wrongIt.push(it); }
   renderSent(false);
   var fb = $('sFeedback');
   fb.className = 'feedback show ' + (ok ? 'ok' : 'ng');
@@ -1051,7 +1059,12 @@ function checkSent() {
 }
 
 function nextSent() {
-  if (S.i === S.items.length - 1) { finishStage(S.st.id, S.right, S.items.length, S.wrong, function () { startSent(S.si); }); return; }
+  if (S.i === S.items.length - 1) {
+    var si = S.si, sw = S.wrongIt;
+    finishStage(S.st.id, S.right, S.items.length, S.wrong, function () { startSent(si); },
+                function () { startSent(si, sw); }, S.retry);
+    return;
+  }
   S.i++; S.filled = []; S.done = false;
   renderSent(true);
 }
@@ -1065,13 +1078,14 @@ $('sSlow').addEventListener('click', function () { play(S.items[S.i].text, true)
    🔊 는 글 녹음이 있을 때만 나옵니다. 없어도 읽기는 됩니다. */
 var R = null;
 
-function startRead(si) {
+function startRead(si, retry) {
   var st = DATA.R[si];
   var items = [];
-  st.texts.forEach(function (t, ti) {
+  if (retry) items = retry.slice();          // 글 차례대로 다시 (섞지 않음)
+  else st.texts.forEach(function (t, ti) {
     t.q.forEach(function (q) { items.push({ ti: ti, text: t, ask: q[0], choices: q[1], answer: q[2] }); });
   });
-  R = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], done: false };
+  R = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, done: false };
   go('read');
   renderRead();
 }
@@ -1104,7 +1118,7 @@ function onReadPick() {
   var got = +this.dataset.c;
   var ok = got === it.answer;
   R.done = true;
-  if (ok) R.right++; else R.wrong.push(it.ask);
+  if (ok) R.right++; else { R.wrong.push(it.ask); R.wrongIt.push(it); }
 
   var bs = $('rdChoices').querySelectorAll('.choice');
   for (var i = 0; i < bs.length; i++) {
@@ -1124,7 +1138,9 @@ function onReadPick() {
 
 function nextRead() {
   if (R.i === R.items.length - 1) {
-    finishStage(R.st.id, R.right, R.items.length, R.wrong, function () { startRead(R.si); });
+    var ri = R.si, rw = R.wrongIt;
+    finishStage(R.st.id, R.right, R.items.length, R.wrong, function () { startRead(ri); },
+                function () { startRead(ri, rw); }, R.retry);
     return;
   }
   R.i++; R.done = false;
@@ -1239,10 +1255,15 @@ $('mnAgain').addEventListener('click', function () { startWrite(M.si); });
 $('mnHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ============ 결과 ============ */
-var againFn = null;
-function finishStage(id, right, total, wrong, again) {
-  saveScore(id, right, total);
+var againFn = null, retryFn = null;
+// retry: 틀린 것만 다시 풀기를 시작하는 함수. isRetry: 지금 끝난 판이 다시 풀기였는가.
+// 다시 풀기는 연습이라 최고 점수에 넣지 않는다. 「10문제 가운데」 점수 녹음도 틀지 않는다(문제 수가 다름).
+function finishStage(id, right, total, wrong, again, retry, isRetry) {
+  if (!isRetry) saveScore(id, right, total);
   againFn = again;
+  retryFn = (wrong && wrong.length) ? retry : null;
+  $('rRetry').hidden = !retryFn;
+  $('rRetry').textContent = '🔁 틀린 것만 다시 (' + (wrong ? wrong.filter(function (w, k, a) { return a.indexOf(w) === k; }).length : 0) + '개)';
   go('result');
   var ratio = right / total;
   var trophy = '🌱', title = '천천히 한 번 더 해 볼까요?', grade = 'ok';
@@ -1250,14 +1271,15 @@ function finishStage(id, right, total, wrong, again) {
   else if (ratio >= 0.7) { trophy = '🎉'; title = '아주 잘하셨어요!'; grade = 'good'; }
   $('rTrophy').textContent = trophy;
   $('rTitle').textContent = title;
-  $('rDesc').textContent = total + '개 가운데 ' + right + '개를 바르게 쓰셨습니다.';
+  $('rDesc').textContent = (isRetry ? '다시 푼 ' : '') + total + '개 가운데 ' + right + '개를 바르게 쓰셨습니다.';
   if (wrong && wrong.length) {
     $('rWrong').hidden = false;
     $('rWrong').innerHTML = '한 번 더 써 보실 말<br>' + wrong.map(function (w) { return '<b>' + w + '</b>'; }).join(' · ');
   } else { $('rWrong').hidden = true; }
-  playSrcs([DATA.SC[right], DATA.FX[grade]]);
+  playSrcs(isRetry ? [DATA.FX[grade]] : [DATA.SC[right], DATA.FX[grade]]);
 }
 $('rAgain').addEventListener('click', function () { if (againFn) againFn(); });
+$('rRetry').addEventListener('click', function () { if (retryFn) retryFn(); });
 $('rHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ============ 시작 ============ */
