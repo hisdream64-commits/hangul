@@ -662,6 +662,7 @@
       <h2 id="rTitle"></h2>
       <p id="rDesc"></p>
       <p class="hint" id="rBest"></p>
+      <button class="speak-btn" id="rRetry" hidden>🔁 틀린 것만 다시 풀기</button>
       <button class="speak-btn" id="rAgain">🔄 다시 해 보기</button>
     </div>
   </section>
@@ -692,6 +693,8 @@
   "ui_resume_home": "지난번에 배우던 곳이 저장되어 있어요. 새싹 단추를 누르면, 거기서부터 이어서 해요.",
   "ui_resume": "지난번에 배우던 곳부터 이어서 할게요. 처음부터 다시 하시려면, 위에 있는 1단계 단추를 누르세요.",
   "ui_quiz_how": "보기를 한 번 누르면 그 낱말을 읽어 드려요. 같은 보기를 한 번 더 누르면 답으로 골라요.",
+  "ui_retry_all": "틀렸던 문제를 이번에는 모두 맞히셨어요. 참 잘하셨어요.",
+  "ui_retry_some": "아직 헷갈리는 낱말이 있어요. 틀린 것만 한 번 더 풀어 볼까요?",
 
   "ui_jung_greet": "한글뚝딱 중급이에요. 기초를 마치신 분들의 받아쓰기 반입니다. 성우가 읽어 주는 말을 듣고, 낱말과 문장을 직접 써 봐요. 종이에 쓰셔도 되고, 화면에서 글자를 만들어 쓰셔도 돼요.",
   "ui_jung_w1": "1단계, 받침 없는 낱말. 모자, 바지, 사과처럼 받침이 없어서, 소리 나는 대로 쓰면 되는 낱말이에요.",
@@ -1603,8 +1606,13 @@
     return a;
   }
 
-  function startQuiz() {
-    quizItems = shuffle(QUIZ_ITEMS.slice()).slice(0, QUIZ_LEN);
+  // 틀린 것만 다시 풀기 (2026-11-08): retryItems 를 주면 그 문제만 다시 푼다.
+  // 다시 풀기는 연습이므로 점수 기록(지난 점수·가장 잘한 점수·횟수)에는 넣지 않는다.
+  let wrongItems = [], retryMode = false;
+  function startQuiz(retryItems) {
+    retryMode = Array.isArray(retryItems) && retryItems.length > 0;
+    quizItems = retryMode ? shuffle(retryItems.slice()) : shuffle(QUIZ_ITEMS.slice()).slice(0, QUIZ_LEN);
+    wrongItems = [];
     qIndex = 0; qScore = 0;
     quizBox.style.display = '';
     quizResult.style.display = 'none';
@@ -1613,7 +1621,7 @@
 
   function showQuestion() {
     const item = quizItems[qIndex];
-    qProgress.textContent = (qIndex + 1) + '번째 문제 / 모두 ' + QUIZ_LEN + '문제';
+    qProgress.textContent = (retryMode ? '🔁 틀린 것만 · ' : '') + (qIndex + 1) + '번째 문제 / 모두 ' + quizItems.length + '문제';
     qEmoji.textContent = item.e;
     qFeedback.textContent = '';
     qFeedback.className = 'feedback';
@@ -1660,6 +1668,7 @@
       say(['p_praise'], '딩동댕! 참 잘하셨어요!');
     } else {
       btn.classList.add('wrong');
+      wrongItems.push(item);
       qChoices.querySelectorAll('.choice').forEach(c => {
         if (c.dataset.w === item.w) c.classList.add('correct');
       });
@@ -1667,13 +1676,13 @@
       qFeedback.classList.add('bad');
       say(['p_wrong', 'w_' + item.w], '괜찮아요. 정답은 ' + item.w + '입니다.');
     }
-    qNext.textContent = (qIndex + 1 < QUIZ_LEN) ? '➡️ 다음 문제' : '🏆 결과 보기';
+    qNext.textContent = (qIndex + 1 < quizItems.length) ? '➡️ 다음 문제' : '🏆 결과 보기';
     qNext.classList.add('show');
   }
 
   qNext.addEventListener('click', () => {
     qIndex++;
-    if (qIndex < QUIZ_LEN) showQuestion();
+    if (qIndex < quizItems.length) showQuestion();
     else showResult();
   });
 
@@ -1688,6 +1697,19 @@
     qProgress.textContent = '';
     const rTitle = document.getElementById('rTitle');
     const rDesc = document.getElementById('rDesc');
+    const retryBtn = document.getElementById('rRetry');
+    retryBtn.hidden = wrongItems.length === 0;
+    retryBtn.textContent = '🔁 틀린 것만 다시 풀기 (' + wrongItems.length + '문제)';
+    if (retryMode) {
+      // 다시 푼 결과. 「10문제 가운데」 녹음은 맞지 않으므로 다시 풀기 전용 안내를 쓴다.
+      const all = qScore === quizItems.length;
+      rTitle.textContent = '다시 푼 ' + quizItems.length + '문제 가운데 ' + qScore + '문제를 맞히셨어요!';
+      rDesc.textContent = uiText(all ? 'ui_retry_all' : 'ui_retry_some');
+      document.getElementById('rBest').textContent = '';
+      const k = all ? 'ui_retry_all' : 'ui_retry_some';
+      say([k], uiText(k));
+      return;
+    }
     rTitle.textContent = QUIZ_LEN + '문제 가운데 ' + qScore + '문제를 맞히셨어요!';
     let msg, gradeKey;
     if (qScore === QUIZ_LEN) { msg = '만점입니다! 정말 훌륭하세요. 👏👏👏'; gradeKey = 'g_perfect'; }
@@ -1703,7 +1725,8 @@
     say(['sc_' + qScore, gradeKey],
       QUIZ_LEN + '문제 가운데 ' + qScore + '문제를 맞히셨어요. ' + msg.replace(/[👏🙂]/g, ''));
   }
-  document.getElementById('rAgain').addEventListener('click', startQuiz);
+  document.getElementById('rAgain').addEventListener('click', () => startQuiz());
+  document.getElementById('rRetry').addEventListener('click', () => startQuiz(wrongItems));
 
   // ---------- 인터넷 없이 쓰기 (홈 화면 앱) ----------
   (function () {
