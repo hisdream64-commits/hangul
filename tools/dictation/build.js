@@ -113,7 +113,28 @@ const SENT_KEY = s => 'd_' + s;
    녹음 키는 r_<글 전체>. 글을 통째로 한 번에 읽어 줍니다.
    녹음이 없으면 🔊 를 내보내지 않습니다 — 읽기 활동이라 소리 없이도 됩니다. */
 const READ_STAGES = [
-  { id: 'r1', icon: '📖', title: '1단계 · 생활 이야기',
+  /* 숫자·날짜 단계. 고지서와 안내문에는 숫자가 글자가 아니라 숫자로 쓰여 있어서,
+     목요일·아홉 시·삼만 이천 원을 읽어 내지 못하면 윗 단계 글을 못 읽습니다.
+     초급·중급·고급 어디에도 없던 자리라 맨 앞에 둡니다.
+     showOnly: 글은 읽어 주지 않습니다 — 숫자를 눈으로 읽어 내는 것이 배울 거리입니다.
+     물음과 보기는 그대로 읽어 드립니다. */
+  { id: 'r0', icon: '🔢', title: '1단계 · 숫자와 날짜 읽기', showOnly: true,
+    tip: '고지서와 안내문에 나오는 숫자를 읽어 봅니다. 글은 눈으로 보고 고르세요.',
+    texts: [
+      { lines: ['아침 9시에 문을 엽니다.', '점심시간은 12시 30분부터입니다.'],
+        q: [['「9시」를 바르게 읽은 것은 무엇입니까?', ['아홉 시', '구 시', '아홉 날'], 0],
+            ['「30분」을 바르게 읽은 것은 무엇입니까?', ['삼십 분', '서른 분', '세 분'], 0],
+            ['병원은 아침 몇 시에 엽니까?', ['아홉 시', '열두 시', '여섯 시'], 0]] },
+      { lines: ['검진 날짜는 10월 15일입니다.', '11월 25일까지 신청하세요.'],
+        q: [['「10월」을 바르게 읽은 것은 무엇입니까?', ['시월', '십월', '열 달'], 0],
+            ['「15일」을 바르게 읽은 것은 무엇입니까?', ['십오일', '열다섯 일', '십오 날'], 0],
+            ['신청은 언제까지 해야 합니까?', ['십일월 이십오일', '시월 십오일', '십일월 십오일'], 0]] },
+      { lines: ['관리비는 32,000원입니다.', '약값은 9,120원입니다.'],
+        q: [['「32,000원」을 바르게 읽은 것은 무엇입니까?', ['삼만 이천 원', '삼십이 원', '삼백이십 원'], 0],
+            ['「9,120원」을 바르게 읽은 것은 무엇입니까?', ['구천백이십 원', '구만 백이십 원', '구백십이 원'], 0],
+            ['어느 것이 더 비쌉니까?', ['관리비', '약값', '같습니다'], 0]] }
+    ] },
+  { id: 'r1', icon: '📖', title: '2단계 · 생활 이야기',
     tip: '글을 소리 내어 읽어 보신 뒤, 아래 물음에 답해 보세요. 글은 그대로 두고 찾아 읽으셔도 됩니다.',
     texts: [
       { lines: ['오늘 아침에 병원에 갔습니다.',
@@ -135,7 +156,7 @@ const READ_STAGES = [
             ['경로당에서 무엇을 합니까?', ['이야기하고 노래합니다', '밥을 먹습니다', '운동을 합니다'], 0],
             ['집에 있으면 어떻습니까?', ['심심합니다', '즐겁습니다', '따뜻합니다'], 0]] }
     ] },
-  { id: 'r2', icon: '📗', title: '2단계 · 가족과 이웃',
+  { id: 'r2', icon: '📗', title: '3단계 · 가족과 이웃',
     tip: '글을 읽고, 누가 무엇을 했는지 찾아보세요. 모르면 글을 한 번 더 읽어 보셔도 됩니다.',
     texts: [
       { lines: ['손자가 어제 전화를 했습니다.',
@@ -159,8 +180,18 @@ const READ_STAGES = [
     ] }
 ];
 const READ_TEXTS = [];
-READ_STAGES.forEach(s => s.texts.forEach(t => READ_TEXTS.push(t.lines.join(' '))));
+READ_STAGES.forEach(s => { if (!s.showOnly) s.texts.forEach(t => READ_TEXTS.push(t.lines.join(' '))); });
 const READ_KEY = t => 'r_' + t;
+
+/* 물음과 보기도 소리로 읽어 드립니다. 글을 못 읽는 분이 「듣고 고를」 수 있어야
+   자기 혼자 할 수 있기 때문입니다. 글(r_)과 달리 짧아서 키를 따로 둡니다. */
+const READ_ASKS = [];
+READ_STAGES.forEach(s => s.texts.forEach(t => t.q.forEach(q => {
+  READ_ASKS.push(q[0]);
+  q[1].forEach(c => READ_ASKS.push(c));
+})));
+const READ_ASK_UNIQ = READ_ASKS.filter((t, i) => READ_ASKS.indexOf(t) === i);
+const ASK_KEY = t => 'ra_' + t;
 
 /* ================= 4부 · 내 이야기 쓰기 =================
    정답이 없는 활동입니다. 자기 생각과 겪은 일을 문장으로 써 보는 것이 목적이라
@@ -308,6 +339,12 @@ UI_KEYS.forEach(k => { if (AUDIO[k]) UI[k] = AUDIO[k]; });
 /* 3부 글 읽기 — 글을 통째로 읽어 주는 녹음이 들어온 것만 모은다.
    없으면 🔊 를 내보내지 않는다. 읽기 활동이라 소리가 없어도 공부가 됩니다. */
 const READ_AUDIO = {};
+const ASK_AUDIO = {};
+const askMissing = [];
+READ_ASK_UNIQ.forEach(t => {
+  const f = AUDIO[ASK_KEY(t)];
+  if (f) ASK_AUDIO[t] = f; else askMissing.push(t);
+});
 const readMissing = [];
 READ_TEXTS.forEach(t => {
   const f = AUDIO[READ_KEY(t)];
@@ -328,6 +365,7 @@ const USED_PATHS = Object.keys(used).map(k => used[k])
   .concat(Object.keys(FX).map(k => FX[k]))
   .concat(Object.keys(UI).map(k => UI[k]))
   .concat(Object.keys(READ_AUDIO).map(k => READ_AUDIO[k]))
+  .concat(Object.keys(ASK_AUDIO).map(k => ASK_AUDIO[k]))
   .concat(Object.keys(WRITE_AUDIO).map(k => WRITE_AUDIO[k]))
   .concat(SC);
 const BIN = binFor(USED_PATHS);
@@ -336,7 +374,7 @@ const jungData = {
   A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO, UI: UI,
   W: WORD_STAGES,
   S1: SENT1, S2: SENT2, S3: SENT3,
-  R: READ_STAGES, READ_AUDIO: READ_AUDIO,
+  R: READ_STAGES, READ_AUDIO: READ_AUDIO, ASK_AUDIO: ASK_AUDIO,
   M: WRITE_STAGES, WRITE_AUDIO: WRITE_AUDIO
 };
 const gyeopData = { A: used, FX: FX, SC: SC, BIN: BIN, G: GYEOP };
@@ -364,6 +402,8 @@ function inlineAudio(data, links) {
   out.BIN = null;                                       // 미리보기는 소리가 파일 안에 있으므로 묶음을 안 씁니다
   Object.keys(out.A).forEach(k => { out.A[k] = toData(out.A[k]); });
   if (out.SENT_AUDIO) Object.keys(out.SENT_AUDIO).forEach(k => { out.SENT_AUDIO[k] = toData(out.SENT_AUDIO[k]); });
+  if (out.READ_AUDIO) Object.keys(out.READ_AUDIO).forEach(k => { out.READ_AUDIO[k] = toData(out.READ_AUDIO[k]); });
+  if (out.ASK_AUDIO) Object.keys(out.ASK_AUDIO).forEach(k => { out.ASK_AUDIO[k] = toData(out.ASK_AUDIO[k]); });
   Object.keys(out.FX).forEach(k => { out.FX[k] = toData(out.FX[k]); });
   out.SC = out.SC.map(toData);
   out.LINKS = links;
@@ -407,6 +447,7 @@ fs.writeFileSync('문장목록.json',
     rate: '-10%', keyPrefix: 'd_', sentences: SENT3_TEXT,
     /* 3부 글 읽기. 글 한 편을 통째로 한 조각으로 읽어 줍니다. */
     reading: { keyPrefix: 'r_', rate: '-10%', texts: READ_TEXTS },
+    readingAsks: { keyPrefix: 'ra_', rate: '-10%', texts: READ_ASK_UNIQ },
     /* 4부 내 이야기 쓰기. 물음을 읽어 줍니다. */
     writing: { keyPrefix: 'm_', rate: '-10%', texts: WRITE_ASKS }
   }, null, 1) + '\n',
@@ -449,6 +490,8 @@ console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needS
 console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
 console.log('글 읽기 소리   ' + Object.keys(READ_AUDIO).length + ' / ' + READ_TEXTS.length + ' 편'
   + (readMissing.length ? '  (없어도 읽기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
+console.log('물음·보기 소리 ' + Object.keys(ASK_AUDIO).length + ' / ' + READ_ASK_UNIQ.length + ' 개'
+  + (askMissing.length ? '  (없으면 듣고 고를 수가 없습니다 — --missing 으로 만드세요)' : ''));
 console.log('내 이야기 물음 ' + Object.keys(WRITE_AUDIO).length + ' / ' + WRITE_ASKS.length + ' 개'
   + (writeMissing.length ? '  (없어도 쓰기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
 console.log('메뉴 안내 🔊   ' + Object.keys(UI).length + ' / ' + UI_KEYS.length + ' 개'

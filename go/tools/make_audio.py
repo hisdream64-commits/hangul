@@ -25,6 +25,10 @@ import sys
 import edge_tts
 
 VOICE = "ko-KR-SunHiNeural"   # 기초반과 같은 목소리
+
+# 클라우드(샌드박스)에서는 바깥으로 나가는 길이 프록시 하나뿐이라,
+# 지정해 주지 않으면 이름 풀이부터 막힙니다. PC 에서는 값이 없어 그대로 동작합니다.
+PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or None
 RATE = "-10%"                 # 어르신이 따라오시기 좋은 차분한 빠르기
 WORKERS = 6                   # 동시에 받는 개수. 너무 올리면 거절당합니다
 
@@ -83,7 +87,7 @@ async def fetch_all(texts):
             for attempt in range(4):
                 try:
                     buf = bytearray()
-                    async for ch in edge_tts.Communicate(t, VOICE, rate=RATE).stream():
+                    async for ch in edge_tts.Communicate(t, VOICE, rate=RATE, proxy=PROXY).stream():
                         if ch["type"] == "audio":
                             buf += ch["data"]
                     if len(buf) < 400:

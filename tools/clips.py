@@ -34,7 +34,10 @@ def dictation_sentences():
     d = json.load(open(SENT_JSON, encoding="utf-8"))
     pre, rate = d.get("keyPrefix", "d_"), d.get("rate", "-10%")
     out = [(pre + s, s, rate) for s in d.get("sentences", [])]
-    for name, default in (("reading", "r_"), ("writing", "m_")):
+    # 3부 글(reading) · 물음과 보기(readingAsks) · 4부 쓰기(writing).
+    # 물음과 보기도 읽어 주는 까닭: 글을 못 읽는 분이 「듣고 고를」 수 있어야
+    # 교사 없이 혼자 할 수 있습니다.
+    for name, default in (("reading", "r_"), ("readingAsks", "ra_"), ("writing", "m_")):
         g = d.get(name) or {}
         gpre, grate = g.get("keyPrefix", default), g.get("rate", rate)
         out += [(gpre + t, t, grate) for t in g.get("texts", [])]

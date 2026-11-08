@@ -34,6 +34,10 @@ import regen_audio_azure as az                  # noqa: E402  (shrink / 비교 �
 import edge_tts                                 # noqa: E402
 
 VOICE = "ko-KR-SunHiNeural"                     # 지금 쓰는 목소리
+
+# 클라우드(샌드박스)에서는 바깥으로 나가는 길이 프록시 하나뿐이라,
+# 지정해 주지 않으면 이름 풀이부터 막힙니다. PC 에서는 값이 없어 그대로 동작합니다.
+PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or None
 HERE = clips.HERE
 IDX = clips.IDX
 AUDIO_DIR = os.path.join(HERE, "audio")
@@ -44,7 +48,7 @@ async def synth(text, rate, sem):
         for attempt in range(3):
             try:
                 buf = b""
-                async for ch in edge_tts.Communicate(text, VOICE, rate=rate).stream():
+                async for ch in edge_tts.Communicate(text, VOICE, rate=rate, proxy=PROXY).stream():
                     if ch["type"] == "audio":
                         buf += ch["data"]
                 if buf:

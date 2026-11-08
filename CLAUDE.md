@@ -60,6 +60,9 @@ python -m http.server 8000                    # 그 뒤 http://localhost:8000/ju
 - 작성자는 저장소 안에서만 `hisdream64-commits <hisdream64@gmail.com>` 로 잡혀 있습니다.
 - **여러 세션이 같은 작업 트리를 함께 씁니다.** 커밋할 때는 반드시 **경로를 지정**해서
   남의 변경을 쓸어 담지 마세요 — `git commit <경로> -m ...`. 실제로 한 번 섞인 적이 있습니다.
+- **일을 집기 전에 [docs/CURRICULUM_REVIEW.md](docs/CURRICULUM_REVIEW.md) 4절의 목록을
+  먼저 보고, 그 줄에 「🔸 진행 중」을 적어 밀어 올리세요.** 2026-11-08 에 두 세션이 같은
+  기능을 따로 만들어 한쪽을 버린 적이 있습니다. 🔸 가 붙은 줄은 집지 마세요.
 - `main` 에 올리면 **운영 주소(https://urihangul.vercel.app/)가 바로 바뀝니다.**
   어르신이 쓰시는 화면이므로, 묻지 않고 올리지 마세요. 가지에 올리면 미리보기만 생깁니다.
 - **클라우드 세션에서는 태그를 못 올립니다.** `refs/tags` 푸시와 git 쓰기 API가 둘 다
