@@ -39,7 +39,11 @@ M.forEach(m => {
   });
   (m.quiz || []).forEach(q => {
     if (q.listen) use(q.listen);                   // 🔊 소리로 듣기
-    use(plain(q.choices[q.answer]));               // 오답일 때 「정답은」 + 정답 보기
+    /* 물음과 보기를 모두 읽어 줍니다. 글을 못 읽는 분이 「듣고 고를」 수 있어야
+       교사 없이 혼자 할 수 있습니다. 전에는 정답 보기 하나만 녹음해서,
+       무슨 말인지 모른 채 눌러야 했습니다. */
+    use(plain(q.ask));
+    q.choices.forEach(c => use(plain(c)));
   });
   (m.orders || []).forEach(o => use(o.parts.join(' ')));   // 문장 차례 맞추기
   (m.sentences || []).forEach(x => use(x.text));           // 소리 내어 읽기
