@@ -421,6 +421,7 @@
       <h2 id="rTitle"></h2>
       <p id="rDesc"></p>
       <div class="btn-row">
+        <button class="nav-btn primary wide" id="rRetry" hidden>🔁 틀린 것만 다시 풀기</button>
         <button class="nav-btn primary wide" id="rAgain">🔄 다시 풀어 보기</button>
         <button class="nav-btn wide" id="rHome">🏠 처음으로</button>
       </div>
@@ -446,6 +447,7 @@
       <h2 id="odRTitle"></h2>
       <p id="odRDesc"></p>
       <div class="btn-row">
+        <button class="nav-btn primary wide" id="odRetry" hidden>🔁 틀린 것만 다시 풀기</button>
         <button class="nav-btn primary wide" id="odAgain">🔄 다시 해 보기</button>
         <button class="nav-btn wide" id="odHome">🏠 처음으로</button>
       </div>
@@ -469,6 +471,7 @@
       <h2 id="slRTitle"></h2>
       <p id="slRDesc"></p>
       <div class="btn-row">
+        <button class="nav-btn primary wide" id="slRetry" hidden>🔁 틀린 것만 다시 풀기</button>
         <button class="nav-btn primary wide" id="slAgain">🔄 다시 해 보기</button>
         <button class="nav-btn wide" id="slHome">🏠 처음으로</button>
       </div>
@@ -1357,7 +1360,7 @@ if ('speechSynthesis' in window) {
    화면 내용이 조금이라도 바뀌면 APP_BUILD 가 달라지므로, 휴대폰에 보이는 값과
    견주어 보면 새 화면을 받았는지 바로 알 수 있습니다. */
 const APP_VERSION = '1.3';
-const APP_BUILD = '224ebc';
+const APP_BUILD = 'e1b1a5';
 const APP_DATE = '2026-11-08';
 window.APP_VERSION = APP_VERSION;
 document.addEventListener('DOMContentLoaded', function () {
@@ -1725,8 +1728,9 @@ function shuffle(arr) {
   return arr;
 }
 
-function startQuiz(m, items) {
-  QZ = { m: m, items: items || m.quiz, i: 0, right: 0, answered: false };
+// retry: 틀린 것만 다시 풀기일 때 true (2026-11-08). 다시 푼 판은 점수 기록에 넣지 않는다.
+function startQuiz(m, items, retry) {
+  QZ = { m: m, items: items || m.quiz, i: 0, right: 0, answered: false, wrong: [], retry: !!retry };
   go('quiz');
   $('quizBox').hidden = false;
   $('quizResult').hidden = true;
@@ -1776,7 +1780,7 @@ function onAnswer() {
   const it = QZ.items[QZ.i];
   const pick = +this.dataset.i;
   const ok = (pick === it.answer);
-  if (ok) QZ.right++;
+  if (ok) QZ.right++; else QZ.wrong.push(it);
   const btns = $('qChoices').querySelectorAll('.choice');
   for (let i = 0; i < btns.length; i++) {
     btns[i].disabled = true;
@@ -1801,7 +1805,9 @@ $('qNext').addEventListener('click', function () {
 
 function showResult() {
   const n = QZ.items.length, r = QZ.right;
-  saveScore(QZ.m.id, r, n);
+  if (!QZ.retry) saveScore(QZ.m.id, r, n);
+  $('rRetry').hidden = QZ.wrong.length === 0;
+  $('rRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + QZ.wrong.length + '문제)';
   $('quizBox').hidden = true;
   $('quizResult').hidden = false;
   const ratio = r / n;
@@ -1809,23 +1815,24 @@ function showResult() {
   if (ratio === 1) { trophy = '🏆'; title = '모두 맞히셨습니다!'; desc = '어렵지 않으시지요? 다음 과로 넘어가 보세요.'; }
   else if (ratio >= 0.7) { trophy = '🎉'; title = '잘하셨습니다!'; desc = '한 번 더 풀어 보시면 완벽합니다.'; }
   else { desc = '배우기 화면을 한 번 더 보고 오시면 훨씬 쉬워집니다.'; }
-  if (QZ.m.exam && ratio >= 0.7) { trophy = '🎓'; title = '졸업을 축하드립니다!'; desc = '이제 어떤 글도 겁내지 않으셔도 됩니다.'; }
+  if (QZ.m.exam && !QZ.retry && ratio >= 0.7) { trophy = '🎓'; title = '졸업을 축하드립니다!'; desc = '이제 어떤 글도 겁내지 않으셔도 됩니다.'; }
   $('rTrophy').textContent = trophy;
   $('rTitle').textContent = title;
-  $('rDesc').textContent = n + '문제 가운데 ' + r + '문제를 맞혔습니다. ' + desc;
+  $('rDesc').textContent = (QZ.retry ? '다시 푼 ' : '') + n + '문제 가운데 ' + r + '문제를 맞혔습니다. ' + desc;
   speak(title);
 }
 $('rAgain').addEventListener('click', function () {
   if (QZ.m.exam) startExam();
   else startQuiz(QZ.m);
 });
+$('rRetry').addEventListener('click', function () { startQuiz(QZ.m, shuffle(QZ.wrong.slice()), true); });
 $('rHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ===================== 문장 차례 맞추기 ===================== */
 let OD = { m: null, i: 0, right: 0, bank: [], picks: [], checked: false };
 
-function startOrder(m) {
-  OD = { m: m, i: 0, right: 0, bank: [], picks: [], checked: false };
+function startOrder(m, retryList) {
+  OD = { m: m, list: retryList || m.orders, retry: !!retryList, wrong: [], i: 0, right: 0, bank: [], picks: [], checked: false };
   go('order');
   $('odResult').hidden = true;
   $('odLine').hidden = false;
@@ -1834,7 +1841,7 @@ function startOrder(m) {
 }
 
 function renderOrder() {
-  const it = OD.m.orders[OD.i];
+  const it = OD.list[OD.i];
   const n = it.parts.length;
   let bank = [];
   for (let i = 0; i < n; i++) bank.push(i);
@@ -1845,7 +1852,7 @@ function renderOrder() {
     if (same) { const t = bank[0]; bank[0] = bank[n - 1]; bank[n - 1] = t; }
   }
   OD.bank = bank; OD.picks = []; OD.checked = false;
-  $('odProgress').textContent = (OD.i + 1) + ' / ' + OD.m.orders.length + ' 문장 · 맞힌 문장 ' + OD.right + '개';
+  $('odProgress').textContent = (OD.i + 1) + ' / ' + OD.list.length + ' 문장 · 맞힌 문장 ' + OD.right + '개';
   $('odAsk').innerHTML = it.ask || '';
   $('odBank').innerHTML = bank.map(function (orig, pos) {
     return '<button class="od-chip" data-pos="' + pos + '">' + it.parts[orig] + '</button>';
@@ -1862,7 +1869,7 @@ function renderOrder() {
 }
 
 function drawOrderLine() {
-  const it = OD.m.orders[OD.i];
+  const it = OD.list[OD.i];
   const line = $('odLine');
   line.classList.toggle('empty', OD.picks.length === 0);
   line.innerHTML = OD.picks.map(function (orig, i) {
@@ -1890,7 +1897,7 @@ $('odClear').addEventListener('click', function () {
 
 $('odCheck').addEventListener('click', function () {
   if (OD.checked) return;
-  const it = OD.m.orders[OD.i];
+  const it = OD.list[OD.i];
   if (OD.picks.length < it.parts.length) {
     showNotice('조각을 모두 눌러 문장을 채워 주세요.');
     return;
@@ -1898,25 +1905,27 @@ $('odCheck').addEventListener('click', function () {
   OD.checked = true;
   let ok = true;
   for (let i = 0; i < OD.picks.length; i++) if (OD.picks[i] !== i) { ok = false; break; }
-  if (ok) OD.right++;
+  if (ok) OD.right++; else OD.wrong.push(it);
   drawOrderLine();
   const sentence = it.parts.join(' ');
   const fb = $('odFeedback');
   fb.className = 'feedback show ' + (ok ? 'ok' : 'ng');
   fb.innerHTML = (ok ? '⭕ 딱 맞습니다!' : '✖ 차례가 조금 달랐습니다.') +
     '<br>바른 문장 → <b>' + sentence + '</b>';
-  $('odProgress').textContent = (OD.i + 1) + ' / ' + OD.m.orders.length + ' 문장 · 맞힌 문장 ' + OD.right + '개';
+  $('odProgress').textContent = (OD.i + 1) + ' / ' + OD.list.length + ' 문장 · 맞힌 문장 ' + OD.right + '개';
   $('odCheck').hidden = true;
   $('odClear').hidden = true;
   $('odNext').hidden = false;
-  $('odNext').textContent = (OD.i === OD.m.orders.length - 1) ? '🏆 결과 보기' : '➡️ 다음 문장';
+  $('odNext').textContent = (OD.i === OD.list.length - 1) ? '🏆 결과 보기' : '➡️ 다음 문장';
   speak(ok ? ['딱 맞습니다', sentence] : [sentence]);
 });
 
 $('odNext').addEventListener('click', function () {
-  if (OD.i < OD.m.orders.length - 1) { OD.i++; renderOrder(); return; }
-  const n = OD.m.orders.length, r = OD.right;
-  saveScore(OD.m.id, r, n);
+  if (OD.i < OD.list.length - 1) { OD.i++; renderOrder(); return; }
+  const n = OD.list.length, r = OD.right;
+  if (!OD.retry) saveScore(OD.m.id, r, n);
+  $('odRetry').hidden = OD.wrong.length === 0;
+  $('odRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + OD.wrong.length + '문장)';
   $('odLine').hidden = true;
   $('odBank').hidden = true;
   $('odAsk').innerHTML = '';
@@ -1926,22 +1935,24 @@ $('odNext').addEventListener('click', function () {
   $('odNext').hidden = true;
   $('odResult').hidden = false;
   $('odRTitle').textContent = (r === n) ? '모두 맞히셨습니다!' : (r / n >= 0.7 ? '잘하셨습니다!' : '한 번 더 해 보세요');
-  $('odRDesc').textContent = n + '문장 가운데 ' + r + '문장을 바르게 이으셨습니다.';
+  $('odRDesc').textContent = (OD.retry ? '다시 푼 ' : '') + n + '문장 가운데 ' + r + '문장을 바르게 이으셨습니다.';
   speak($('odRTitle').textContent);
 });
 $('odAgain').addEventListener('click', function () { startOrder(OD.m); });
+$('odRetry').addEventListener('click', function () { startOrder(OD.m, OD.wrong.slice()); });
 $('odHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ===================== 서식 칸 찾기 ===================== */
 const NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
 let SL = { m: null, items: [], i: 0, right: 0, answered: false };
 
-function startSlot(m) {
+function startSlot(m, retryItems) {
   const items = [];
-  m.forms.forEach(function (f) {
+  if (retryItems) retryItems.forEach(function (x) { items.push(x); });
+  else m.forms.forEach(function (f) {
     f.asks.forEach(function (a) { items.push({ form: f, ask: a }); });
   });
-  SL = { m: m, items: items, i: 0, right: 0, answered: false };
+  SL = { m: m, items: items, retry: !!retryItems, wrong: [], i: 0, right: 0, answered: false };
   go('slot');
   $('slResult').hidden = true;
   $('slSheet').hidden = false;
@@ -1974,7 +1985,7 @@ function onSlotPick() {
   const it = SL.items[SL.i];
   const pick = +this.dataset.s;
   const ok = (pick === it.ask.slot);
-  if (ok) SL.right++;
+  if (ok) SL.right++; else SL.wrong.push(it);
   const slots = $('slSheet').querySelectorAll('.f-slot');
   for (let i = 0; i < slots.length; i++) {
     const s = +slots[i].dataset.s;
@@ -1997,7 +2008,9 @@ $('slSpeak').addEventListener('click', function () { speak(plain(SL.items[SL.i].
 $('slNext').addEventListener('click', function () {
   if (SL.i < SL.items.length - 1) { SL.i++; renderSlot(true); return; }
   const n = SL.items.length, r = SL.right;
-  saveScore(SL.m.id, r, n);
+  if (!SL.retry) saveScore(SL.m.id, r, n);
+  $('slRetry').hidden = SL.wrong.length === 0;
+  $('slRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + SL.wrong.length + '물음)';
   $('slSheet').hidden = true;
   $('slAsk').innerHTML = '';
   $('slFeedback').className = 'feedback';
@@ -2005,10 +2018,11 @@ $('slNext').addEventListener('click', function () {
   $('slSpeak').hidden = true;
   $('slResult').hidden = false;
   $('slRTitle').textContent = (r === n) ? '모두 맞히셨습니다!' : (r / n >= 0.7 ? '잘하셨습니다!' : '한 번 더 해 보세요');
-  $('slRDesc').textContent = '물음 ' + n + '개 가운데 ' + r + '개를 맞히셨습니다.';
+  $('slRDesc').textContent = (SL.retry ? '다시 푼 ' : '') + '물음 ' + n + '개 가운데 ' + r + '개를 맞히셨습니다.';
   speak($('slRTitle').textContent);
 });
 $('slAgain').addEventListener('click', function () { startSlot(SL.m); });
+$('slRetry').addEventListener('click', function () { startSlot(SL.m, SL.wrong.slice()); });
 $('slHome').addEventListener('click', function () { go('home'); renderHome(); });
 
 /* ===================== 소리 내어 읽기 ===================== */
