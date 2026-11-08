@@ -70,12 +70,36 @@
   .part-title { font-size: 1.1rem; font-weight: 800; margin: 1.2rem 0 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
   .part-title span.n { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0.1rem 0.7rem; font-size: 0.9rem; }
   .menu { display: flex; flex-direction: column; gap: 0.7rem; }
+  /* 줄 하나 = 메뉴 단추 + 🔊 (기초반과 같은 모양) */
+  .menu-item { display: flex; align-items: stretch; gap: 0.5rem; }
   .menu-btn {
     display: flex; align-items: center; gap: 0.9rem; text-align: left; width: 100%;
     background: var(--card); color: var(--ink); border: 1px solid var(--line);
     border-left: 12px solid var(--accent); border-radius: 18px; padding: 0.95rem 1rem; box-shadow: var(--shadow);
   }
+  .menu-item .menu-btn { flex: 1 1 auto; min-width: 0; width: auto; }
   .menu-btn:hover { background: var(--accent-soft); }
+  .menu-spk {
+    flex: 0 0 3.4rem; min-width: 56px;
+    font-size: 1.7rem; font-family: inherit; cursor: pointer;
+    background: var(--card); color: var(--accent);
+    border: 2px solid var(--accent); border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+  .menu-spk:hover { background: var(--accent-soft); }
+  .menu-item.warm .menu-spk { color: var(--warm); border-color: var(--warm); }
+  .menu-item.warm .menu-spk:hover { background: var(--warm-soft); }
+  /* 읽어 주는 동안 그 단추를 밝혀, 소리와 단추를 눈으로 잇게 한다 */
+  .menu-item.speaking .menu-btn, .menu-item.speaking .menu-spk, .greet-spk.speaking {
+    background: var(--accent-soft); border-color: var(--accent);
+  }
+  /* 인사말 칸 읽어 주기 */
+  .greet-spk {
+    font-size: 1rem; font-weight: 800; font-family: inherit; cursor: pointer;
+    padding: 0.4rem 0.8rem; border-radius: 999px; margin-top: 0.6rem;
+    background: var(--card); color: var(--accent); border: 2px solid var(--accent);
+  }
+  .greet-spk:hover { background: var(--accent-soft); }
   .menu-btn.warm { border-left-color: var(--warm); }
   .menu-btn .icon { font-size: 2rem; line-height: 1; }
   .menu-btn .mid { flex: 1; }
@@ -223,6 +247,8 @@
       <p style="margin-top:0.6rem"><a href="index.html">← 🌱 한글뚝딱(초급)으로 돌아가기</a></p>
       <!-- 다음 과정. 고급은 go/ 폴더의 따로 선 앱이라 주소로 넘어갑니다. -->
       <p style="margin-top:0.35rem"><a href="go/">📘 한글뚝딱(고급)으로 가기 →</a></p>
+      <!-- 안내 녹음이 있을 때만 보입니다 (renderHome 에서 켭니다) -->
+      <button class="greet-spk" id="greetSpk" hidden>🔊 소리로 안내 듣기</button>
     </div>
 
     <h2 class="part-title"><span class="n">1부</span> 낱말 쓰기</h2>
@@ -231,12 +257,16 @@
     <h2 class="part-title"><span class="n">2부</span> 문장 쓰기</h2>
     <div class="menu" id="menuSent"></div>
 
-    <a class="tool-card" href="gyeopbatchim.html">
-      <span class="icon">🧩</span>
-      <span><span class="label">겹받침 쓰기 연습</span>
-      <span class="desc">닭 · 값 · 많다 … 받침이 두 개인 글자만 따로 익히기</span></span>
-      <span style="font-size:1.3rem;color:var(--warm)">▶</span>
-    </a>
+    <div class="menu-item warm" id="gbRow" style="margin-top:1.2rem">
+      <a class="tool-card" href="gyeopbatchim.html" style="margin-top:0">
+        <span class="icon">🧩</span>
+        <span><span class="label">겹받침 쓰기 연습</span>
+        <span class="desc">닭 · 값 · 많다 … 받침이 두 개인 글자만 따로 익히기</span></span>
+        <span style="font-size:1.3rem;color:var(--warm)">▶</span>
+      </a>
+      <!-- 안내 녹음이 있을 때만 보입니다 -->
+      <button class="menu-spk" id="gbSpk" aria-label="겹받침 쓰기 연습 설명 듣기" hidden>🔊</button>
+    </div>
   </section>
 
   <!-- 낱말 받아쓰기 -->
@@ -422,6 +452,7 @@ function stopAll() {
   stepQueue = [];
   clearTimeout(stepTimer);
   try { player.pause(); } catch (e) {}
+  clearSpeaking();          /* 읽어 주던 줄의 밝기도 끈다 */
 }
 
 /* 낱말·문장 → 소리 파일. 녹음이 없으면 null (꾸며 낸 목소리는 쓰지 않습니다) */
@@ -468,6 +499,27 @@ function playFx(key, then) {
 function playSrcs(srcs) {
   var steps = (srcs || []).filter(Boolean).map(function (s) { return { src: s }; });
   if (steps.length) playSteps(steps);
+}
+
+/* 메뉴 설명 읽어 주기 (기초반과 같은 방식).
+   글을 못 읽는 분이 혼자 메뉴를 고르실 수 있게 합니다.
+   읽어 주는 동안 그 줄을 밝혀, 소리와 단추를 눈으로 잇게 합니다.
+   녹음이 없는 말은 DATA.UI 에 아예 담기지 않으므로 단추도 내보내지 않습니다. */
+var speakingEl = null;
+function clearSpeaking() {
+  if (speakingEl) { speakingEl.classList.remove('speaking'); speakingEl = null; }
+}
+/* 다 읽고 나면 밝기를 끈다. 'pause' 로는 끄지 않는다 — 첫 터치 때 소리 잠금을 푸는
+   무음 재생이 바로 뒤에 pause 를 내보내서, 방금 켠 밝기가 곧바로 꺼진다.
+   대신 멈추는 길목인 stopAll() 에서 끈다. */
+player.addEventListener('ended', function () { if (!stepQueue.length) clearSpeaking(); });
+function uiSrc(key) { return (DATA.UI && DATA.UI[key]) || null; }
+function sayUI(key, el) {
+  var src = uiSrc(key);
+  if (!src) return;
+  clearSpeaking();
+  playSrcs([src]);
+  if (el) { el.classList.add('speaking'); speakingEl = el; }
 }
 
 /* ============ 한글 글자 만들기 ============ */
@@ -560,24 +612,45 @@ var SENT_STAGES = [
     tip: '소리 나는 대로 쓴 말과 바르게 쓴 말을 가려 문장을 만듭니다. 낱말 소리는 들어 보실 수 있습니다.', pool: DATA.S3 }
 ];
 
+/* 메뉴 한 줄. 안내 녹음이 있으면 그 줄에 🔊 를 달고, 없으면 단추만 내보냅니다. */
+function menuRow(s, inner, warm) {
+  var key = 'ui_jung_' + s.id;
+  var spk = uiSrc(key)
+    ? '<button class="menu-spk" data-say="' + key + '" aria-label="' + s.title + ' 설명 듣기">🔊</button>'
+    : '';
+  return '<div class="menu-item' + (warm ? ' warm' : '') + '">' + inner + spk + '</div>';
+}
+
 function renderHome() {
   $('menuWord').innerHTML = DATA.W.map(function (s, i) {
-    return '<button class="menu-btn" data-w="' + i + '">' +
+    return menuRow(s, '<button class="menu-btn" data-w="' + i + '">' +
       '<span class="icon">' + s.icon + '</span><span class="mid">' +
       '<span class="label">' + (i + 1) + '단계 · ' + s.title + '</span>' +
-      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>';
+      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>', false);
   }).join('');
   $('menuSent').innerHTML = SENT_STAGES.map(function (s, i) {
-    return '<button class="menu-btn warm" data-s="' + i + '">' +
+    return menuRow(s, '<button class="menu-btn warm" data-s="' + i + '">' +
       '<span class="icon">' + s.icon + '</span><span class="mid">' +
       '<span class="label">' + s.title + '</span>' +
-      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>';
+      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>', true);
   }).join('');
   var a = $('menuWord').querySelectorAll('.menu-btn');
   for (var i = 0; i < a.length; i++) a[i].addEventListener('click', function () { startWord(+this.dataset.w); });
   var b = $('menuSent').querySelectorAll('.menu-btn');
   for (var j = 0; j < b.length; j++) b[j].addEventListener('click', function () { startSent(+this.dataset.s); });
+
+  /* 🔊 는 같은 줄(.menu-item)을 밝히며 읽습니다 */
+  var spks = document.querySelectorAll('#menuWord .menu-spk, #menuSent .menu-spk');
+  for (var k = 0; k < spks.length; k++) spks[k].addEventListener('click', function () {
+    sayUI(this.dataset.say, this.parentNode);
+  });
+
+  /* 인사말 칸과 겹받침 줄의 🔊 — 녹음이 있을 때만 켭니다 */
+  $('greetSpk').hidden = !uiSrc('ui_jung_greet');
+  $('gbSpk').hidden = !uiSrc('ui_jung_gb');
 }
+$('greetSpk').addEventListener('click', function () { sayUI('ui_jung_greet', this); });
+$('gbSpk').addEventListener('click', function () { sayUI('ui_jung_gb', $('gbRow')); });
 
 function pick(arr, n) {
   var c = arr.slice();

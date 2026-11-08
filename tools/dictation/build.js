@@ -170,15 +170,25 @@ SENT3_TEXT.forEach(s => {
   if (f) SENT_AUDIO[s] = f; else sentMissing.push(s);
 });
 
+/* 화면 안내 말 (메뉴 설명 읽어 주기). 기초반 index.html 의 window.UI_SAY 가 원본이고,
+   tools/clips.py 가 ui_jung_* 로 녹음을 만듭니다.
+   녹음이 아직 없는 말은 여기에 담기지 않으므로 🔊 단추도 나오지 않습니다 — 규칙 2.
+   (안내 녹음이 없는데 단추만 내보내면 눌러도 아무 일이 없어 어르신이 고장인 줄 아십니다) */
+const UI_KEYS = ['ui_jung_greet', 'ui_jung_w1', 'ui_jung_w2', 'ui_jung_w3', 'ui_jung_w4',
+                 'ui_jung_s1', 'ui_jung_s2', 'ui_jung_s3', 'ui_jung_gb'];
+const UI = {};
+UI_KEYS.forEach(k => { if (AUDIO[k]) UI[k] = AUDIO[k]; });
+
 /* 두 화면이 쓰는 소리 파일 전부 — 묶음 자리표를 이 목록만큼만 넣는다 */
 const USED_PATHS = Object.keys(used).map(k => used[k])
   .concat(Object.keys(SENT_AUDIO).map(k => SENT_AUDIO[k]))
   .concat(Object.keys(FX).map(k => FX[k]))
+  .concat(Object.keys(UI).map(k => UI[k]))
   .concat(SC);
 const BIN = binFor(USED_PATHS);
 
 const jungData = {
-  A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO,
+  A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO, UI: UI,
   W: WORD_STAGES,
   S1: SENT1, S2: SENT2, S3: SENT3
 };
@@ -284,6 +294,9 @@ const txt =
 fs.writeFileSync('녹음이-필요한-말.txt', txt, 'utf8');
 console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needSent.length, '개');
 console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
+console.log('메뉴 안내 🔊   ' + Object.keys(UI).length + ' / ' + UI_KEYS.length + ' 개'
+  + (Object.keys(UI).length < UI_KEYS.length
+     ? '  (없는 것은 단추를 안 내보냅니다 — PC에서 --missing)' : ''));
 console.log(BIN
   ? '오프라인 소리  묶음 자리표 ' + Object.keys(BIN.off).length + '개 넣었습니다 (' + BIN.file + ')'
   : '오프라인 소리  기초반에 묶음(window.AUDIO_BIN)이 없어 낱개로 재생합니다');
