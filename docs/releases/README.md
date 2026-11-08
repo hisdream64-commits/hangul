@@ -7,11 +7,18 @@
 올릴 수 없습니다 — `refs/tags` 푸시와 git 쓰기 API가 둘 다 막혀 있어 **브랜치만**
 올라갑니다. 그래서 글은 여기 남기고, 태그는 PC에서 한 줄로 답니다.
 
-**PC의 PowerShell 에 이 한 줄** (v1.4):
+**PC의 PowerShell 에 다섯 줄** (v1.4):
 
 ```powershell
-cd $HOME\projects\hangul; git pull; git tag -a v1.4 -F docs/releases/v1.4.txt 877cc4d; git push origin v1.4
+cd $HOME\projects\hangul
+git checkout main
+git pull
+git tag -a v1.4 -F docs/releases/v1.4.txt
+git push origin v1.4
 ```
+
+커밋 번호를 적지 않습니다. `git pull` 로 받아 온 **지금 자리**에 붙기 때문입니다.
+그래서 번호를 잘못 옮겨 적을 일이 없습니다.
 
 v1.2 · v1.3 은 2026-11-06 에 이미 붙였습니다. 다시 붙일 일이 있으면:
 
@@ -26,7 +33,7 @@ git tag -a v1.2 -F docs/releases/v1.2.txt 0a74da9; git tag -a v1.3 -F docs/relea
 | v1.1 | (태그에만 있음) | — | ✅ |
 | v1.2 | `v1.2.txt` | `0a74da9` | ✅ 2026-11-06 |
 | v1.3 | `v1.3.txt` | `af70200` | ✅ 2026-11-06 |
-| v1.4 | `v1.4.txt` | `877cc4d` | ⬜ **PC에서 붙이면 됩니다** |
+| v1.4 | `v1.4.txt` | main 맨 끝 | ⬜ **PC에서 붙이면 됩니다** |
 
 다음 판부터는 같은 꼴로: 글을 `vX.Y.txt` 로 남기고, 위 한 줄의 판 번호와 커밋만 바꿉니다.
 
