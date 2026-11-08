@@ -347,6 +347,10 @@
   .choice:disabled { cursor: default; }
   .choice.correct { background: var(--good-soft); border-color: var(--good); color: var(--good); }
   .choice.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  /* 한 번 눌러 소리를 들은 보기. 한 번 더 누르면 답으로 고른다 */
+  .choice.armed { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+  .choice .choice-hint { display: none; font-size: 1rem; font-weight: 700; color: var(--accent); margin-top: 0.2rem; }
+  .choice.armed .choice-hint { display: block; }
 
   .feedback { font-size: 1.5rem; font-weight: 900; margin: 1.1rem 0 0; min-height: 2.2rem; }
   .feedback.good { color: var(--good); }
@@ -687,6 +691,7 @@
   "ui_n_nostorage": "이 휴대폰에서는 미리 받기를 쓸 수 없어요. 와이파이에서 그대로 쓰셔도 돼요.",
   "ui_resume_home": "지난번에 배우던 곳이 저장되어 있어요. 새싹 단추를 누르면, 거기서부터 이어서 해요.",
   "ui_resume": "지난번에 배우던 곳부터 이어서 할게요. 처음부터 다시 하시려면, 위에 있는 1단계 단추를 누르세요.",
+  "ui_quiz_how": "보기를 한 번 누르면 그 낱말을 읽어 드려요. 같은 보기를 한 번 더 누르면 답으로 골라요.",
 
   "ui_jung_greet": "한글뚝딱 중급이에요. 기초를 마치신 분들의 받아쓰기 반입니다. 성우가 읽어 주는 말을 듣고, 낱말과 문장을 직접 써 봐요. 종이에 쓰셔도 되고, 화면에서 글자를 만들어 쓰셔도 돼요.",
   "ui_jung_w1": "1단계, 받침 없는 낱말. 모자, 바지, 사과처럼 받침이 없어서, 소리 나는 대로 쓰면 되는 낱말이에요.",
@@ -1036,11 +1041,16 @@
   // ---------- 화면 전환 ----------
   const screens = document.querySelectorAll('.screen');
   const btnHome = document.getElementById('btnHome');
+  let quizHowTold = false;
   function render(id) {
     screens.forEach(s => s.classList.toggle('active', s.id === 'scr-' + id));
     btnHome.hidden = (id === 'home');
     stopAll();
-    if (id === 'quiz') startQuiz();
+    if (id === 'quiz') {
+      startQuiz();
+      // 놀이 방법은 앱을 연 뒤 처음 들어올 때 한 번만 소리로 알려 준다 (메뉴를 누른 동작이라 재생 가능)
+      if (!quizHowTold) { quizHowTold = true; say(['ui_quiz_how'], uiText('ui_quiz_how')); }
+    }
     // 메뉴를 누른 것이 사용자 동작이라 소리를 바로 낼 수 있다. 조용히 들어가면
     // 글을 못 읽는 분은 「다시 듣기」가 무엇인지 몰라 그대로 멈춘다.
     if (id === 'basics') enterBasics();
@@ -1615,17 +1625,33 @@
     const options = shuffle([item.w, ...pool]);
 
     qChoices.innerHTML = '';
+    armedChoice = null;
     options.forEach(w => {
       const b = document.createElement('button');
       b.className = 'choice';
-      b.textContent = w;
-      b.addEventListener('click', () => answer(b, w, item));
+      b.dataset.w = w;
+      b.innerHTML = '<span class="choice-word"></span><span class="choice-hint">한 번 더 누르면 골라요</span>';
+      b.querySelector('.choice-word').textContent = w;
+      b.addEventListener('click', () => pickChoice(b, w, item));
       qChoices.appendChild(b);
     });
   }
 
+  // 2026-11-08 (11절 ⑤): 보기를 들어 보고 고를 수 있게.
+  // 한 번 누르면 그 낱말 소리 + 밝힘, 같은 보기를 한 번 더 누르면 답으로 고른다.
+  // 글을 아직 잘 못 읽는 분이 짐작으로 고르지 않고, 소리와 글자를 이어 보며 고르게 하려는 것.
+  let armedChoice = null;
+  function pickChoice(btn, w, item) {
+    if (btn.disabled) return;
+    if (armedChoice === btn) { answer(btn, w, item); return; }
+    armedChoice = btn;
+    qChoices.querySelectorAll('.choice').forEach(c => c.classList.toggle('armed', c === btn));
+    say(['w_' + w], w);
+  }
+
   function answer(btn, w, item) {
-    qChoices.querySelectorAll('.choice').forEach(c => c.disabled = true);
+    armedChoice = null;
+    qChoices.querySelectorAll('.choice').forEach(c => { c.disabled = true; c.classList.remove('armed'); });
     if (w === item.w) {
       qScore++;
       btn.classList.add('correct');
@@ -1635,7 +1661,7 @@
     } else {
       btn.classList.add('wrong');
       qChoices.querySelectorAll('.choice').forEach(c => {
-        if (c.textContent === item.w) c.classList.add('correct');
+        if (c.dataset.w === item.w) c.classList.add('correct');
       });
       qFeedback.textContent = '괜찮아요. 정답은 「' + item.w + '」입니다.';
       qFeedback.classList.add('bad');
