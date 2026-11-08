@@ -137,10 +137,15 @@ def stamp_sw():
         md.update(open(p, "rb").read())
     digest = md.hexdigest()[:10]
 
-    # 첫 화면 맨 아래에 보일 값
+    # 첫 화면 맨 아래에 보일 값.
+    # 날짜는 판 번호가 바뀔 때만 새로 적습니다. 내용이 그대로인데 날짜만 바뀌면,
+    # 시간대가 다른 곳에서 돌릴 때마다 하루씩 왔다 갔다 합니다(실제로 그랬습니다).
+    cur = re.search(r"const APP_BUILD = '([^']*)';", html)
+    changed = not cur or cur.group(1) != digest[:6]
     today = datetime.date.today().isoformat()
     new_html = re.sub(r"const APP_BUILD = '[^']*';", f"const APP_BUILD = '{digest[:6]}';", html)
-    new_html = re.sub(r"const APP_DATE = '[^']*';", f"const APP_DATE = '{today}';", new_html)
+    if changed:
+        new_html = re.sub(r"const APP_DATE = '[^']*';", f"const APP_DATE = '{today}';", new_html)
     if new_html != html:
         open(IDX, "w", encoding="utf-8", newline="").write(new_html)
     print(f"go/index.html 화면 판 번호 -> {digest[:6]} ({today})")
