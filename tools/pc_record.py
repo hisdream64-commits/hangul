@@ -1,17 +1,20 @@
 # pc_record.py — 녹음이 필요한 말을 PC에서 한 번에 처리한다. (인터넷 되는 PC 전용)
 #
 #   PowerShell 에 이 한 줄:
-#     cd $HOME\projects\hangul; git fetch; git switch main-ta7yke; git pull; python tools\pc_record.py
+#     cd $HOME\projects\hangul; git switch main; git pull; python tools\pc_record.py
 #
 # 하는 일 (순서대로, 하나라도 실패하면 그 자리에서 멈춥니다)
 #   1. 준비 확인 — 가지, 다른 작업이 섞였는지, 파이썬 패키지, Node
 #   2. 대본에 있는데 녹음이 없는 말 만들기          regen_audio_edge.py --missing
-#   3. 글을 고친 안내 말 다시 녹음 (첫 화면 인사)   regen_audio_edge.py --redo ui_greet
+#   3. 글을 고친 안내 말 다시 녹음 (REDO 가 비어 있으면 건너뜁니다)
 #   4. 소리 묶음 다시 만들기 · 말소리 구간          build_audio_bundle.py · speech_spans.py
 #   5. 받아쓰기 화면 다시 만들기 (묶음이 바뀌었으므로) tools/dictation/build.js
 #   6. 캐시 지문                                    stamp_sw.py
-#   7. 확인 — 소리 전수(verify.py) · 받아쓰기 오프라인(check_offline.py)
-#   8. 커밋하고 가지(main-ta7yke)에 올리기. main(운영)에는 올리지 않습니다.
+#   7. 한글뚝딱(고급) 녹음 — go/tools/ 는 길이 따로입니다
+#        extract_used.js → make_audio.py → build_audio_bundle_go.py
+#   8. 확인 — 소리 전수(verify.py) · 받아쓰기 오프라인(check_offline.py)
+#   9. 커밋하고 가지(wip/record)에 올리기.
+#      main(운영 주소)에는 올리지 않습니다 — 어르신 화면이라 묻고 올립니다.
 #
 # 중간에 멈춰도 다시 실행하면 이어서 합니다(이미 만든 녹음은 다시 받지 않음).
 
@@ -29,12 +32,16 @@ except Exception:
     pass
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BRANCH = "main-ta7yke"
-REDO = ["ui_greet"]                      # 글을 고친 안내 말. 다음에 또 고치면 여기에 더하세요.
+BRANCH = "main"                          # 이 가지에서 실행합니다 (운영과 같은 자리)
+PUSH_BRANCH = "wip/record"               # 올리는 곳. main 에는 묻지 않고 올리지 않습니다
+REDO = []                                # 글을 고친 안내 말. 고칠 것이 생기면 여기에 더하세요.
 # build.js 가 함께 쓰는 목록 두 개. git 이 한글 이름을 \354… 처럼 따옴표로 감싸 보여 주므로
 # 비교는 core.quotepath=false 로 받은 이름으로 합니다.
 DICT_LISTS = ("tools/dictation/문장목록.json", "tools/dictation/녹음이-필요한-말.txt")
-OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", "tools/__pycache__/") + DICT_LISTS
+# 한글뚝딱(고급)은 소리도 묶음도 따로입니다 (go/ 안에서만 바뀝니다)
+GO_FILES = ("go/audio/", "go/index.html", "go/sw.js", "go/tools/used.json", "go/tools/audio_map.json")
+OURS = ("audio/", "index.html", "sw.js", "jung.html", "gyeopbatchim.html",
+        "tools/__pycache__/") + DICT_LISTS + GO_FILES
 PY = sys.executable
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -48,7 +55,7 @@ def stop(msg):
 
 
 def step(n, title):
-    print(f"\n[{n}/8] {title}")
+    print(f"\n[{n}/9] {title}")
 
 
 def run(args, cwd=HERE, what=""):
@@ -109,7 +116,7 @@ def free_port():
 
 
 def check():
-    step(7, "확인")
+    step(8, "확인")
     port = free_port()
     srv = subprocess.Popen([PY, "-m", "http.server", str(port), "--bind", "127.0.0.1"],
                            cwd=HERE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -134,8 +141,11 @@ def main():
     step(2, "녹음이 없는 말 만들기")
     run([PY, "tools/regen_audio_edge.py", "--missing"], what="새 말 녹음")
 
-    step(3, "글을 고친 안내 말 다시 녹음: " + ", ".join(REDO))
-    run([PY, "tools/regen_audio_edge.py", "--redo", *REDO], what="다시 녹음")
+    if REDO:
+        step(3, "글을 고친 안내 말 다시 녹음: " + ", ".join(REDO))
+        run([PY, "tools/regen_audio_edge.py", "--redo", *REDO], what="다시 녹음")
+    else:
+        step(3, "다시 녹음할 안내 말 없음 — 건너뜁니다")
 
     step(4, "소리 묶음 다시 만들기 · 말소리 구간 다시 재기")
     run([PY, "tools/build_audio_bundle.py"], what="묶음 만들기")
@@ -150,30 +160,40 @@ def main():
     step(6, "캐시 지문")
     run([PY, "tools/stamp_sw.py"], what="캐시 지문")
 
+    # 고급은 소리 파일 이름이 글 내용의 해시(v<해시>.mp3)이고 묶음도 따로입니다.
+    # 그래서 기초·중급과 같은 도구를 쓸 수 없고 go/tools/ 의 제 길을 씁니다.
+    step(7, "한글뚝딱(고급) 녹음")
+    run(["node", "go/tools/extract_used.js", "go/index.html", "go/tools/used.json"],
+        what="고급이 읽는 말 뽑기")
+    run([PY, "go/tools/make_audio.py"], what="고급 녹음 만들기")
+    run([PY, "go/tools/build_audio_bundle_go.py"], what="고급 묶음·판 번호")
+
     check()
 
-    step(8, f"커밋하고 가지({BRANCH})에 올리기")
+    step(9, f"커밋하고 가지({PUSH_BRANCH})에 올리기")
     git("checkout", "--", "tools/__pycache__")          # 파이썬이 저절로 고친 파일은 되돌린다
-    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html", *DICT_LISTS)
+    r = git("add", "--", "audio", "index.html", "sw.js", "jung.html", "gyeopbatchim.html",
+            "go", *DICT_LISTS)
     if r.returncode != 0:
         stop("git add 실패:\n" + r.stderr)
     if not git("diff", "--cached", "--quiet").returncode:
         print("  바뀐 것이 없습니다. 이미 끝난 상태입니다.")
     else:
         r = git("commit", "-m",
-                "소리 녹음: 녹음이 없던 말 + 첫 화면 인사 「한글뚝딱」 다시 녹음\n\n"
-                "tools/pc_record.py 로 PC에서 만듦 (edge-tts SunHi). 묶음·받아쓰기 화면·캐시 지문 갱신,\n"
-                "verify.py · check_offline.py 통과.")
+                "소리 녹음: 녹음이 없던 말 (기초·중급·겹받침 + 한글뚝딱(고급))\n\n"
+                "tools/pc_record.py 로 PC에서 만듦 (edge-tts SunHi). 묶음·받아쓰기 화면·캐시 지문과\n"
+                "고급 묶음·판 번호까지 갱신, verify.py · check_offline.py 통과.")
         if r.returncode != 0:
             stop("커밋 실패:\n" + r.stdout + r.stderr)
         print("  ✓ 커밋")
-    r = git("push", "-u", "origin", BRANCH)
+    # main(운영 주소)에는 올리지 않습니다. 어르신이 쓰시는 화면이라 묻고 올립니다.
+    r = git("push", "-u", "origin", f"HEAD:refs/heads/{PUSH_BRANCH}")
     if r.returncode != 0:
         stop("GitHub 에 올리지 못했습니다 (녹음과 커밋은 PC에 남아 있습니다):\n" + r.stderr)
-    print("  ✓ GitHub 에 올림")
+    print(f"  ✓ GitHub 가지 {PUSH_BRANCH} 에 올림 (운영 주소는 그대로입니다)")
 
     print("\n" + "=" * 60)
-    print("✅ 끝났습니다. 이제 Claude 에게  「main에 합쳐 줘」  라고 말씀하세요.")
+    print("✅ 끝났습니다. 이제 Claude 에게  「녹음 끝났어. main에 합쳐 줘」  라고 말씀하세요.")
     print("=" * 60)
 
 
