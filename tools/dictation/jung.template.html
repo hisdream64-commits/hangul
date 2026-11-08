@@ -104,7 +104,40 @@
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
     padding: 1rem 0.85rem; box-shadow: var(--shadow); }
 
+  /* ===== 3부 · 짧은 글 읽기 =====
+     글은 또박또박 크게. 어르신이 한 줄씩 눈으로 따라갈 수 있게 줄 사이를 넉넉히 둡니다. */
+  .read-name { font-size: 1rem; font-weight: 800; color: var(--sub); margin: 0 0 0.5rem; }
+  .read-box {
+    background: var(--bg); border: 2px solid var(--line); border-radius: 14px;
+    padding: 1rem 0.9rem; margin-bottom: 0.9rem;
+  }
+  .read-box p {
+    font-size: 1.28rem; line-height: 1.85; margin: 0 0 0.45rem; word-break: keep-all;
+  }
+  .read-box p:last-child { margin-bottom: 0; }
+  /* 숫자는 눈으로 읽어 내는 것이 배울 거리라 또렷하게 보여 줍니다 */
+  .read-box .num { font-weight: 900; color: var(--warm); }
+  .read-ask {
+    font-size: 1.18rem; font-weight: 800; line-height: 1.6;
+    margin: 1rem 0 0.7rem; word-break: keep-all;
+  }
+  .read-choices { display: flex; flex-direction: column; gap: 0.55rem; }
+  .read-choices button {
+    font-size: 1.15rem; font-weight: 700; text-align: left; line-height: 1.5;
+    padding: 0.95rem 1rem; border-radius: 14px;
+    border: 2px solid var(--line); background: var(--card); color: var(--ink);
+    word-break: keep-all;
+  }
+  .read-choices button .mark { font-weight: 900; margin-right: 0.45rem; color: var(--sub); }
+  .read-choices button.pick { border-color: var(--accent); background: var(--accent-soft); }
+  .read-choices button.ok { border-color: var(--good); background: var(--good-soft); }
+  .read-choices button.ng { border-color: var(--bad); background: var(--bad-soft); }
+  .read-choices button[disabled] { opacity: 1; }
+
   .listen-row { display: flex; gap: 0.5rem; }
+  /* display:flex 가 hidden 을 덮어써서, 감춰야 할 때도 단추가 보였습니다.
+     2부(문장)와 3부(읽기) 둘 다 해당합니다. */
+  .listen-row[hidden] { display: none; }
   .listen-btn {
     flex: 2; font-size: 1.2rem; font-weight: 800; padding: 1rem 0.8rem; border-radius: 16px;
     border: 3px solid var(--accent); background: var(--accent); color: var(--accent-ink);
@@ -232,6 +265,9 @@
     <h2 class="part-title"><span class="n">2부</span> 문장 쓰기</h2>
     <div class="menu" id="menuSent"></div>
 
+    <h2 class="part-title"><span class="n">3부</span> 짧은 글 읽고 이해하기</h2>
+    <div class="menu" id="menuRead"></div>
+
     <a class="tool-card" href="gyeopbatchim.html">
       <span class="icon">🧩</span>
       <span><span class="label">겹받침 쓰기 연습</span>
@@ -292,6 +328,25 @@
   </section>
 
   <!-- 결과 -->
+  <!-- 3부 · 짧은 글 읽고 이해하기 -->
+  <section class="screen" id="scr-read">
+    <h2 class="section-title" id="rdTitle"></h2>
+    <p class="hint" id="rdTip"></p>
+    <p class="progress" id="rdProgress"></p>
+    <div class="panel">
+      <p class="read-name" id="rdName"></p>
+      <div class="read-box" id="rdBox"></div>
+      <div class="listen-row" id="rdListenRow">
+        <button class="listen-btn" id="rdListen">🔊 글 다시 듣기</button>
+      </div>
+      <p class="no-audio" id="rdNoAudio" hidden></p>
+      <p class="read-ask" id="rdAsk"></p>
+      <div class="read-choices" id="rdChoices"></div>
+      <p class="feedback" id="rdFeedback"></p>
+      <div class="btn-row" id="rdBtns"></div>
+    </div>
+  </section>
+
   <section class="screen" id="scr-result">
     <div class="result">
       <div class="trophy" id="rTrophy">🏆</div>
@@ -437,6 +492,7 @@ function stopAll() {
 function fileOf(text) {
   if (!text) return null;
   if (DATA.SENT_AUDIO && DATA.SENT_AUDIO[text]) return DATA.SENT_AUDIO[text];
+  if (DATA.READ_AUDIO && DATA.READ_AUDIO[text]) return DATA.READ_AUDIO[text];
   return DATA.A[text] || null;
 }
 
@@ -570,6 +626,14 @@ function renderHome() {
   for (var i = 0; i < a.length; i++) a[i].addEventListener('click', function () { startWord(+this.dataset.w); });
   var b = $('menuSent').querySelectorAll('.menu-btn');
   for (var j = 0; j < b.length; j++) b[j].addEventListener('click', function () { startSent(+this.dataset.s); });
+  $('menuRead').innerHTML = (DATA.R || []).map(function (st, i) {
+    return '<button class="menu-btn" data-r="' + i + '">' +
+      '<span class="icon">' + st.icon + '</span><span class="mid">' +
+      '<span class="label">' + st.title + '</span>' +
+      '<span class="desc">' + st.tip + '</span></span>' + stampOf(st.id) + '</button>';
+  }).join('');
+  var r = $('menuRead').querySelectorAll('.menu-btn');
+  for (var m = 0; m < r.length; m++) r[m].addEventListener('click', function () { startRead(+this.dataset.r); });
 }
 
 function pick(arr, n) {
@@ -860,6 +924,143 @@ $('sListen').addEventListener('click', function () { play(S.items[S.i].text); })
 $('sSlow').addEventListener('click', function () { play(S.items[S.i].text, true); });
 
 /* ============ 결과 ============ */
+
+/* ============ 3부 · 짧은 글 읽고 이해하기 ============
+   받아쓰기와 달리 「읽고 고르기」입니다. 글을 한 줄씩 들려 드리고,
+   묻는 말과 보기도 모두 소리로 읽어 드립니다. 글을 못 읽는 분도
+   듣고 고를 수 있어야 하기 때문입니다.
+   숫자 단계(showOnly)는 일부러 글을 읽어 주지 않습니다 —
+   숫자를 눈으로 읽어 내는 것이 그 단계의 배울 거리입니다. */
+/* 글에 꺾쇠나 & 가 섞여도 화면이 깨지지 않게. 지금 자료에는 없지만,
+   나중에 글을 더할 때 안전하도록 둡니다. */
+function esc(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+var RD = null;
+
+/* 줄 자료는 '글' 이거나 ['보이는 글', '읽어 줄 말'] 입니다 */
+function rdShown(line) { return Array.isArray(line) ? line[0] : line; }
+function rdSaid(line) { return Array.isArray(line) ? line[1] : line; }
+
+/* 숫자·금액·시각을 또렷하게 (보이기만 바꿉니다. 글자는 그대로입니다) */
+function rdMarkNums(t) {
+  return esc(t).replace(/[0-9][0-9,]*/g, function (m) { return '<span class="num">' + m + '</span>'; });
+}
+
+function startRead(si) {
+  var st = DATA.R[si];
+  /* 글 차례는 섞지 않습니다. 쉬운 것부터 짜 두었기 때문입니다. */
+  var items = [];
+  st.texts.forEach(function (t, ti) {
+    t.q.forEach(function (q, qi) { items.push({ t: t, ti: ti, q: q, first: qi === 0 }); });
+  });
+  RD = { st: st, items: items, i: 0, right: 0, wrong: [], done: false, picked: -1 };
+  go('read');
+  renderRead(true);
+}
+
+function renderRead(withSound) {
+  var it = RD.items[RD.i], t = it.t, q = it.q;
+  $('rdTitle').textContent = RD.st.title;
+  $('rdTip').textContent = RD.st.tip;
+  $('rdProgress').textContent = '물음 ' + (RD.i + 1) + ' / ' + RD.items.length +
+    ' · 맞힌 물음 ' + RD.right + '개';
+  $('rdName').textContent = t.title;
+  $('rdBox').innerHTML = t.lines.map(function (l) {
+    return '<p>' + rdMarkNums(rdShown(l)) + '</p>';
+  }).join('');
+
+  /* 글 듣기 단추 — 숫자 단계이거나 녹음이 없으면 감춥니다 */
+  var says = t.showOnly ? [] : t.lines.map(rdSaid).filter(function (x) { return fileOf(x); });
+  var canHear = says.length > 0;
+  $('rdListenRow').hidden = !canHear;
+  $('rdNoAudio').hidden = !(t.showOnly);
+  if (t.showOnly) $('rdNoAudio').textContent = '이 단계는 숫자를 눈으로 읽어 보는 곳입니다. 물음과 보기는 들려 드립니다.';
+
+  $('rdAsk').textContent = q[0];
+  RD.picked = -1;
+  RD.done = false;
+  var marks = ['①', '②', '③', '④'];
+  $('rdChoices').innerHTML = q[1].map(function (c, k) {
+    return '<button type="button" data-k="' + k + '"><span class="mark">' + marks[k] + '</span>' + esc(c) + '</button>';
+  }).join('');
+  var bs = $('rdChoices').querySelectorAll('button');
+  for (var k = 0; k < bs.length; k++) {
+    bs[k].addEventListener('click', function () { pickRead(+this.dataset.k); });
+  }
+  var fb = $('rdFeedback'); fb.className = 'feedback'; fb.innerHTML = '';
+  $('rdBtns').innerHTML = '';
+
+  if (withSound) {
+    /* 글 → 묻는 말 차례로 들려 드립니다 */
+    play(says.concat([q[0]]));
+  }
+}
+
+function pickRead(k) {
+  if (RD.done) return;
+  var it = RD.items[RD.i], q = it.q;
+  RD.picked = k;
+  RD.done = true;
+  var ok = (k === q[2]);
+  if (ok) RD.right++; else RD.wrong.push(q[0]);
+
+  var bs = $('rdChoices').querySelectorAll('button');
+  for (var i = 0; i < bs.length; i++) {
+    bs[i].disabled = true;
+    if (i === q[2]) bs[i].classList.add('ok');
+    else if (i === k) bs[i].classList.add('ng');
+  }
+  var fb = $('rdFeedback');
+  fb.className = 'feedback show ' + (ok ? 'ok' : 'ng');
+  fb.innerHTML = ok ? '⭕ 맞았습니다!' : '바른 답은 <b>' + esc(q[1][q[2]]) + '</b> 입니다.';
+
+  var last = (RD.i === RD.items.length - 1);
+  $('rdBtns').innerHTML = '<button class="nav-btn primary wide" id="rdNext">' +
+    (last ? '🏆 결과 보기' : '➡️ 다음 물음') + '</button>';
+  $('rdNext').addEventListener('click', nextRead);
+
+  playFx(ok ? 'praise' : 'wrong', ok ? null : q[1][q[2]]);
+}
+
+function nextRead() {
+  if (RD.i < RD.items.length - 1) {
+    RD.i++;
+    /* 같은 글의 두 번째 물음이면 글은 다시 안 읽어 드립니다 */
+    renderRead(RD.items[RD.i].first);
+    return;
+  }
+  finishRead();
+}
+
+function finishRead() {
+  var st = RD.st;
+  saveScore(st.id, RD.right, RD.items.length);
+  againFn = function () { startRead(DATA.R.indexOf(st)); };
+  go('result');
+  var ratio = RD.right / RD.items.length;
+  var trophy = '🌱', title = '천천히 한 번 더 읽어 볼까요?', grade = 'ok';
+  if (ratio === 1) { trophy = '🏆'; title = '만점입니다!'; grade = 'perfect'; }
+  else if (ratio >= 0.7) { trophy = '🎉'; title = '아주 잘 읽으셨어요!'; grade = 'good'; }
+  $('rTrophy').textContent = trophy;
+  $('rTitle').textContent = title;
+  $('rDesc').textContent = RD.items.length + '개 물음 가운데 ' + RD.right + '개를 맞히셨습니다.';
+  if (RD.wrong.length) {
+    $('rWrong').hidden = false;
+    $('rWrong').innerHTML = '한 번 더 읽어 보실 물음<br>' +
+      RD.wrong.map(function (w) { return '<b>' + esc(w) + '</b>'; }).join('<br>');
+  } else { $('rWrong').hidden = true; }
+  playSrcs([DATA.SC[RD.right] || null, DATA.FX[grade]]);
+}
+
+$('rdListen').addEventListener('click', function () {
+  var t = RD.items[RD.i].t;
+  if (t.showOnly) return;
+  play(t.lines.map(rdSaid));
+});
+
 var againFn = null;
 function finishStage(id, right, total, wrong, again) {
   saveScore(id, right, total);

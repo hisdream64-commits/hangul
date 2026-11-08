@@ -104,7 +104,40 @@
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
     padding: 1rem 0.85rem; box-shadow: var(--shadow); }
 
+  /* ===== 3부 · 짧은 글 읽기 =====
+     글은 또박또박 크게. 어르신이 한 줄씩 눈으로 따라갈 수 있게 줄 사이를 넉넉히 둡니다. */
+  .read-name { font-size: 1rem; font-weight: 800; color: var(--sub); margin: 0 0 0.5rem; }
+  .read-box {
+    background: var(--bg); border: 2px solid var(--line); border-radius: 14px;
+    padding: 1rem 0.9rem; margin-bottom: 0.9rem;
+  }
+  .read-box p {
+    font-size: 1.28rem; line-height: 1.85; margin: 0 0 0.45rem; word-break: keep-all;
+  }
+  .read-box p:last-child { margin-bottom: 0; }
+  /* 숫자는 눈으로 읽어 내는 것이 배울 거리라 또렷하게 보여 줍니다 */
+  .read-box .num { font-weight: 900; color: var(--warm); }
+  .read-ask {
+    font-size: 1.18rem; font-weight: 800; line-height: 1.6;
+    margin: 1rem 0 0.7rem; word-break: keep-all;
+  }
+  .read-choices { display: flex; flex-direction: column; gap: 0.55rem; }
+  .read-choices button {
+    font-size: 1.15rem; font-weight: 700; text-align: left; line-height: 1.5;
+    padding: 0.95rem 1rem; border-radius: 14px;
+    border: 2px solid var(--line); background: var(--card); color: var(--ink);
+    word-break: keep-all;
+  }
+  .read-choices button .mark { font-weight: 900; margin-right: 0.45rem; color: var(--sub); }
+  .read-choices button.pick { border-color: var(--accent); background: var(--accent-soft); }
+  .read-choices button.ok { border-color: var(--good); background: var(--good-soft); }
+  .read-choices button.ng { border-color: var(--bad); background: var(--bad-soft); }
+  .read-choices button[disabled] { opacity: 1; }
+
   .listen-row { display: flex; gap: 0.5rem; }
+  /* display:flex 가 hidden 을 덮어써서, 감춰야 할 때도 단추가 보였습니다.
+     2부(문장)와 3부(읽기) 둘 다 해당합니다. */
+  .listen-row[hidden] { display: none; }
   .listen-btn {
     flex: 2; font-size: 1.2rem; font-weight: 800; padding: 1rem 0.8rem; border-radius: 16px;
     border: 3px solid var(--accent); background: var(--accent); color: var(--accent-ink);
@@ -232,6 +265,9 @@
     <h2 class="part-title"><span class="n">2부</span> 문장 쓰기</h2>
     <div class="menu" id="menuSent"></div>
 
+    <h2 class="part-title"><span class="n">3부</span> 짧은 글 읽고 이해하기</h2>
+    <div class="menu" id="menuRead"></div>
+
     <a class="tool-card" href="gyeopbatchim.html">
       <span class="icon">🧩</span>
       <span><span class="label">겹받침 쓰기 연습</span>
@@ -292,6 +328,25 @@
   </section>
 
   <!-- 결과 -->
+  <!-- 3부 · 짧은 글 읽고 이해하기 -->
+  <section class="screen" id="scr-read">
+    <h2 class="section-title" id="rdTitle"></h2>
+    <p class="hint" id="rdTip"></p>
+    <p class="progress" id="rdProgress"></p>
+    <div class="panel">
+      <p class="read-name" id="rdName"></p>
+      <div class="read-box" id="rdBox"></div>
+      <div class="listen-row" id="rdListenRow">
+        <button class="listen-btn" id="rdListen">🔊 글 다시 듣기</button>
+      </div>
+      <p class="no-audio" id="rdNoAudio" hidden></p>
+      <p class="read-ask" id="rdAsk"></p>
+      <div class="read-choices" id="rdChoices"></div>
+      <p class="feedback" id="rdFeedback"></p>
+      <div class="btn-row" id="rdBtns"></div>
+    </div>
+  </section>
+
   <section class="screen" id="scr-result">
     <div class="result">
       <div class="trophy" id="rTrophy">🏆</div>
@@ -309,7 +364,7 @@
 </main>
 
 <script>
-var DATA = {"A":{"모자":"audio/a234.mp3","바지":"audio/a268.mp3","치마":"audio/a666.mp3","구두":"audio/a70.mp3","우유":"audio/a522.mp3","두부":"audio/a185.mp3","사과":"audio/a332.mp3","포도":"audio/a714.mp3","배추":"audio/a284.mp3","오이":"audio/a503.mp3","고구마":"audio/a49.mp3","커피":"audio/a681.mp3","시계":"audio/a408.mp3","의자":"audio/a541.mp3","베개":"audio/a294.mp3","가위":"audio/a7.mp3","도마":"audio/a168.mp3","비누":"audio/a318.mp3","지도":"audio/a631.mp3","바다":"audio/a265.mp3","나무":"audio/a101.mp3","어머니":"audio/a470.mp3","아버지":"audio/a440.mp3","아기":"audio/a436.mp3","김치":"audio/a92.mp3","국수":"audio/a73.mp3","된장":"audio/a183.mp3","반찬":"audio/a271.mp3","수건":"audio/a394.mp3","안경":"audio/a445.mp3","우산":"audio/a520.mp3","가방":"audio/a4.mp3","지갑":"audio/a630.mp3","달력":"audio/a150.mp3","냉장고":"audio/a116.mp3","병원":"audio/a299.mp3","약국":"audio/a458.mp3","감기":"audio/a17.mp3","혈압":"audio/a741.mp3","시장":"audio/a414.mp3","통장":"audio/a698.mp3","편지":"audio/a712.mp3","택배":"audio/a692.mp3","학교":"audio/a722.mp3","경로당":"audio/a43.mp3","정류장":"audio/a603.mp3","아침":"audio/a442.mp3","점심":"audio/a597.mp3","부엌":"audio/a312.mp3","무릎":"audio/a244.mp3","그릇":"audio/a80.mp3","젓가락":"audio/a601.mp3","칫솔":"audio/a674.mp3","옷장":"audio/a508.mp3","빗자루":"audio/a324.mp3","밥솥":"audio/a278.mp3","속옷":"audio/a383.mp3","곶감":"audio/a64.mp3","젓갈":"audio/a602.mp3","이웃":"audio/a550.mp3","버섯":"audio/a288.mp3","씨앗":"audio/a434.mp3","콧물":"audio/a686.mp3","깻잎":"audio/a96.mp3","좋다":"audio/a614.mp3","놓다":"audio/a130.mp3","높다":"audio/a129.mp3","맛있다":"audio/a216.mp3","값":"audio/a20.mp3","흙":"audio/a756.mp3","닭":"audio/a152.mp3","앉다":"audio/a453.mp3","읽다":"audio/a556.mp3","많다":"audio/a213.mp3","싫다":"audio/a423.mp3","짧다":"audio/a641.mp3","밝다":"audio/a275.mp3","끓이다":"audio/a99.mp3","안녕하세요":"audio/a446.mp3","고맙습니다":"audio/a52.mp3","감사합니다":"audio/a18.mp3","미안합니다":"audio/a256.mp3","죄송합니다":"audio/a615.mp3","반갑습니다":"audio/a270.mp3","축하합니다":"audio/a662.mp3","괜찮습니다":"audio/a67.mp3","여보세요":"audio/a483.mp3","사랑합니다":"audio/a335.mp3","잘했어요":"audio/a572.mp3","맛있어요":"audio/a217.mp3","안녕히 가세요":"audio/a447.mp3","안녕히 계세요":"audio/a448.mp3","어서 오세요":"audio/a473.mp3","잘 먹겠습니다":"audio/a570.mp3","잘 먹었습니다":"audio/a571.mp3","안녕히 주무세요":"audio/a449.mp3","또 봐요":"audio/a199.mp3","처음 뵙겠습니다":"audio/a654.mp3","새해 복 많이 받으세요":"audio/a353.mp3","오래오래 사세요":"audio/a500.mp3","약":"audio/a457.mp3","먹다":"audio/a222.mp3","사다":"audio/a333.mp3","손자":"audio/a389.mp3","가다":"audio/a2.mp3","날씨":"audio/a107.mp3","저녁":"audio/a585.mp3","돈":"audio/a173.mp3","내일":"audio/a112.mp3","딸":"audio/a193.mp3","쓰다":"audio/a430.mp3"},"FX":{"praise":"audio/a1210.mp3","wrong":"audio/a1211.mp3","perfect":"audio/a1223.mp3","good":"audio/a1224.mp3","ok":"audio/a1225.mp3"},"SC":["audio/a1212.mp3","audio/a1213.mp3","audio/a1214.mp3","audio/a1215.mp3","audio/a1216.mp3","audio/a1217.mp3","audio/a1218.mp3","audio/a1219.mp3","audio/a1220.mp3","audio/a1221.mp3","audio/a1222.mp3"],"BIN":{"file":"audio/audio.bin","total":11441448,"off":{"audio/a234.mp3":[1914552,7628],"audio/a268.mp3":[2197616,7820],"audio/a666.mp3":[5486232,7628],"audio/a70.mp3":[578312,7628],"audio/a522.mp3":[4294008,7820],"audio/a185.mp3":[1513132,7628],"audio/a332.mp3":[2714032,7820],"audio/a714.mp3":[5876952,7916],"audio/a284.mp3":[2328304,8108],"audio/a503.mp3":[4136980,7436],"audio/a49.mp3":[402764,8108],"audio/a681.mp3":[5607948,8012],"audio/a408.mp3":[3345888,7628],"audio/a541.mp3":[4452092,7628],"audio/a294.mp3":[2407752,7532],"audio/a7.mp3":[57236,7820],"audio/a168.mp3":[1375104,7724],"audio/a318.mp3":[2599560,7724],"audio/a631.mp3":[5197556,7436],"audio/a265.mp3":[2172524,8972],"audio/a101.mp3":[830908,7724],"audio/a470.mp3":[3864712,7820],"audio/a440.mp3":[3613312,8204],"audio/a436.mp3":[3582992,7628],"audio/a92.mp3":[756400,8492],"audio/a73.mp3":[601100,8492],"audio/a183.mp3":[1496436,8204],"audio/a271.mp3":[2223860,8588],"audio/a394.mp3":[3225752,8492],"audio/a445.mp3":[3655004,8396],"audio/a520.mp3":[4277984,7916],"audio/a4.mp3":[32336,8300],"audio/a630.mp3":[5190216,7340],"audio/a150.mp3":[1225608,7532],"audio/a116.mp3":[947824,8780],"audio/a299.mp3":[2446564,8588],"audio/a458.mp3":[3767992,7436],"audio/a17.mp3":[136780,8300],"audio/a741.mp3":[6095484,7340],"audio/a414.mp3":[3398664,8204],"audio/a698.mp3":[5747128,7916],"audio/a712.mp3":[5861408,8204],"audio/a692.mp3":[5697904,8204],"audio/a722.mp3":[5940760,7532],"audio/a43.mp3":[353252,8876],"audio/a603.mp3":[4963908,8780],"audio/a442.mp3":[3629240,8108],"audio/a597.mp3":[4914492,8396],"audio/a312.mp3":[2551776,7340],"audio/a244.mp3":[1996400,7340],"audio/a80.mp3":[656896,7340],"audio/a601.mp3":[4947692,8108],"audio/a674.mp3":[5548984,8396],"audio/a508.mp3":[4177136,8108],"audio/a324.mp3":[2649264,8588],"audio/a278.mp3":[2278696,7436],"audio/a383.mp3":[3138196,7340],"audio/a64.mp3":[528128,8300],"audio/a602.mp3":[4955800,8108],"audio/a550.mp3":[4524200,7340],"audio/a288.mp3":[2360640,7340],"audio/a434.mp3":[3567544,7532],"audio/a686.mp3":[5647624,8204],"audio/a96.mp3":[790656,7340],"audio/a614.mp3":[5058280,7820],"audio/a130.mp3":[1065080,7820],"audio/a129.mp3":[1056972,8108],"audio/a216.mp3":[1769472,8300],"audio/a20.mp3":[163408,7340],"audio/a756.mp3":[6217104,7340],"audio/a152.mp3":[1241824,7340],"audio/a453.mp3":[3728988,8204],"audio/a556.mp3":[4574288,7820],"audio/a213.mp3":[1744572,8108],"audio/a423.mp3":[3471828,8204],"audio/a641.mp3":[5278540,8204],"audio/a275.mp3":[2255620,8108],"audio/a99.mp3":[814020,8972],"audio/a446.mp3":[3663400,9068],"audio/a52.mp3":[427760,9260],"audio/a18.mp3":[145080,10220],"audio/a256.mp3":[2096480,9452],"audio/a615.mp3":[5066100,9452],"audio/a270.mp3":[2214312,9548],"audio/a662.mp3":[5450536,9932],"audio/a67.mp3":[552932,9452],"audio/a483.mp3":[3973572,8396],"audio/a335.mp3":[2739220,9932],"audio/a572.mp3":[4709392,9164],"audio/a217.mp3":[1777772,9164],"audio/a447.mp3":[3672468,9644],"audio/a448.mp3":[3682112,9836],"audio/a473.mp3":[3889036,9164],"audio/a570.mp3":[4688856,10316],"audio/a571.mp3":[4699172,10220],"audio/a449.mp3":[3691948,10604],"audio/a199.mp3":[1626260,8396],"audio/a654.mp3":[5382792,10988],"audio/a353.mp3":[2887564,12332],"audio/a500.mp3":[4111120,10316],"audio/a457.mp3":[3760652,7340],"audio/a222.mp3":[1818312,7916],"audio/a333.mp3":[2721852,9356],"audio/a389.mp3":[3185884,8300],"audio/a2.mp3":[14968,9260],"audio/a107.mp3":[876964,8204],"audio/a585.mp3":[4816716,7340],"audio/a173.mp3":[1415740,7628],"audio/a112.mp3":[916160,7724],"audio/a193.mp3":[1580492,7340],"audio/a430.mp3":[3532328,9068],"audio/a1242.mp3":[11298360,10988],"audio/a1243.mp3":[11309348,11564],"audio/a1244.mp3":[11320912,13196],"audio/a1245.mp3":[11334108,11756],"audio/a1246.mp3":[11345864,13292],"audio/a1247.mp3":[11359156,12332],"audio/a1248.mp3":[11371488,10988],"audio/a1249.mp3":[11382476,12044],"audio/a1250.mp3":[11394520,11852],"audio/a1251.mp3":[11406372,12428],"audio/a1252.mp3":[11418800,11660],"audio/a1253.mp3":[11430460,10988],"audio/a1210.mp3":[10406552,17420],"audio/a1211.mp3":[10423972,15788],"audio/a1223.mp3":[10613332,19724],"audio/a1224.mp3":[10633056,22124],"audio/a1225.mp3":[10655180,21356],"audio/a1212.mp3":[10439760,16076],"audio/a1213.mp3":[10455836,15692],"audio/a1214.mp3":[10471528,15308],"audio/a1215.mp3":[10486836,15788],"audio/a1216.mp3":[10502624,15884],"audio/a1217.mp3":[10518508,15884],"audio/a1218.mp3":[10534392,15884],"audio/a1219.mp3":[10550276,15788],"audio/a1220.mp3":[10566064,15788],"audio/a1221.mp3":[10581852,15788],"audio/a1222.mp3":[10597640,15692]}},"SENT_AUDIO":{"오늘 병원에 갑니다":"audio/a1242.mp3","약을 아침에 먹습니다":"audio/a1243.mp3","시장에서 김치를 샀습니다":"audio/a1244.mp3","손자가 학교에 갔어요":"audio/a1245.mp3","오늘 날씨가 참 좋습니다":"audio/a1246.mp3","저녁에 국수를 먹었어요":"audio/a1247.mp3","우산을 가지고 가세요":"audio/a1248.mp3","통장에 돈을 넣었습니다":"audio/a1249.mp3","내일 경로당에 갑니다":"audio/a1250.mp3","안경을 어디에 두었어요":"audio/a1251.mp3","택배가 경비실에 있어요":"audio/a1252.mp3","딸에게 편지를 씁니다":"audio/a1253.mp3"},"W":[{"id":"w1","icon":"🌱","title":"받침 없는 낱말","tip":"받침이 없어 소리 나는 대로 쓰면 되는 낱말입니다.","words":["모자","바지","치마","구두","우유","두부","사과","포도","배추","오이","고구마","커피","시계","의자","베개","가위","도마","비누","지도","바다","나무","어머니","아버지","아기"]},{"id":"w2","icon":"🌿","title":"받침 있는 낱말","tip":"받침을 빠뜨리지 않도록 끝소리를 잘 들어 보세요.","words":["김치","국수","된장","반찬","수건","안경","우산","가방","지갑","달력","냉장고","병원","약국","감기","혈압","시장","통장","편지","택배","학교","경로당","정류장","아침","점심"]},{"id":"w3","icon":"🌾","title":"소리와 글자가 다른 낱말","tip":"들리는 소리와 쓰는 글자가 다릅니다. 부엌은 [부억]으로 들려도 「부엌」이라 씁니다.","words":["부엌","무릎","그릇","젓가락","칫솔","옷장","빗자루","밥솥","속옷","곶감","젓갈","이웃","버섯","씨앗","콧물","깻잎","좋다","놓다","높다","맛있다"]},{"id":"w4","icon":"🌳","title":"겹받침 낱말","tip":"받침이 두 개입니다. 소리는 하나만 나니 더 조심해서 써야 합니다.","words":["값","흙","닭","앉다","읽다","많다","싫다","짧다","밝다","끓이다"]}],"S1":["안녕하세요","고맙습니다","감사합니다","미안합니다","죄송합니다","반갑습니다","축하합니다","괜찮습니다","여보세요","사랑합니다","잘했어요","맛있어요"],"S2":["안녕히 가세요","안녕히 계세요","어서 오세요","잘 먹겠습니다","잘 먹었습니다","안녕히 주무세요","또 봐요","처음 뵙겠습니다","새해 복 많이 받으세요","오래오래 사세요"],"S3":[[["오늘",null,null],["병원에","병원","병워네"],["갑니다",null,"감니다"]],[["약을","약","야글"],["아침에","아침","아치메"],["먹습니다","먹다","먹씀니다"]],[["시장에서","시장","시장에써"],["김치를","김치",null],["샀습니다","사다","싿씀니다"]],[["손자가","손자",null],["학교에","학교","학꾜에"],["갔어요","가다","가써요"]],[["오늘",null,null],["날씨가","날씨",null],["참",null,null],["좋습니다","좋다","조씀니다"]],[["저녁에","저녁","저녀게"],["국수를","국수","국쑤를"],["먹었어요","먹다","머거써요"]],[["우산을","우산","우사늘"],["가지고",null,null],["가세요","가다",null]],[["통장에","통장",null],["돈을","돈","도늘"],["넣었습니다","놓다","너어씀니다"]],[["내일","내일",null],["경로당에","경로당","경노당에"],["갑니다",null,"감니다"]],[["안경을","안경","안경얼"],["어디에",null,null],["두었어요",null,"두어써요"]],[["택배가","택배","택빼가"],["경비실에",null,null],["있어요",null,"이써요"]],[["딸에게","딸",null],["편지를","편지",null],["씁니다","쓰다",null]]]};
+var DATA = {"A":{"모자":"audio/a234.mp3","바지":"audio/a268.mp3","치마":"audio/a666.mp3","구두":"audio/a70.mp3","우유":"audio/a522.mp3","두부":"audio/a185.mp3","사과":"audio/a332.mp3","포도":"audio/a714.mp3","배추":"audio/a284.mp3","오이":"audio/a503.mp3","고구마":"audio/a49.mp3","커피":"audio/a681.mp3","시계":"audio/a408.mp3","의자":"audio/a541.mp3","베개":"audio/a294.mp3","가위":"audio/a7.mp3","도마":"audio/a168.mp3","비누":"audio/a318.mp3","지도":"audio/a631.mp3","바다":"audio/a265.mp3","나무":"audio/a101.mp3","어머니":"audio/a470.mp3","아버지":"audio/a440.mp3","아기":"audio/a436.mp3","김치":"audio/a92.mp3","국수":"audio/a73.mp3","된장":"audio/a183.mp3","반찬":"audio/a271.mp3","수건":"audio/a394.mp3","안경":"audio/a445.mp3","우산":"audio/a520.mp3","가방":"audio/a4.mp3","지갑":"audio/a630.mp3","달력":"audio/a150.mp3","냉장고":"audio/a116.mp3","병원":"audio/a299.mp3","약국":"audio/a458.mp3","감기":"audio/a17.mp3","혈압":"audio/a741.mp3","시장":"audio/a414.mp3","통장":"audio/a698.mp3","편지":"audio/a712.mp3","택배":"audio/a692.mp3","학교":"audio/a722.mp3","경로당":"audio/a43.mp3","정류장":"audio/a603.mp3","아침":"audio/a442.mp3","점심":"audio/a597.mp3","부엌":"audio/a312.mp3","무릎":"audio/a244.mp3","그릇":"audio/a80.mp3","젓가락":"audio/a601.mp3","칫솔":"audio/a674.mp3","옷장":"audio/a508.mp3","빗자루":"audio/a324.mp3","밥솥":"audio/a278.mp3","속옷":"audio/a383.mp3","곶감":"audio/a64.mp3","젓갈":"audio/a602.mp3","이웃":"audio/a550.mp3","버섯":"audio/a288.mp3","씨앗":"audio/a434.mp3","콧물":"audio/a686.mp3","깻잎":"audio/a96.mp3","좋다":"audio/a614.mp3","놓다":"audio/a130.mp3","높다":"audio/a129.mp3","맛있다":"audio/a216.mp3","값":"audio/a20.mp3","흙":"audio/a756.mp3","닭":"audio/a152.mp3","앉다":"audio/a453.mp3","읽다":"audio/a556.mp3","많다":"audio/a213.mp3","싫다":"audio/a423.mp3","짧다":"audio/a641.mp3","밝다":"audio/a275.mp3","끓이다":"audio/a99.mp3","안녕하세요":"audio/a446.mp3","고맙습니다":"audio/a52.mp3","감사합니다":"audio/a18.mp3","미안합니다":"audio/a256.mp3","죄송합니다":"audio/a615.mp3","반갑습니다":"audio/a270.mp3","축하합니다":"audio/a662.mp3","괜찮습니다":"audio/a67.mp3","여보세요":"audio/a483.mp3","사랑합니다":"audio/a335.mp3","잘했어요":"audio/a572.mp3","맛있어요":"audio/a217.mp3","안녕히 가세요":"audio/a447.mp3","안녕히 계세요":"audio/a448.mp3","어서 오세요":"audio/a473.mp3","잘 먹겠습니다":"audio/a570.mp3","잘 먹었습니다":"audio/a571.mp3","안녕히 주무세요":"audio/a449.mp3","또 봐요":"audio/a199.mp3","처음 뵙겠습니다":"audio/a654.mp3","새해 복 많이 받으세요":"audio/a353.mp3","오래오래 사세요":"audio/a500.mp3","약":"audio/a457.mp3","먹다":"audio/a222.mp3","사다":"audio/a333.mp3","손자":"audio/a389.mp3","가다":"audio/a2.mp3","날씨":"audio/a107.mp3","저녁":"audio/a585.mp3","돈":"audio/a173.mp3","내일":"audio/a112.mp3","딸":"audio/a193.mp3","쓰다":"audio/a430.mp3"},"FX":{"praise":"audio/a1210.mp3","wrong":"audio/a1211.mp3","perfect":"audio/a1223.mp3","good":"audio/a1224.mp3","ok":"audio/a1225.mp3"},"SC":["audio/a1212.mp3","audio/a1213.mp3","audio/a1214.mp3","audio/a1215.mp3","audio/a1216.mp3","audio/a1217.mp3","audio/a1218.mp3","audio/a1219.mp3","audio/a1220.mp3","audio/a1221.mp3","audio/a1222.mp3"],"BIN":{"file":"audio/audio.bin","total":12864207,"off":{"audio/a234.mp3":[1914552,7628],"audio/a268.mp3":[2197616,7820],"audio/a666.mp3":[5486232,7628],"audio/a70.mp3":[578312,7628],"audio/a522.mp3":[4294008,7820],"audio/a185.mp3":[1513132,7628],"audio/a332.mp3":[2714032,7820],"audio/a714.mp3":[5876952,7916],"audio/a284.mp3":[2328304,8108],"audio/a503.mp3":[4136980,7436],"audio/a49.mp3":[402764,8108],"audio/a681.mp3":[5607948,8012],"audio/a408.mp3":[3345888,7628],"audio/a541.mp3":[4452092,7628],"audio/a294.mp3":[2407752,7532],"audio/a7.mp3":[57236,7820],"audio/a168.mp3":[1375104,7724],"audio/a318.mp3":[2599560,7724],"audio/a631.mp3":[5197556,7436],"audio/a265.mp3":[2172524,8972],"audio/a101.mp3":[830908,7724],"audio/a470.mp3":[3864712,7820],"audio/a440.mp3":[3613312,8204],"audio/a436.mp3":[3582992,7628],"audio/a92.mp3":[756400,8492],"audio/a73.mp3":[601100,8492],"audio/a183.mp3":[1496436,8204],"audio/a271.mp3":[2223860,8588],"audio/a394.mp3":[3225752,8492],"audio/a445.mp3":[3655004,8396],"audio/a520.mp3":[4277984,7916],"audio/a4.mp3":[32336,8300],"audio/a630.mp3":[5190216,7340],"audio/a150.mp3":[1225608,7532],"audio/a116.mp3":[947824,8780],"audio/a299.mp3":[2446564,8588],"audio/a458.mp3":[3767992,7436],"audio/a17.mp3":[136780,8300],"audio/a741.mp3":[6095484,7340],"audio/a414.mp3":[3398664,8204],"audio/a698.mp3":[5747128,7916],"audio/a712.mp3":[5861408,8204],"audio/a692.mp3":[5697904,8204],"audio/a722.mp3":[5940760,7532],"audio/a43.mp3":[353252,8876],"audio/a603.mp3":[4963908,8780],"audio/a442.mp3":[3629240,8108],"audio/a597.mp3":[4914492,8396],"audio/a312.mp3":[2551776,7340],"audio/a244.mp3":[1996400,7340],"audio/a80.mp3":[656896,7340],"audio/a601.mp3":[4947692,8108],"audio/a674.mp3":[5548984,8396],"audio/a508.mp3":[4177136,8108],"audio/a324.mp3":[2649264,8588],"audio/a278.mp3":[2278696,7436],"audio/a383.mp3":[3138196,7340],"audio/a64.mp3":[528128,8300],"audio/a602.mp3":[4955800,8108],"audio/a550.mp3":[4524200,7340],"audio/a288.mp3":[2360640,7340],"audio/a434.mp3":[3567544,7532],"audio/a686.mp3":[5647624,8204],"audio/a96.mp3":[790656,7340],"audio/a614.mp3":[5058280,7820],"audio/a130.mp3":[1065080,7820],"audio/a129.mp3":[1056972,8108],"audio/a216.mp3":[1769472,8300],"audio/a20.mp3":[163408,7340],"audio/a756.mp3":[6217104,7340],"audio/a152.mp3":[1241824,7340],"audio/a453.mp3":[3728988,8204],"audio/a556.mp3":[4574288,7820],"audio/a213.mp3":[1744572,8108],"audio/a423.mp3":[3471828,8204],"audio/a641.mp3":[5278540,8204],"audio/a275.mp3":[2255620,8108],"audio/a99.mp3":[814020,8972],"audio/a446.mp3":[3663400,9068],"audio/a52.mp3":[427760,9260],"audio/a18.mp3":[145080,10220],"audio/a256.mp3":[2096480,9452],"audio/a615.mp3":[5066100,9452],"audio/a270.mp3":[2214312,9548],"audio/a662.mp3":[5450536,9932],"audio/a67.mp3":[552932,9452],"audio/a483.mp3":[3973572,8396],"audio/a335.mp3":[2739220,9932],"audio/a572.mp3":[4709392,9164],"audio/a217.mp3":[1777772,9164],"audio/a447.mp3":[3672468,9644],"audio/a448.mp3":[3682112,9836],"audio/a473.mp3":[3889036,9164],"audio/a570.mp3":[4688856,10316],"audio/a571.mp3":[4699172,10220],"audio/a449.mp3":[3691948,10604],"audio/a199.mp3":[1626260,8396],"audio/a654.mp3":[5382792,10988],"audio/a353.mp3":[2887564,12332],"audio/a500.mp3":[4111120,10316],"audio/a457.mp3":[3760652,7340],"audio/a222.mp3":[1818312,7916],"audio/a333.mp3":[2721852,9356],"audio/a389.mp3":[3185884,8300],"audio/a2.mp3":[14968,9260],"audio/a107.mp3":[876964,8204],"audio/a585.mp3":[4816716,7340],"audio/a173.mp3":[1415740,7628],"audio/a112.mp3":[916160,7724],"audio/a193.mp3":[1580492,7340],"audio/a430.mp3":[3532328,9068],"audio/a1242.mp3":[11298360,10988],"audio/a1243.mp3":[11309348,11564],"audio/a1244.mp3":[11320912,13196],"audio/a1245.mp3":[11334108,11756],"audio/a1246.mp3":[11345864,13292],"audio/a1247.mp3":[11359156,12332],"audio/a1248.mp3":[11371488,10988],"audio/a1249.mp3":[11382476,12044],"audio/a1250.mp3":[11394520,11852],"audio/a1251.mp3":[11406372,12428],"audio/a1252.mp3":[11418800,11660],"audio/a1253.mp3":[11430460,10988],"audio/a1254.mp3":[11441448,16845],"audio/a1255.mp3":[11458293,8013],"audio/a1256.mp3":[11466306,7917],"audio/a1257.mp3":[11474223,7821],"audio/a1258.mp3":[11482044,16941],"audio/a1259.mp3":[11498985,9069],"audio/a1260.mp3":[11508054,8301],"audio/a1261.mp3":[11516355,7917],"audio/a1262.mp3":[11524272,15789],"audio/a1263.mp3":[11540061,7725],"audio/a1264.mp3":[11547786,7725],"audio/a1265.mp3":[11555511,8109],"audio/a1266.mp3":[11563620,16845],"audio/a1267.mp3":[11580465,8013],"audio/a1268.mp3":[11588478,9165],"audio/a1269.mp3":[11597643,8301],"audio/a1270.mp3":[11605944,14637],"audio/a1271.mp3":[11620581,8013],"audio/a1272.mp3":[11628594,8013],"audio/a1273.mp3":[11636607,8109],"audio/a1274.mp3":[11644716,17325],"audio/a1275.mp3":[11662041,8013],"audio/a1276.mp3":[11670054,8109],"audio/a1277.mp3":[11678163,17709],"audio/a1278.mp3":[11695872,10125],"audio/a1279.mp3":[11705997,9741],"audio/a1280.mp3":[11715738,9837],"audio/a1281.mp3":[11725575,18189],"audio/a1282.mp3":[11743764,10893],"audio/a1283.mp3":[11754657,10509],"audio/a1284.mp3":[11765166,9837],"audio/a1285.mp3":[11775003,15885],"audio/a1286.mp3":[11790888,8013],"audio/a1287.mp3":[11798901,8301],"audio/a1288.mp3":[11807202,7725],"audio/a1289.mp3":[11814927,12621],"audio/a1290.mp3":[11827548,8685],"audio/a1291.mp3":[11836233,8685],"audio/a1292.mp3":[11844918,8109],"audio/a1293.mp3":[11853027,16557],"audio/a1294.mp3":[11869584,12621],"audio/a1295.mp3":[11882205,12909],"audio/a1296.mp3":[11895114,13101],"audio/a1297.mp3":[11908215,8013],"audio/a1298.mp3":[11916228,7725],"audio/a1299.mp3":[11923953,7725],"audio/a1300.mp3":[11931678,12717],"audio/a1301.mp3":[11944395,9549],"audio/a1302.mp3":[11953944,8877],"audio/a1303.mp3":[11962821,9741],"audio/a1304.mp3":[11972562,9933],"audio/a1305.mp3":[11982495,12333],"audio/a1306.mp3":[11994828,10125],"audio/a1307.mp3":[12004953,11949],"audio/a1308.mp3":[12016902,8397],"audio/a1309.mp3":[12025299,7725],"audio/a1310.mp3":[12033024,7821],"audio/a1311.mp3":[12040845,12045],"audio/a1312.mp3":[12052890,7725],"audio/a1313.mp3":[12060615,7725],"audio/a1314.mp3":[12068340,7725],"audio/a1315.mp3":[12076065,18189],"audio/a1316.mp3":[12094254,13773],"audio/a1317.mp3":[12108027,12717],"audio/a1318.mp3":[12120744,12045],"audio/a1319.mp3":[12132789,7821],"audio/a1320.mp3":[12140610,7725],"audio/a1321.mp3":[12148335,7725],"audio/a1322.mp3":[12156060,11277],"audio/a1323.mp3":[12167337,10221],"audio/a1324.mp3":[12177558,9165],"audio/a1325.mp3":[12186723,18765],"audio/a1326.mp3":[12205488,10701],"audio/a1327.mp3":[12216189,15501],"audio/a1328.mp3":[12231690,11853],"audio/a1329.mp3":[12243543,12813],"audio/a1330.mp3":[12256356,10701],"audio/a1331.mp3":[12267057,8685],"audio/a1332.mp3":[12275742,8877],"audio/a1333.mp3":[12284619,15981],"audio/a1334.mp3":[12300600,11181],"audio/a1335.mp3":[12311781,11277],"audio/a1336.mp3":[12323058,11565],"audio/a1337.mp3":[12334623,10509],"audio/a1338.mp3":[12345132,9069],"audio/a1339.mp3":[12354201,9261],"audio/a1340.mp3":[12363462,11661],"audio/a1341.mp3":[12375123,9933],"audio/a1342.mp3":[12385056,9165],"audio/a1343.mp3":[12394221,16077],"audio/a1344.mp3":[12410298,13101],"audio/a1345.mp3":[12423399,12141],"audio/a1346.mp3":[12435540,12045],"audio/a1347.mp3":[12447585,8973],"audio/a1348.mp3":[12456558,8109],"audio/a1349.mp3":[12464667,7725],"audio/a1350.mp3":[12472392,12525],"audio/a1351.mp3":[12484917,8685],"audio/a1352.mp3":[12493602,7725],"audio/a1353.mp3":[12501327,7725],"audio/a1354.mp3":[12509052,10509],"audio/a1355.mp3":[12519561,14157],"audio/a1356.mp3":[12533718,11181],"audio/a1357.mp3":[12544899,11277],"audio/a1358.mp3":[12556176,8013],"audio/a1359.mp3":[12564189,7725],"audio/a1360.mp3":[12571914,9645],"audio/a1361.mp3":[12581559,9453],"audio/a1362.mp3":[12591012,10029],"audio/a1363.mp3":[12601041,9549],"audio/a1364.mp3":[12610590,18381],"audio/a1365.mp3":[12628971,17613],"audio/a1366.mp3":[12646584,13293],"audio/a1367.mp3":[12659877,12333],"audio/a1368.mp3":[12672210,7725],"audio/a1369.mp3":[12679935,7725],"audio/a1370.mp3":[12687660,14733],"audio/a1371.mp3":[12702393,13389],"audio/a1372.mp3":[12715782,11277],"audio/a1373.mp3":[12727059,9261],"audio/a1374.mp3":[12736320,11181],"audio/a1375.mp3":[12747501,12621],"audio/a1376.mp3":[12760122,16173],"audio/a1377.mp3":[12776295,14061],"audio/a1378.mp3":[12790356,10413],"audio/a1379.mp3":[12800769,10221],"audio/a1380.mp3":[12810990,10317],"audio/a1381.mp3":[12821307,14349],"audio/a1382.mp3":[12835656,10221],"audio/a1383.mp3":[12845877,9453],"audio/a1384.mp3":[12855330,8877],"audio/a1210.mp3":[10406552,17420],"audio/a1211.mp3":[10423972,15788],"audio/a1223.mp3":[10613332,19724],"audio/a1224.mp3":[10633056,22124],"audio/a1225.mp3":[10655180,21356],"audio/a1212.mp3":[10439760,16076],"audio/a1213.mp3":[10455836,15692],"audio/a1214.mp3":[10471528,15308],"audio/a1215.mp3":[10486836,15788],"audio/a1216.mp3":[10502624,15884],"audio/a1217.mp3":[10518508,15884],"audio/a1218.mp3":[10534392,15884],"audio/a1219.mp3":[10550276,15788],"audio/a1220.mp3":[10566064,15788],"audio/a1221.mp3":[10581852,15788],"audio/a1222.mp3":[10597640,15692]}},"SENT_AUDIO":{"오늘 병원에 갑니다":"audio/a1242.mp3","약을 아침에 먹습니다":"audio/a1243.mp3","시장에서 김치를 샀습니다":"audio/a1244.mp3","손자가 학교에 갔어요":"audio/a1245.mp3","오늘 날씨가 참 좋습니다":"audio/a1246.mp3","저녁에 국수를 먹었어요":"audio/a1247.mp3","우산을 가지고 가세요":"audio/a1248.mp3","통장에 돈을 넣었습니다":"audio/a1249.mp3","내일 경로당에 갑니다":"audio/a1250.mp3","안경을 어디에 두었어요":"audio/a1251.mp3","택배가 경비실에 있어요":"audio/a1252.mp3","딸에게 편지를 씁니다":"audio/a1253.mp3"},"W":[{"id":"w1","icon":"🌱","title":"받침 없는 낱말","tip":"받침이 없어 소리 나는 대로 쓰면 되는 낱말입니다.","words":["모자","바지","치마","구두","우유","두부","사과","포도","배추","오이","고구마","커피","시계","의자","베개","가위","도마","비누","지도","바다","나무","어머니","아버지","아기"]},{"id":"w2","icon":"🌿","title":"받침 있는 낱말","tip":"받침을 빠뜨리지 않도록 끝소리를 잘 들어 보세요.","words":["김치","국수","된장","반찬","수건","안경","우산","가방","지갑","달력","냉장고","병원","약국","감기","혈압","시장","통장","편지","택배","학교","경로당","정류장","아침","점심"]},{"id":"w3","icon":"🌾","title":"소리와 글자가 다른 낱말","tip":"들리는 소리와 쓰는 글자가 다릅니다. 부엌은 [부억]으로 들려도 「부엌」이라 씁니다.","words":["부엌","무릎","그릇","젓가락","칫솔","옷장","빗자루","밥솥","속옷","곶감","젓갈","이웃","버섯","씨앗","콧물","깻잎","좋다","놓다","높다","맛있다"]},{"id":"w4","icon":"🌳","title":"겹받침 낱말","tip":"받침이 두 개입니다. 소리는 하나만 나니 더 조심해서 써야 합니다.","words":["값","흙","닭","앉다","읽다","많다","싫다","짧다","밝다","끓이다"]}],"S1":["안녕하세요","고맙습니다","감사합니다","미안합니다","죄송합니다","반갑습니다","축하합니다","괜찮습니다","여보세요","사랑합니다","잘했어요","맛있어요"],"S2":["안녕히 가세요","안녕히 계세요","어서 오세요","잘 먹겠습니다","잘 먹었습니다","안녕히 주무세요","또 봐요","처음 뵙겠습니다","새해 복 많이 받으세요","오래오래 사세요"],"S3":[[["오늘",null,null],["병원에","병원","병워네"],["갑니다",null,"감니다"]],[["약을","약","야글"],["아침에","아침","아치메"],["먹습니다","먹다","먹씀니다"]],[["시장에서","시장","시장에써"],["김치를","김치",null],["샀습니다","사다","싿씀니다"]],[["손자가","손자",null],["학교에","학교","학꾜에"],["갔어요","가다","가써요"]],[["오늘",null,null],["날씨가","날씨",null],["참",null,null],["좋습니다","좋다","조씀니다"]],[["저녁에","저녁","저녀게"],["국수를","국수","국쑤를"],["먹었어요","먹다","머거써요"]],[["우산을","우산","우사늘"],["가지고",null,null],["가세요","가다",null]],[["통장에","통장",null],["돈을","돈","도늘"],["넣었습니다","놓다","너어씀니다"]],[["내일","내일",null],["경로당에","경로당","경노당에"],["갑니다",null,"감니다"]],[["안경을","안경","안경얼"],["어디에",null,null],["두었어요",null,"두어써요"]],[["택배가","택배","택빼가"],["경비실에",null,null],["있어요",null,"이써요"]],[["딸에게","딸",null],["편지를","편지",null],["씁니다","쓰다",null]]],"R":[{"id":"r1","icon":"🔢","title":"1단계 · 숫자와 날짜 읽기","tip":"고지서와 안내문에 나오는 숫자를 어떻게 읽는지 익힙니다. 글을 눈으로 보고 고르세요.","texts":[{"title":"병원 시간","showOnly":true,"lines":["아침 9시에 문을 엽니다.","점심시간은 12시 30분부터입니다."],"q":[["「9시」를 바르게 읽은 것은 무엇일까요?",["아홉 시","구 시","아홉 날"],0],["「30분」을 바르게 읽은 것은 무엇일까요?",["삼십 분","서른 분","세 분"],0]]},{"title":"검진 날짜","showOnly":true,"lines":["검진 날짜는 10월 15일입니다.","11월 25일까지 신청하세요."],"q":[["「10월」을 바르게 읽은 것은 무엇일까요?",["시월","십월","열 달"],0],["「15일」을 바르게 읽은 것은 무엇일까요?",["십오일","열다섯 일","십오 날"],0]]},{"title":"경로당 알림","showOnly":true,"lines":["점심은 목요일에 드립니다.","일요일은 쉽니다."],"q":[["토요일 다음 날은 무슨 요일일까요?",["일요일","금요일","월요일"],0],["경로당에서 점심을 드리는 날은 언제일까요?",["목요일","일요일","토요일"],0]]},{"title":"고지서 금액","showOnly":true,"lines":["관리비는 32,000원입니다.","약값은 9,120원입니다."],"q":[["「32,000원」을 바르게 읽은 것은 무엇일까요?",["삼만 이천 원","삼십이 원","삼백이십 원"],0],["「9,120원」을 바르게 읽은 것은 무엇일까요?",["구천백이십 원","구만 백이십 원","구백십이 원"],0]]},{"title":"약 먹는 횟수","showOnly":true,"lines":["하루에 3번 드세요.","모두 5일 치입니다."],"q":[["「3번」을 바르게 읽은 것은 무엇일까요?",["세 번","삼 번","세 개"],0],["「5일 치」는 며칠 치일까요?",["닷새 치","사흘 치","이레 치"],0]]}]},{"id":"r2","icon":"📝","title":"2단계 · 쪽지와 짧은 편지","tip":"가족이나 이웃이 남긴 짧은 글입니다. 읽고 무슨 말인지 알아봅니다.","texts":[{"title":"딸이 남긴 쪽지","lines":["어머니, 저녁에 국수를 끓여 놓았어요.","냉장고에 김치도 있어요.","약은 꼭 드시고 주무세요."],"q":[["저녁에 무엇을 먹으면 될까요?",["국수","빵","고기"],0],["자기 전에 무엇을 해야 할까요?",["약을 먹는다","빨래를 한다","시장에 간다"],0]]},{"title":"이웃이 남긴 쪽지","lines":["택배가 왔습니다.","경비실에 맡겨 두었어요.","오후에 찾아가세요."],"q":[["택배는 어디에 있을까요?",["경비실","우체국","시장"],0],["언제 찾으러 가면 될까요?",["오후","아침","내일"],0]]},{"title":"손자가 보낸 편지","lines":["할머니, 저는 학교에 잘 다니고 있어요.","다음 주에 할머니 집에 갈 거예요.","그때 사진도 같이 찍어요."],"q":[["이 글은 누가 썼을까요?",["손자","딸","이웃"],0],["다음 주에 무엇을 할까요?",["할머니 집에 간다","병원에 간다","시장에 간다"],0]]}]},{"id":"r3","icon":"📢","title":"3단계 · 마을 알림 글","tip":"경로당이나 마을에 붙는 알림입니다. 날짜와 할 일을 찾아봅니다.","texts":[{"title":"경로당 알림","lines":["이번 주 목요일에 경로당에서 점심을 드립니다.","열두 시까지 오세요.","오시기 전에 총무님께 말씀해 주세요."],"q":[["언제 점심을 드릴까요?",["목요일","월요일","토요일"],0],["오기 전에 무엇을 해야 할까요?",["총무님께 말한다","돈을 낸다","그냥 간다"],0]]},{"title":"물 끊김 안내","lines":["내일 아침 아홉 시부터 열한 시까지","물이 나오지 않습니다.","미리 물을 받아 두세요."],"q":[["내일 무슨 일이 있을까요?",["물이 나오지 않는다","불이 꺼진다","길이 막힌다"],0],["미리 무엇을 해야 할까요?",["물을 받아 둔다","집에 있는다","시장에 간다"],0]]},{"title":"건강 검진 알림","lines":["마을 회관에서 건강 검진을 합니다.","날짜는 시월 십오일입니다.","신분증을 가지고 오세요."],"q":[["어디에서 검진을 할까요?",["마을 회관","병원","약국"],0],["무엇을 가지고 가야 할까요?",["신분증","통장","우산"],0]]}]},{"id":"r4","icon":"📄","title":"4단계 · 생활 서류 읽기","tip":"약 봉투, 병원 안내문처럼 꼭 읽어야 하는 글입니다. 숫자를 눈으로 읽어 보세요.","texts":[{"title":"약 봉투","lines":[["하루에 3번 드세요.","하루에 세 번 드세요."],["밥을 먹고 30분 뒤에 드세요.","밥을 먹고 삼십 분 뒤에 드세요."],["모두 5일 치입니다.","모두 닷새 치입니다."]],"q":[["하루에 몇 번 먹을까요?",["세 번","한 번","두 번"],0],["언제 먹을까요?",["밥을 먹은 뒤","밥을 먹기 전","잠자기 전"],0]]},{"title":"병원 진료 시간","lines":[["아침 9시부터 저녁 6시까지 합니다.","아침 아홉 시부터 저녁 여섯 시까지 합니다."],["점심시간은 12시부터 1시까지입니다.","점심시간은 열두 시부터 한 시까지입니다."],["토요일은 1시까지만 합니다.","토요일은 한 시까지만 합니다."]],"q":[["토요일은 몇 시까지 할까요?",["한 시","여섯 시","아홉 시"],0],["열두 시 반에 가면 어떻게 될까요?",["점심시간이라 기다려야 한다","바로 진료를 받는다","문을 닫았다"],0]]},{"title":"관리비 고지서","lines":[["11월 관리비입니다.","십일월 관리비입니다."],["모두 32,000원입니다.","모두 삼만 이천 원입니다."],["내는 날은 11월 25일입니다.","내는 날은 십일월 이십오일입니다."],["늦으면 돈을 더 내야 합니다.","늦으면 돈을 더 내야 합니다."]],"q":[["얼마를 내야 할까요?",["삼만 이천 원","이만 삼천 원","삼천 이백 원"],0],["이십오일이 지나면 어떻게 될까요?",["돈을 더 낸다","안 내도 된다","반만 낸다"],0]]}]}],"READ_AUDIO":{"「9시」를 바르게 읽은 것은 무엇일까요?":"audio/a1254.mp3","아홉 시":"audio/a1255.mp3","구 시":"audio/a1256.mp3","아홉 날":"audio/a1257.mp3","「30분」을 바르게 읽은 것은 무엇일까요?":"audio/a1258.mp3","삼십 분":"audio/a1259.mp3","서른 분":"audio/a1260.mp3","세 분":"audio/a1261.mp3","「10월」을 바르게 읽은 것은 무엇일까요?":"audio/a1262.mp3","시월":"audio/a1263.mp3","십월":"audio/a1264.mp3","열 달":"audio/a1265.mp3","「15일」을 바르게 읽은 것은 무엇일까요?":"audio/a1266.mp3","십오일":"audio/a1267.mp3","열다섯 일":"audio/a1268.mp3","십오 날":"audio/a1269.mp3","토요일 다음 날은 무슨 요일일까요?":"audio/a1270.mp3","일요일":"audio/a1271.mp3","금요일":"audio/a1272.mp3","월요일":"audio/a1273.mp3","경로당에서 점심을 드리는 날은 언제일까요?":"audio/a1274.mp3","목요일":"audio/a1275.mp3","토요일":"audio/a1276.mp3","「32,000원」을 바르게 읽은 것은 무엇일까요?":"audio/a1277.mp3","삼만 이천 원":"audio/a1278.mp3","삼십이 원":"audio/a1279.mp3","삼백이십 원":"audio/a1280.mp3","「9,120원」을 바르게 읽은 것은 무엇일까요?":"audio/a1281.mp3","구천백이십 원":"audio/a1282.mp3","구만 백이십 원":"audio/a1283.mp3","구백십이 원":"audio/a1284.mp3","「3번」을 바르게 읽은 것은 무엇일까요?":"audio/a1285.mp3","세 번":"audio/a1286.mp3","삼 번":"audio/a1287.mp3","세 개":"audio/a1288.mp3","「5일 치」는 며칠 치일까요?":"audio/a1289.mp3","닷새 치":"audio/a1290.mp3","사흘 치":"audio/a1291.mp3","이레 치":"audio/a1292.mp3","어머니, 저녁에 국수를 끓여 놓았어요.":"audio/a1293.mp3","냉장고에 김치도 있어요.":"audio/a1294.mp3","약은 꼭 드시고 주무세요.":"audio/a1295.mp3","저녁에 무엇을 먹으면 될까요?":"audio/a1296.mp3","국수":"audio/a1297.mp3","빵":"audio/a1298.mp3","고기":"audio/a1299.mp3","자기 전에 무엇을 해야 할까요?":"audio/a1300.mp3","약을 먹는다":"audio/a1301.mp3","빨래를 한다":"audio/a1302.mp3","시장에 간다":"audio/a1303.mp3","택배가 왔습니다.":"audio/a1304.mp3","경비실에 맡겨 두었어요.":"audio/a1305.mp3","오후에 찾아가세요.":"audio/a1306.mp3","택배는 어디에 있을까요?":"audio/a1307.mp3","경비실":"audio/a1308.mp3","우체국":"audio/a1309.mp3","시장":"audio/a1310.mp3","언제 찾으러 가면 될까요?":"audio/a1311.mp3","오후":"audio/a1312.mp3","아침":"audio/a1313.mp3","내일":"audio/a1314.mp3","할머니, 저는 학교에 잘 다니고 있어요.":"audio/a1315.mp3","다음 주에 할머니 집에 갈 거예요.":"audio/a1316.mp3","그때 사진도 같이 찍어요.":"audio/a1317.mp3","이 글은 누가 썼을까요?":"audio/a1318.mp3","손자":"audio/a1319.mp3","딸":"audio/a1320.mp3","이웃":"audio/a1321.mp3","다음 주에 무엇을 할까요?":"audio/a1322.mp3","할머니 집에 간다":"audio/a1323.mp3","병원에 간다":"audio/a1324.mp3","이번 주 목요일에 경로당에서 점심을 드립니다.":"audio/a1325.mp3","열두 시까지 오세요.":"audio/a1326.mp3","오시기 전에 총무님께 말씀해 주세요.":"audio/a1327.mp3","언제 점심을 드릴까요?":"audio/a1328.mp3","오기 전에 무엇을 해야 할까요?":"audio/a1329.mp3","총무님께 말한다":"audio/a1330.mp3","돈을 낸다":"audio/a1331.mp3","그냥 간다":"audio/a1332.mp3","내일 아침 아홉 시부터 열한 시까지":"audio/a1333.mp3","물이 나오지 않습니다.":"audio/a1334.mp3","미리 물을 받아 두세요.":"audio/a1335.mp3","내일 무슨 일이 있을까요?":"audio/a1336.mp3","물이 나오지 않는다":"audio/a1337.mp3","불이 꺼진다":"audio/a1338.mp3","길이 막힌다":"audio/a1339.mp3","미리 무엇을 해야 할까요?":"audio/a1340.mp3","물을 받아 둔다":"audio/a1341.mp3","집에 있는다":"audio/a1342.mp3","마을 회관에서 건강 검진을 합니다.":"audio/a1343.mp3","날짜는 시월 십오일입니다.":"audio/a1344.mp3","신분증을 가지고 오세요.":"audio/a1345.mp3","어디에서 검진을 할까요?":"audio/a1346.mp3","마을 회관":"audio/a1347.mp3","병원":"audio/a1348.mp3","약국":"audio/a1349.mp3","무엇을 가지고 가야 할까요?":"audio/a1350.mp3","신분증":"audio/a1351.mp3","통장":"audio/a1352.mp3","우산":"audio/a1353.mp3","하루에 세 번 드세요.":"audio/a1354.mp3","밥을 먹고 삼십 분 뒤에 드세요.":"audio/a1355.mp3","모두 닷새 치입니다.":"audio/a1356.mp3","하루에 몇 번 먹을까요?":"audio/a1357.mp3","한 번":"audio/a1358.mp3","두 번":"audio/a1359.mp3","언제 먹을까요?":"audio/a1360.mp3","밥을 먹은 뒤":"audio/a1361.mp3","밥을 먹기 전":"audio/a1362.mp3","잠자기 전":"audio/a1363.mp3","아침 아홉 시부터 저녁 여섯 시까지 합니다.":"audio/a1364.mp3","점심시간은 열두 시부터 한 시까지입니다.":"audio/a1365.mp3","토요일은 한 시까지만 합니다.":"audio/a1366.mp3","토요일은 몇 시까지 할까요?":"audio/a1367.mp3","한 시":"audio/a1368.mp3","여섯 시":"audio/a1369.mp3","열두 시 반에 가면 어떻게 될까요?":"audio/a1370.mp3","점심시간이라 기다려야 한다":"audio/a1371.mp3","바로 진료를 받는다":"audio/a1372.mp3","문을 닫았다":"audio/a1373.mp3","십일월 관리비입니다.":"audio/a1374.mp3","모두 삼만 이천 원입니다.":"audio/a1375.mp3","내는 날은 십일월 이십오일입니다.":"audio/a1376.mp3","늦으면 돈을 더 내야 합니다.":"audio/a1377.mp3","얼마를 내야 할까요?":"audio/a1378.mp3","이만 삼천 원":"audio/a1379.mp3","삼천 이백 원":"audio/a1380.mp3","이십오일이 지나면 어떻게 될까요?":"audio/a1381.mp3","돈을 더 낸다":"audio/a1382.mp3","안 내도 된다":"audio/a1383.mp3","반만 낸다":"audio/a1384.mp3"}};
 </script>
 <script>
 'use strict';
@@ -437,6 +492,7 @@ function stopAll() {
 function fileOf(text) {
   if (!text) return null;
   if (DATA.SENT_AUDIO && DATA.SENT_AUDIO[text]) return DATA.SENT_AUDIO[text];
+  if (DATA.READ_AUDIO && DATA.READ_AUDIO[text]) return DATA.READ_AUDIO[text];
   return DATA.A[text] || null;
 }
 
@@ -570,6 +626,14 @@ function renderHome() {
   for (var i = 0; i < a.length; i++) a[i].addEventListener('click', function () { startWord(+this.dataset.w); });
   var b = $('menuSent').querySelectorAll('.menu-btn');
   for (var j = 0; j < b.length; j++) b[j].addEventListener('click', function () { startSent(+this.dataset.s); });
+  $('menuRead').innerHTML = (DATA.R || []).map(function (st, i) {
+    return '<button class="menu-btn" data-r="' + i + '">' +
+      '<span class="icon">' + st.icon + '</span><span class="mid">' +
+      '<span class="label">' + st.title + '</span>' +
+      '<span class="desc">' + st.tip + '</span></span>' + stampOf(st.id) + '</button>';
+  }).join('');
+  var r = $('menuRead').querySelectorAll('.menu-btn');
+  for (var m = 0; m < r.length; m++) r[m].addEventListener('click', function () { startRead(+this.dataset.r); });
 }
 
 function pick(arr, n) {
@@ -860,6 +924,143 @@ $('sListen').addEventListener('click', function () { play(S.items[S.i].text); })
 $('sSlow').addEventListener('click', function () { play(S.items[S.i].text, true); });
 
 /* ============ 결과 ============ */
+
+/* ============ 3부 · 짧은 글 읽고 이해하기 ============
+   받아쓰기와 달리 「읽고 고르기」입니다. 글을 한 줄씩 들려 드리고,
+   묻는 말과 보기도 모두 소리로 읽어 드립니다. 글을 못 읽는 분도
+   듣고 고를 수 있어야 하기 때문입니다.
+   숫자 단계(showOnly)는 일부러 글을 읽어 주지 않습니다 —
+   숫자를 눈으로 읽어 내는 것이 그 단계의 배울 거리입니다. */
+/* 글에 꺾쇠나 & 가 섞여도 화면이 깨지지 않게. 지금 자료에는 없지만,
+   나중에 글을 더할 때 안전하도록 둡니다. */
+function esc(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+var RD = null;
+
+/* 줄 자료는 '글' 이거나 ['보이는 글', '읽어 줄 말'] 입니다 */
+function rdShown(line) { return Array.isArray(line) ? line[0] : line; }
+function rdSaid(line) { return Array.isArray(line) ? line[1] : line; }
+
+/* 숫자·금액·시각을 또렷하게 (보이기만 바꿉니다. 글자는 그대로입니다) */
+function rdMarkNums(t) {
+  return esc(t).replace(/[0-9][0-9,]*/g, function (m) { return '<span class="num">' + m + '</span>'; });
+}
+
+function startRead(si) {
+  var st = DATA.R[si];
+  /* 글 차례는 섞지 않습니다. 쉬운 것부터 짜 두었기 때문입니다. */
+  var items = [];
+  st.texts.forEach(function (t, ti) {
+    t.q.forEach(function (q, qi) { items.push({ t: t, ti: ti, q: q, first: qi === 0 }); });
+  });
+  RD = { st: st, items: items, i: 0, right: 0, wrong: [], done: false, picked: -1 };
+  go('read');
+  renderRead(true);
+}
+
+function renderRead(withSound) {
+  var it = RD.items[RD.i], t = it.t, q = it.q;
+  $('rdTitle').textContent = RD.st.title;
+  $('rdTip').textContent = RD.st.tip;
+  $('rdProgress').textContent = '물음 ' + (RD.i + 1) + ' / ' + RD.items.length +
+    ' · 맞힌 물음 ' + RD.right + '개';
+  $('rdName').textContent = t.title;
+  $('rdBox').innerHTML = t.lines.map(function (l) {
+    return '<p>' + rdMarkNums(rdShown(l)) + '</p>';
+  }).join('');
+
+  /* 글 듣기 단추 — 숫자 단계이거나 녹음이 없으면 감춥니다 */
+  var says = t.showOnly ? [] : t.lines.map(rdSaid).filter(function (x) { return fileOf(x); });
+  var canHear = says.length > 0;
+  $('rdListenRow').hidden = !canHear;
+  $('rdNoAudio').hidden = !(t.showOnly);
+  if (t.showOnly) $('rdNoAudio').textContent = '이 단계는 숫자를 눈으로 읽어 보는 곳입니다. 물음과 보기는 들려 드립니다.';
+
+  $('rdAsk').textContent = q[0];
+  RD.picked = -1;
+  RD.done = false;
+  var marks = ['①', '②', '③', '④'];
+  $('rdChoices').innerHTML = q[1].map(function (c, k) {
+    return '<button type="button" data-k="' + k + '"><span class="mark">' + marks[k] + '</span>' + esc(c) + '</button>';
+  }).join('');
+  var bs = $('rdChoices').querySelectorAll('button');
+  for (var k = 0; k < bs.length; k++) {
+    bs[k].addEventListener('click', function () { pickRead(+this.dataset.k); });
+  }
+  var fb = $('rdFeedback'); fb.className = 'feedback'; fb.innerHTML = '';
+  $('rdBtns').innerHTML = '';
+
+  if (withSound) {
+    /* 글 → 묻는 말 차례로 들려 드립니다 */
+    play(says.concat([q[0]]));
+  }
+}
+
+function pickRead(k) {
+  if (RD.done) return;
+  var it = RD.items[RD.i], q = it.q;
+  RD.picked = k;
+  RD.done = true;
+  var ok = (k === q[2]);
+  if (ok) RD.right++; else RD.wrong.push(q[0]);
+
+  var bs = $('rdChoices').querySelectorAll('button');
+  for (var i = 0; i < bs.length; i++) {
+    bs[i].disabled = true;
+    if (i === q[2]) bs[i].classList.add('ok');
+    else if (i === k) bs[i].classList.add('ng');
+  }
+  var fb = $('rdFeedback');
+  fb.className = 'feedback show ' + (ok ? 'ok' : 'ng');
+  fb.innerHTML = ok ? '⭕ 맞았습니다!' : '바른 답은 <b>' + esc(q[1][q[2]]) + '</b> 입니다.';
+
+  var last = (RD.i === RD.items.length - 1);
+  $('rdBtns').innerHTML = '<button class="nav-btn primary wide" id="rdNext">' +
+    (last ? '🏆 결과 보기' : '➡️ 다음 물음') + '</button>';
+  $('rdNext').addEventListener('click', nextRead);
+
+  playFx(ok ? 'praise' : 'wrong', ok ? null : q[1][q[2]]);
+}
+
+function nextRead() {
+  if (RD.i < RD.items.length - 1) {
+    RD.i++;
+    /* 같은 글의 두 번째 물음이면 글은 다시 안 읽어 드립니다 */
+    renderRead(RD.items[RD.i].first);
+    return;
+  }
+  finishRead();
+}
+
+function finishRead() {
+  var st = RD.st;
+  saveScore(st.id, RD.right, RD.items.length);
+  againFn = function () { startRead(DATA.R.indexOf(st)); };
+  go('result');
+  var ratio = RD.right / RD.items.length;
+  var trophy = '🌱', title = '천천히 한 번 더 읽어 볼까요?', grade = 'ok';
+  if (ratio === 1) { trophy = '🏆'; title = '만점입니다!'; grade = 'perfect'; }
+  else if (ratio >= 0.7) { trophy = '🎉'; title = '아주 잘 읽으셨어요!'; grade = 'good'; }
+  $('rTrophy').textContent = trophy;
+  $('rTitle').textContent = title;
+  $('rDesc').textContent = RD.items.length + '개 물음 가운데 ' + RD.right + '개를 맞히셨습니다.';
+  if (RD.wrong.length) {
+    $('rWrong').hidden = false;
+    $('rWrong').innerHTML = '한 번 더 읽어 보실 물음<br>' +
+      RD.wrong.map(function (w) { return '<b>' + esc(w) + '</b>'; }).join('<br>');
+  } else { $('rWrong').hidden = true; }
+  playSrcs([DATA.SC[RD.right] || null, DATA.FX[grade]]);
+}
+
+$('rdListen').addEventListener('click', function () {
+  var t = RD.items[RD.i].t;
+  if (t.showOnly) return;
+  play(t.lines.map(rdSaid));
+});
+
 var againFn = null;
 function finishStage(id, right, total, wrong, again) {
   saveScore(id, right, total);
