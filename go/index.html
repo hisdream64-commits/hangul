@@ -1158,7 +1158,8 @@ const MODULES = [
       { ask: '손녀에게 보내는 안부 문자로 알맞은 것은?', choices: ['「은지야, 할머니다. 밥은 잘 먹고 다니니?」', '「[Web발신] 안내드립니다」'], answer: 0, why: '누구인지 밝히고 안부를 물으면 훌륭한 문자입니다.' },
       { ask: '인터넷에서 주민센터 번호를 찾으려면 어떻게 적을까요?', choices: ['○○동 주민센터 전화번호', '전화', '번호 알려줘 빨리'], answer: 0, why: '<b>아는 말 그대로</b> 적으면 찾아 줍니다.' },
       { ask: '같은 번호로 광고 문자가 자꾸 옵니다.', choices: ['길게 눌러 스팸 신고·차단한다', '답장으로 오지 말라고 한다', '전화를 걸어 따진다'], answer: 0, why: '답장을 하면 <b>번호가 살아 있다</b>고 알려 주는 셈입니다. 차단하세요.' },
-      { ask: '중급에서 이렇게 썼지요. 「택배가 경비실에 있어요」. 이 문자를 쉬운 말로 하면 무엇일까요?', doc: { tag: '받은 문자', body: '[○○택배] 고객님의 상품이\n<b>경비실에 보관</b>되었습니다.' }, choices: ['택배가 오늘 안 와요', '택배를 다시 보내요', '택배가 경비실에 있어요'], answer: 2, why: '<b>보관</b>은 맡아 두었다는 말입니다. 경비실에 가서 찾으시면 됩니다.' }
+      { ask: '중급에서 이렇게 썼지요. 「택배가 경비실에 있어요」. 이 문자를 쉬운 말로 하면 무엇일까요?', doc: { tag: '받은 문자', body: '[○○택배] 고객님의 상품이\n<b>경비실에 보관</b>되었습니다.' }, choices: ['택배가 오늘 안 와요', '택배를 다시 보내요', '택배가 경비실에 있어요'], answer: 2, why: '<b>보관</b>은 맡아 두었다는 말입니다. 경비실에 가서 찾으시면 됩니다.' },
+      { ask: '이 문자에서 「외출을 자제하세요」는 무슨 뜻일까요?', doc: { tag: '안전 안내 문자', body: '[○○시청] 오늘 밤 <b>한파 경보</b>.\n수도관이 얼지 않게 살피시고\n<b>외출을 자제</b>하세요.' }, choices: ['되도록 밖에 나가지 마세요', '빨리 밖으로 나가세요', '창문을 열어 두세요'], answer: 0, why: '<b>자제</b>는 스스로 참는다는 말입니다. 몹시 추우니 되도록 집에 계시라는 뜻입니다.', rec: true }
     ]
   },
 
@@ -1273,7 +1274,9 @@ const MODULES = [
       { ask: '청첩장에서 꼭 확인할 것 셋은 무엇일까요?', choices: ['날짜 · 시각 · 장소', '혼주 · 나이 · 직업', '음식 · 주차 · 선물'], answer: 0, why: '<b>일시</b>와 <b>장소</b>만 확실하면 됩니다.' },
       { ask: '편지 끝에 웃어른께 쓰는 말은 무엇일까요?', choices: ['올림', '드림', '씀'], answer: 0, why: '웃어른께는 <b>올림</b>이 가장 공손합니다.' },
       { ask: '모임에서 함께 봉투를 낼 때 이름 대신 쓰는 말은?', choices: ['○○회 일동', '○○회 회장', '여러 사람'], answer: 0, why: '여럿이 함께 낼 때는 <b>일동</b>이라고 씁니다.' },
-      { ask: '중급에서 이렇게 썼지요. 「오래오래 사세요」. 일흔 살 잔치 봉투의 「축 고희」와 같은 마음의 인사말은 무엇일까요?', doc: { tag: '잔치 봉투', body: '<b>축 고희</b>\n\n아들 김민수' }, choices: ['안녕히 주무세요', '오래오래 사세요', '어서 오세요'], answer: 1, why: '<b>고희</b>는 일흔 살 잔치입니다. 오래 사시기를 비는 마음을 담습니다.' }
+      { ask: '중급에서 이렇게 썼지요. 「오래오래 사세요」. 일흔 살 잔치 봉투의 「축 고희」와 같은 마음의 인사말은 무엇일까요?', doc: { tag: '잔치 봉투', body: '<b>축 고희</b>\n\n아들 김민수' }, choices: ['안녕히 주무세요', '오래오래 사세요', '어서 오세요'], answer: 1, why: '<b>고희</b>는 일흔 살 잔치입니다. 오래 사시기를 비는 마음을 담습니다.' },
+      { ask: '설날 아침, 어른께 절을 하며 새해 인사를 드리는 것을 무엇이라 할까요?', choices: ['성묘', '세배', '차례'], answer: 1, why: '<b>세배</b>를 드리면 어른께서 <b>덕담</b>을 해 주십니다. <b>차례</b>는 조상께 지내는 것, <b>성묘</b>는 산소에 가는 것입니다.', rec: true },
+      { ask: '이 안내문을 보면 설 연휴에 병원은 언제 쉴까요?', doc: { tag: '병원 안내문', body: '<b>설 연휴 휴진 안내</b>\n\n휴진  2월 16일 ~ 2월 18일\n진료  2월 19일부터 평소대로' }, choices: ['2월 19일부터', '2월 16일부터 18일까지', '쉬지 않는다'], answer: 1, why: '<b>휴진</b>은 진료를 쉰다는 말입니다. 휴진 줄의 날짜를 보시면 됩니다.', rec: true }
     ]
   },
 
@@ -1444,6 +1447,16 @@ const ALL = MODULES.concat([FINAL]);
 const $ = function (id) { return document.getElementById(id); };
 let koVoice = null, voiceWarned = false;
 
+/* rec: true 가 붙은 문제는 물음과 보기가 모두 녹음된 뒤에만 내보냅니다.
+   (2026-11-15 콘텐츠 5 — 소리가 나지 않는 새 문제를 학습자에게 보이지 않기)
+   PC에서 tools/pc_record.py 로 녹음하면 저절로 나타납니다. */
+MODULES.forEach(function (m) {
+  if (!m.quiz) return;
+  m.quiz = m.quiz.filter(function (q) {
+    return !q.rec || [q.ask].concat(q.choices).every(function (t) { return canSay(plain(t)); });
+  });
+});
+
 function pickVoice() {
   if (!('speechSynthesis' in window)) return;
   const vs = speechSynthesis.getVoices().filter(function (v) { return v.lang && v.lang.replace('_', '-').indexOf('ko') === 0; });
@@ -1464,7 +1477,7 @@ if ('speechSynthesis' in window) {
    화면 내용이 조금이라도 바뀌면 APP_BUILD 가 달라지므로, 휴대폰에 보이는 값과
    견주어 보면 새 화면을 받았는지 바로 알 수 있습니다. */
 const APP_VERSION = '1.4';
-const APP_BUILD = '5eb044';
+const APP_BUILD = 'bdf952';
 const APP_DATE = '2026-11-15';
 window.APP_VERSION = APP_VERSION;
 document.addEventListener('DOMContentLoaded', function () {

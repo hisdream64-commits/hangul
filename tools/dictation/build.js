@@ -87,7 +87,12 @@ const SENT3 = [
   [['내일', '내일', null], ['경로당에', '경로당', '경노당에'], ['갑니다', null, '감니다']],
   [['안경을', '안경', '안경얼'], ['어디에', null, null], ['두었어요', null, '두어써요']],
   [['택배가', '택배', '택빼가'], ['경비실에', null, null], ['있어요', null, '이써요']],
-  [['딸에게', '딸', null], ['편지를', '편지', null], ['씁니다', '쓰다', null]]
+  [['딸에게', '딸', null], ['편지를', '편지', null], ['씁니다', '쓰다', null]],
+  /* 2026-11-15 콘텐츠 5 「주제 묶음」의 빈 곳: 마을·관공서, 명절·잔치, 자연·날씨.
+     통문장 녹음(d_<문장>)이 들어오기 전에는 화면에 내보내지 않습니다 — 아래 SENT3_SHOWN. */
+  [['주민센터에', '주민센터', null], ['서류를', null, '서류럴'], ['냈습니다', null, '낻씀니다']],
+  [['추석에', '추석', '추서게'], ['송편을', '송편', '송펴늘'], ['먹었습니다', '먹다', '머거씀니다']],
+  [['밖에', null, '바께'], ['눈이', '눈', '누니'], ['많이', '많다', '마니'], ['왔어요', '오다', '와써요']]
 ];
 
 /* 3단계에서 통째로 들려줄 문장. 녹음 키는 d_<문장>, 말 속도는 문장이므로 -10%.
@@ -290,7 +295,8 @@ if (mismatch.length) {
 WORD_STAGES.forEach(s => s.words.forEach(put));
 SENT1.forEach(put);
 SENT2.forEach(put);
-SENT3.forEach(s => s.forEach(p => put(p[1])));
+SENT3.filter(s => AUDIO[SENT_KEY(s.map(p => p[0]).join(' '))])   // 화면에 나가는 문장만 (SENT3_SHOWN 과 같은 기준)
+  .forEach(s => s.forEach(p => put(p[1])));
 GYEOP.forEach(g => g[4].forEach(w => put(w[2])));
 
 const FX = {
@@ -310,6 +316,10 @@ SENT3_TEXT.forEach(s => {
   const f = AUDIO[SENT_KEY(s)];
   if (f) SENT_AUDIO[s] = f; else sentMissing.push(s);
 });
+/* 받아쓰기에서는 들리는 소리가 곧 정답입니다. 통문장 녹음이 없는 문장은 낱말 소리를
+   이어 붙여 들려주게 되므로, 학습 화면에는 녹음이 있는 문장만 내보냅니다.
+   (문장목록.json 에는 모두 적어 두어 PC 녹음 때 함께 만들어집니다) */
+const SENT3_SHOWN = SENT3.filter((s, i) => SENT_AUDIO[SENT3_TEXT[i]]);
 
 /* 화면 안내 말 (메뉴 설명 읽어 주기). 기초반 index.html 의 window.UI_SAY 가 원본이고,
    tools/clips.py 가 ui_jung_* 로 녹음을 만듭니다.
@@ -373,7 +383,7 @@ const BIN = binFor(USED_PATHS);
 const jungData = {
   A: used, FX: FX, SC: SC, BIN: BIN, SENT_AUDIO: SENT_AUDIO, UI: UI,
   W: WORD_STAGES,
-  S1: SENT1, S2: SENT2, S3: SENT3,
+  S1: SENT1, S2: SENT2, S3: SENT3_SHOWN,
   R: READ_STAGES, READ_AUDIO: READ_AUDIO, ASK_AUDIO: ASK_AUDIO,
   M: WRITE_STAGES, WRITE_AUDIO: WRITE_AUDIO
 };
@@ -487,7 +497,8 @@ const txt =
   '기초반·중급반·겹받침 세 화면이 한꺼번에 좋아집니다.\n';
 fs.writeFileSync('녹음이-필요한-말.txt', txt, 'utf8');
 console.log('녹음이 필요한 낱말', needWord.length, '개 / 문장', needSent.length, '개');
-console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장');
+console.log('통문장 받아쓰기  ' + Object.keys(SENT_AUDIO).length + ' / ' + SENT3_TEXT.length + ' 문장'
+  + (sentMissing.length ? '  (녹음 없는 ' + sentMissing.length + '문장은 화면에 내보내지 않습니다: ' + sentMissing.join(' · ') + ')' : ''));
 console.log('글 읽기 소리   ' + Object.keys(READ_AUDIO).length + ' / ' + READ_TEXTS.length + ' 편'
   + (readMissing.length ? '  (없어도 읽기는 됩니다 — 🔊 만 안 나옵니다)' : ''));
 console.log('물음·보기 소리 ' + Object.keys(ASK_AUDIO).length + ' / ' + READ_ASK_UNIQ.length + ' 개'
