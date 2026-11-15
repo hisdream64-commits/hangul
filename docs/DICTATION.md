@@ -276,7 +276,7 @@ cd ../.. && python tools/stamp_sw.py                     # 캐시 지문 (반드
 | ~~결과 화면에 「틀린 것만 다시」 단추~~ — ✅ 2026-11-08 들어감 | `finishStage` 둘레 | 단추 한 개 늘어남 |
 | **PC에서 자모 판을 넓게** (6칸 → 8~9칸) | `@media (min-width: 700px)` 한 블록 | 휴대폰은 안 바뀜 |
 | **키보드로 자모 입력** — 지금은 `keydown` 처리가 없어 PC에서도 마우스로만 누릅니다 | 새 `keydown` 처리 | 단추는 그대로 |
-| ~~중간 진도 저장~~ — ✅ 2026-11-15 중급(`jung.html`) 1~3부에 들어감. 열쇠 `hangul-dict:mid`, `midSave`·`midGet`·`midClear`. 겹받침 화면은 아직 | `saveScore` 둘레 | 메뉴에 「▶ ○번째 문제부터 이어서 해요」 |
+| ~~중간 진도 저장~~ — ✅ 2026-11-15 중급(`jung.html`) 1~3부에 들어감. 열쇠 `hangul-dict:mid`, `midSave`·`midGet`·`midClear`. 겹받침(`gyeopbatchim.html`)도 같은 날 들어감(열쇠 `hangul-gb:mid`) | `saveScore` 둘레 | 메뉴에 「▶ ○번째 문제부터 이어서 해요」 |
 | `audio/` mp3 가 32kbps 로 세게 눌려 있음 | 원본이 있으면 다시 뽑기 (`tools/dictation/녹음이-필요한-말.txt` 아래쪽 ffmpeg) | 소리만 좋아짐 |
 
 **잠재 버그 하나** — 2부에서 한 문장에 **같은 낱말이 두 번** 나오면 카드가 하나만
