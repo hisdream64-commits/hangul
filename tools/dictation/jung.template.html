@@ -122,6 +122,25 @@
   .menu-btn .resume-note { display: block; margin-top: 0.25rem; font-size: 0.85rem; font-weight: 800; color: var(--accent); }
   .stamp { font-size: 1.3rem; width: 2.2rem; text-align: center; line-height: 1.15; }
   .stamp .score { display: block; font-size: 0.65rem; font-weight: 800; color: var(--good); }
+  /* 휴대폰처럼 좁은 화면 (2026-11-15): 그림·이름·도장이 한 줄을 나눠 써서 단계 이름이
+     낱말마다 줄이 바뀌었습니다(글자 크게면 한 줄에 한두 글자). 그래서
+       윗줄 = 그림 + 단계 이름,  아랫줄 = 설명(단추 폭 전체) + 도장
+     으로 놓습니다. .mid 를 display: contents 로 풀어 이름·설명을 칸에 바로 놓습니다.
+     🔊 는 누르기 쉬운 크기(52px)를 지키면서 조금 좁힙니다. PC 화면은 그대로입니다. */
+  @media (max-width: 560px) {
+    .menu-item .menu-btn {
+      display: grid; grid-template-columns: auto 1fr auto; column-gap: 0.6rem; row-gap: 0.2rem;
+      grid-template-areas: "icon label label" "desc desc stamp" "note note stamp";
+      align-items: center; padding: 0.85rem 0.8rem; border-left-width: 9px;
+    }
+    .menu-item .menu-btn .mid { display: contents; }
+    .menu-item .menu-btn .icon { grid-area: icon; font-size: 1.7rem; }
+    .menu-item .menu-btn .label { grid-area: label; min-width: 0; overflow-wrap: break-word; word-break: keep-all; }
+    .menu-item .menu-btn .desc { grid-area: desc; min-width: 0; margin-top: 0; word-break: keep-all; overflow-wrap: break-word; }
+    .menu-item .menu-btn .resume-note { grid-area: note; min-width: 0; margin-top: 0; word-break: keep-all; overflow-wrap: break-word; }
+    .menu-item .menu-btn .stamp { grid-area: stamp; align-self: end; }
+    .menu-spk { flex: 0 0 52px; min-width: 52px; font-size: 1.45rem; }
+  }
 
   .tool-card {
     display: flex; align-items: center; gap: 0.8rem; width: 100%; text-align: left;
