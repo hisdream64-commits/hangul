@@ -1,5 +1,5 @@
 /* 한글뚝딱(고급) — 오프라인 서비스 워커
-   빌드 때 5bc459d57e 이 실제 값으로 바뀝니다(go/tools/build_audio_bundle_go.py).
+   빌드 때 c0a4d8806c 이 실제 값으로 바뀝니다(go/tools/build_audio_bundle_go.py).
 
    - 이 워커가 맡는 범위는 /go/ 안쪽뿐입니다(파일이 /go/sw.js 에 있어 저절로 그렇게 됩니다).
      기초반(/)은 뿌리의 sw.js 가 따로 맡습니다.
@@ -17,7 +17,7 @@
 'use strict';
 
 var PREFIX = 'hangul3-';
-var SHELL = 'hangul3-shell-5bc459d57e';
+var SHELL = 'hangul3-shell-c0a4d8806c';
 var AUDIO = 'hangul3-audio';                 // 판이 바뀌어도 그대로 둔다
 var KEEP = [SHELL, AUDIO];
 
