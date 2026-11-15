@@ -1477,7 +1477,7 @@ if ('speechSynthesis' in window) {
    화면 내용이 조금이라도 바뀌면 APP_BUILD 가 달라지므로, 휴대폰에 보이는 값과
    견주어 보면 새 화면을 받았는지 바로 알 수 있습니다. */
 const APP_VERSION = '1.4';
-const APP_BUILD = '007bf4';
+const APP_BUILD = '9be5bf';
 const APP_DATE = '2026-11-15';
 window.APP_VERSION = APP_VERSION;
 document.addEventListener('DOMContentLoaded', function () {
@@ -1489,6 +1489,11 @@ const AUDIO = window.AUDIO || {};
 const player = new Audio();
 player.preload = 'auto';
 let sayQ = [], sayOn = false;
+/* 읽기 차례 번호. 새로 읽기 시작할 때마다(stopSpeak) 하나씩 올라갑니다.
+   앞 소리를 끊으면 브라우저가 그 소리에 「중단됨(AbortError)」을 알려 오는데,
+   전에는 이것을 「재생 실패」로 알고 끊긴 말을 기계 음성으로 다시 읽었습니다(2026-11-15 고침).
+   이제 지금 차례가 아닌 소리의 실패 알림은 무시합니다. */
+let sayGen = 0;
 
 /* ---------- 소리 묶음 (audio/audio.bin) ----------
    소리 375개를 낱개로 저장하면 파일마다 붙는 관리 정보만 0.5MB 가까이 더 들고,
@@ -1581,7 +1586,7 @@ function showNotice(msg) {
 }
 
 function stopSpeak() {
-  sayQ = []; sayOn = false;
+  sayQ = []; sayOn = false; sayGen++;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   try { player.pause(); } catch (e) {}
   clearSpeaking();          /* 읽어 주던 줄의 밝기도 끈다 */
@@ -1603,14 +1608,25 @@ function sayNext() {
   const it = sayQ.shift();
   const src = AUDIO[it.t];
   if (src) {
-    player.onended = function () { sayNext(); };
-    player.onerror = function () { ttsSay(it.t, it.rate); };
+    const gen = sayGen;
+    let fellBack = false;
+    /* 녹음이 정말 안 틀릴 때만 기계 음성으로 넘어갑니다. 끊긴 소리(AbortError)나
+       이미 다음 말로 넘어간 뒤의 알림은 무시합니다. 실패 알림은 두 곳(onerror ·
+       play 실패)에서 함께 올 수 있어, 한 말에 한 번만 넘어갑니다. */
+    const failed = function (e) {
+      if (gen !== sayGen || !sayOn || fellBack) return;
+      if (e && e.name === 'AbortError') return;
+      fellBack = true;
+      ttsSay(it.t, it.rate);
+    };
+    player.onended = function () { if (gen === sayGen) sayNext(); };
+    player.onerror = function () { failed(null); };
     try {
       setSrc(src);
       player.playbackRate = 1;   // 2026-11-07 「천천히 듣기」를 뺌(사용자 결정). 녹음은 빠르기를 바꾸지 않고 그대로 튼다
       const pr = player.play();
-      if (pr && pr.catch) pr.catch(function () { ttsSay(it.t, it.rate); });
-    } catch (e) { ttsSay(it.t, it.rate); }
+      if (pr && pr.catch) pr.catch(failed);
+    } catch (e) { failed(e); }
     return;
   }
   ttsSay(it.t, it.rate);
@@ -1632,8 +1648,9 @@ function ttsSay(text, rate) {
   u.lang = 'ko-KR';
   if (koVoice) u.voice = koVoice;
   u.rate = rate || 0.88;
-  u.onend = function () { sayNext(); };
-  u.onerror = function () { sayNext(); };
+  const gen = sayGen;      // 끊긴 말의 「끝남」 알림이 늦게 와서 새 말을 건너뛰지 않게
+  u.onend = function () { if (gen === sayGen) sayNext(); };
+  u.onerror = function () { if (gen === sayGen) sayNext(); };
   speechSynthesis.speak(u);
 }
 
