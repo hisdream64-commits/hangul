@@ -55,9 +55,11 @@
   button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-family: inherit; cursor: pointer; }
   button:focus-visible { outline: 4px solid var(--accent); outline-offset: 3px; }
 
-  header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.2rem 0.5rem; }
-  header h1 { font-size: 1.35rem; margin: 0; }
-  .top-tools { display: flex; gap: 0.4rem; }
+  /* 머리말: 좁은 화면·「글자 크게」에서 단추가 제목 아래 줄로 내려가고, 낱말 중간에서 끊기지 않게 (2026-11-15) */
+  header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.2rem 0.5rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.35rem; margin: 0; word-break: keep-all; }
+  .top-tools { display: flex; gap: 0.4rem; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .top-tools .tool-btn { white-space: nowrap; }
   .tool-btn {
     font-size: 0.88rem; font-weight: 700; padding: 0.45rem 0.75rem; border-radius: 14px;
     border: 3px solid var(--accent); background: var(--card); color: var(--accent);
@@ -126,6 +128,8 @@
     padding: 0.9rem 1rem; margin-top: 1.2rem; color: var(--ink); text-decoration: none;
   }
   .tool-card:hover { background: var(--card); }
+  /* 🔊 단추와 한 줄에 놓일 때는 남는 자리만 (가장 좁은 화면·큰 글자에서 🔊 가 밀려나지 않게, 2026-11-15) */
+  .menu-item .tool-card { flex: 1 1 auto; min-width: 0; width: auto; }
   .tool-card .icon { font-size: 1.9rem; }
   .tool-card .label { font-size: 1.1rem; font-weight: 800; display: block; }
   .tool-card .desc { font-size: 0.85rem; color: var(--sub); display: block; margin-top: 0.1rem; }
@@ -163,7 +167,7 @@
 
   .build-now { text-align: center; font-size: 1.05rem; font-weight: 800; color: var(--accent); margin: 0.2rem 0 0.5rem; }
   .build-now .pv { font-size: 1.6rem; color: var(--ink); }
-  .pal { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.35rem; }
+  .pal { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.35rem; }   /* minmax: 좁은 화면·큰 글자에서도 칸이 화면 안에서 줄어들게 */
   .pal button {
     font-size: 1.3rem; font-weight: 800; padding: 0.55rem 0.1rem; border-radius: 12px;
     border: 2px solid var(--line); background: var(--bg); color: var(--ink);
