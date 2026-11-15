@@ -152,6 +152,11 @@
   .menu-spk:hover { background: var(--accent-soft); }
   /* 녹음이 없어 🔊 를 못 다는 줄(중급반)이 위 줄들과 폭이 맞게 자리만 비워 둔다 */
   .menu-spk-gap { flex: 0 0 3.4rem; min-width: 56px; }
+  /* 반 고르기 안내 (기능 6번, 2026-11-15) — 중급·고급 줄 바로 위 */
+  .level-guide { display: flex; align-items: stretch; gap: 0.5rem; margin-top: 0.6rem; }
+  .level-guide p { flex: 1 1 auto; min-width: 0; margin: 0; padding: 0.9rem 1rem; border-radius: 16px;
+    background: var(--accent-soft); color: var(--ink); font-size: 1.05rem; line-height: 1.55; word-break: keep-all; }
+  .level-guide.speaking p { outline: 3px solid var(--accent); }
   /* 읽어 주는 동안 그 단추를 밝혀, 소리와 단추를 눈으로 잇게 한다 */
   .speaking, .menu-item.speaking .menu-btn, .menu-item.speaking .menu-spk {
     background: var(--accent-soft); border-color: var(--accent);
@@ -514,10 +519,14 @@
         </button>
         <button class="menu-spk" data-say="ui_menu_quiz" aria-label="낱말 맞히기 놀이 설명 듣기">🔊</button>
       </div>
-      <!-- 중급반은 따로 만든 화면이라 단추가 아니라 주소로 넘어갑니다.
+      <!-- 중급·고급은 따로 만든 화면이라 단추가 아니라 주소로 넘어갑니다.
            data-go 가 없으므로 아래 화면 바꾸기 코드가 집어 가지 않습니다.
-           녹음이 아직 없어 🔊 는 달지 않습니다. 위 다섯 줄과 폭을 맞추려고
-           🔊 자리만 빈칸으로 둡니다. -->
+           🔊: 중급·겹받침은 중급 화면에서 쓰는 소개 녹음(ui_jung_greet · ui_jung_gb)을 그대로 씁니다.
+           고급 소개(ui_menu_go)와 반 고르기 안내(ui_level_guide)는 2026-11-15 새로 (기능 6번). -->
+      <div class="level-guide">
+        <p><b>📚 어느 반부터 할까요?</b> 한글을 처음 배우시면, 🌱 새싹 그림의 기초 학습부터 하세요. 받침 있는 낱말을 읽으실 수 있으면, 📝 중급에서 받아쓰기를 해 보세요. 문장을 읽고 쓰실 수 있으면, 📘 고급에서 안내문과 서식 같은 생활 속 글을 익혀요.</p>
+        <button class="menu-spk" data-say="ui_level_guide" aria-label="어느 반부터 할지 안내 듣기">🔊</button>
+      </div>
       <div class="menu-item">
         <a class="menu-btn" href="jung.html">
           <span class="icon">📝</span>
@@ -526,7 +535,7 @@
             <span class="desc">듣고 직접 써 봐요 · 낱말 4단계, 문장 3단계</span>
           </span>
         </a>
-        <span class="menu-spk-gap" aria-hidden="true"></span>
+        <button class="menu-spk" data-say="ui_jung_greet" aria-label="한글뚝딱(중급) 설명 듣기">🔊</button>
       </div>
       <div class="menu-item">
         <a class="menu-btn" href="gyeopbatchim.html">
@@ -536,7 +545,17 @@
             <span class="desc">받침이 두 개인 낱말을 배우고 받아써요</span>
           </span>
         </a>
-        <span class="menu-spk-gap" aria-hidden="true"></span>
+        <button class="menu-spk" data-say="ui_jung_gb" aria-label="겹받침 쓰기 연습 설명 듣기">🔊</button>
+      </div>
+      <div class="menu-item">
+        <a class="menu-btn" href="go/">
+          <span class="icon">📘</span>
+          <span>
+            <span class="label">한글뚝딱(고급)</span>
+            <span class="desc">안내문·약 봉투·서식·문자 — 생활 속 글 읽고 쓰기</span>
+          </span>
+        </a>
+        <button class="menu-spk" data-say="ui_menu_go" aria-label="한글뚝딱(고급) 설명 듣기">🔊</button>
       </div>
     </div>
     <p class="version" id="appVersion"></p>
@@ -759,7 +778,9 @@
   "ui_step5_g2": "같은 자음을 두 개 나란히 쓰면, 더 세게 소리 나요. 이것을 쌍자음이라고 해요.",
   "ui_step5_g3": "두 모음을 합친 모음이에요. 두 소리를 빠르게 이어 읽으면 돼요. 3단계 소리 합치기와 같아요.",
   "ui_step5_g4": "드물게 쓰는 모음이에요. 모양만 알아 두셔도 충분해요.",
-  "ui_words_order": "새싹은 받침 없는 낱말, 잎은 받침 있는 낱말, 나무는 더 배우는 글자가 든 낱말이에요. 쉬운 낱말부터 차례로 놓았어요."
+  "ui_words_order": "새싹은 받침 없는 낱말, 잎은 받침 있는 낱말, 나무는 더 배우는 글자가 든 낱말이에요. 쉬운 낱말부터 차례로 놓았어요.",
+  "ui_level_guide": "어느 반부터 할까요? 한글을 처음 배우시면, 새싹 그림의 기초 학습부터 하세요. 받침 있는 낱말을 읽으실 수 있으면, 중급에서 받아쓰기를 해 보세요. 문장을 읽고 쓰실 수 있으면, 고급에서 안내문과 서식 같은 생활 속 글을 익혀요.",
+  "ui_menu_go": "한글뚝딱 고급. 안내문, 약 봉투, 서식, 문자처럼 생활 속에서 만나는 글을 읽고 써 봐요."
 };</script>
 <script>
   // ---------- 음성: 내장 성우 녹음 우선, 없으면 브라우저 음성 ----------
