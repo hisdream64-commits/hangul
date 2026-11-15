@@ -235,6 +235,21 @@
   .doc .doc-body b { font-weight: 900; }
 
   .btn-row { display: flex; gap: 0.6rem; margin-top: 0.9rem; flex-wrap: wrap; }
+  /* 직접 써 보기 (기능 5번) */
+  .wr-head { display: flex; align-items: flex-start; gap: 0.5rem; }
+  .wr-head .q-ask { flex: 1 1 auto; min-width: 0; margin-top: 0; }
+  .wr-row { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.6rem 0; text-align: left; }
+  .wr-label { font-weight: 800; font-size: 1.05rem; }
+  .wr-input, .wr-text { font: inherit; font-size: 1.15rem; padding: 0.6rem 0.7rem; width: 100%; box-sizing: border-box;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); }
+  .wr-input:focus, .wr-text:focus { outline: 3px solid var(--accent); border-color: var(--accent); }
+  .wr-input.empty, .wr-text.empty { border-color: var(--bad); background: var(--bad-soft); }
+  .wr-ex { font-size: 0.95rem; color: var(--sub); }
+  .wr-bank { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .wr-bank button { font: inherit; font-size: 1rem; font-weight: 700; padding: 0.4rem 0.7rem; border-radius: 12px;
+    border: 2px solid var(--accent); background: var(--card); color: var(--accent); cursor: pointer; }
+  .wr-mine { text-align: left; margin: 0.8rem 0; }
+  .wr-mine .doc-body { white-space: pre-line; }
   .btn-row > * { flex: 1 1 8rem; }
   .nav-btn {
     font-size: 1.05rem; font-weight: 800; padding: 0.8rem 0.9rem; border-radius: 16px;
@@ -447,6 +462,7 @@
       <p id="rDesc"></p>
       <div class="btn-row">
         <button class="nav-btn primary wide" id="rRetry" hidden>🔁 틀린 것만 다시 풀기</button>
+        <button class="nav-btn primary wide" id="rWrite" hidden>✍️ 직접 써 보기</button>
         <button class="nav-btn primary wide" id="rAgain">🔄 다시 풀어 보기</button>
         <button class="nav-btn wide" id="rHome">🏠 처음으로</button>
       </div>
@@ -473,6 +489,7 @@
       <p id="odRDesc"></p>
       <div class="btn-row">
         <button class="nav-btn primary wide" id="odRetry" hidden>🔁 틀린 것만 다시 풀기</button>
+        <button class="nav-btn primary wide" id="odWrite" hidden>✍️ 직접 써 보기</button>
         <button class="nav-btn primary wide" id="odAgain">🔄 다시 해 보기</button>
         <button class="nav-btn wide" id="odHome">🏠 처음으로</button>
       </div>
@@ -497,6 +514,7 @@
       <p id="slRDesc"></p>
       <div class="btn-row">
         <button class="nav-btn primary wide" id="slRetry" hidden>🔁 틀린 것만 다시 풀기</button>
+        <button class="nav-btn primary wide" id="slWrite" hidden>✍️ 직접 써 보기</button>
         <button class="nav-btn primary wide" id="slAgain">🔄 다시 해 보기</button>
         <button class="nav-btn wide" id="slHome">🏠 처음으로</button>
       </div>
@@ -504,6 +522,34 @@
   </section>
 
   <!-- 소리 내어 읽기 -->
+  <!-- 직접 써 보기 (기능 5번, 2026-11-15) -->
+  <section class="screen" id="scr-write">
+    <h2 class="section-title" id="wrTitle"></h2>
+    <p class="hint" id="wrNote">연습이에요. 쓰신 글은 이 휴대폰에만 남아요. 진짜 주민등록번호나 통장 번호는 쓰지 마세요.</p>
+    <p class="progress" id="wrProgress"></p>
+    <div class="quiz-box" id="wrBox">
+      <div class="wr-head"><p class="q-ask" id="wrAsk"></p><button class="tool-btn" id="wrSpk" hidden aria-label="안내 듣기">🔊</button></div>
+      <div id="wrFields"></div>
+      <div class="wr-bank" id="wrBank"></div>
+      <div class="doc" id="wrModelBox" hidden><p class="doc-tag">본보기</p><p class="doc-body" id="wrModelText"></p></div>
+      <p class="feedback" id="wrFeedback"></p>
+      <div class="btn-row">
+        <button class="nav-btn wide" id="wrModel">📄 본보기 보기</button>
+        <button class="nav-btn primary wide" id="wrDone">✅ 다 썼어요</button>
+      </div>
+    </div>
+    <div class="result" id="wrResult" hidden>
+      <div class="trophy">✍️</div>
+      <h2>다 쓰셨습니다!</h2>
+      <p>쓰신 글은 이 휴대폰에만 남아 있습니다. 언제든 다시 써 보실 수 있습니다.</p>
+      <div id="wrMine"></div>
+      <div class="btn-row">
+        <button class="nav-btn primary wide" id="wrAgain">🔄 다시 써 보기</button>
+        <button class="nav-btn wide" id="wrHome">🏠 처음으로</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="scr-voice">
     <h2 class="section-title">소리 내어 읽기</h2>
     <p class="hint" id="vcHint">아래 문장을 소리 내어 읽어 보세요. 휴대폰이 듣고 알려 드립니다.</p>
@@ -862,6 +908,15 @@ const MODULES = [
     desc: '신청서 · 택배 송장 · 입금표 · 문진표 칸 찾기',
     hint: '서류마다 칸 이름이 정해져 있습니다. 어느 칸에 무엇을 쓰는지 익혀 두면 혼자서도 쓰실 수 있습니다.',
     guide: '제 5 과, 서식 채워 쓰기. 신청서, 택배 송장, 입금표, 문진표에서 어느 칸에 무엇을 쓰는지 찾아봐요.',
+    /* 직접 써 보기 (기능 5번, 2026-11-15): fields 는 [칸 이름, 본보기] */
+    writes: [
+      { tag: '주민센터 신청서', say: '주민센터 신청서를 직접 써 봐요. 칸마다 알맞은 것을 쓰세요.',
+        fields: [['성명', '홍길순'], ['생년월일', '1948. 3. 5.'], ['주소', '○○시 ○○동 12-3'], ['연락처', '010-1234-5678'],
+                 ['신청 내용', '교통비 지원을 받고 싶습니다'], ['신청일', '2026. 11. 15.'], ['신청인 서명', '홍길순']] },
+      { tag: '택배 송장', say: '딸에게 김치를 보내는 택배 송장을 써 봐요.',
+        fields: [['보내는 분 이름', '홍길순'], ['보내는 분 전화', '010-1234-5678'], ['받는 분 이름', '김은지'],
+                 ['받는 분 전화', '010-9876-5432'], ['받는 분 주소', '○○시 ○○구 ○○로 45'], ['물품', '김치']] }
+    ],
     cards: [
       { glyph: '서식 쓰기 세 가지', size: 'mid', name: '먼저 알아 둘 약속',
         note: '① <b>검은색 볼펜</b>으로 씁니다. 연필·빨간 펜은 쓰지 않습니다.<br>② <b>또박또박 정자</b>로 씁니다. 흘려 쓰면 다시 쓰라고 합니다.<br>③ 잘못 썼으면 <b>두 줄을 긋고</b> 그 옆에 바르게 씁니다. 덧칠하지 않습니다.',
@@ -1050,6 +1105,15 @@ const MODULES = [
     desc: '문자 · 카카오톡 · 사진 보내기 · 스팸 가리기',
     hint: '손으로 쓰던 글을 손가락으로 쓰는 연습입니다. 천천히 하셔도 아무도 재촉하지 않습니다.',
     guide: '제 8 과, 스마트폰으로 글 쓰기. 문자와 카카오톡을 보내고, 사진을 보내고, 스팸을 가려내요. 천천히 하셔도 아무도 재촉하지 않아요.',
+    /* 직접 써 보기 (기능 5번): bank 는 눌러서 넣는 말, model 은 본보기 */
+    writes: [
+      { tag: '딸에게 안부 문자', say: '딸에게 안부를 묻는 문자를 써 봐요.',
+        bank: ['은지야', '잘 지내니?', '밥은 꼭 챙겨 먹어라', '보고 싶구나', '엄마가'],
+        model: '은지야, 잘 지내니? 밥은 꼭 챙겨 먹어라. 보고 싶구나. 엄마가.' },
+      { tag: '용건 문자', say: '내일 병원에 같이 가 달라는 문자를 써 봐요.',
+        bank: ['내일', '오전 10시에', '병원에', '같이 가 줄 수 있니?', '고맙다'],
+        model: '내일 오전 10시에 병원에 같이 가 줄 수 있니? 고맙다.' }
+    ],
     cards: [
       { glyph: '문자 보내는 차례', size: 'small', name: '네 걸음이면 됩니다',
         note: '① <b>초록색 말풍선</b>(문자) 누르기<br>② 오른쪽 아래 <b>연필</b> 또는 <b>＋</b> 누르기<br>③ 받는 사람 고르고 <b>글 쓰기</b><br>④ <b>보내기(▶)</b> 누르기',
@@ -1099,6 +1163,12 @@ const MODULES = [
     desc: '편지 형식 · 안부 글 · 일기 · 문장 차례 맞추기',
     hint: '쓰는 차례만 알면 편지는 어렵지 않습니다. 배운 뒤에 문장 맞추기 놀이를 합니다.',
     guide: '제 9 과, 편지와 짧은 글 쓰기. 편지 형식, 안부 글, 일기를 쓰고, 문장 차례를 맞춰 봐요.',
+    /* 직접 써 보기 (기능 5번): 편지의 차례대로 칸을 채운다 */
+    writes: [
+      { tag: '손주에게 쓰는 짧은 편지', say: '손주에게 짧은 편지를 써 봐요. 편지의 차례대로 칸을 채우세요.',
+        fields: [['받는 사람', '사랑하는 민준이에게'], ['첫인사', '민준아, 잘 지내니?'], ['하고 싶은 말', '학교 잘 다니고 밥 잘 먹어라.'],
+                 ['끝인사', '건강하게 지내라.'], ['날짜와 보내는 사람', '2026년 11월 15일, 할머니가']] }
+    ],
     cards: [
       { doc: { tag: '편지의 차례', body: '① <b>받는 분</b>    — 할머니께\n② <b>첫인사</b>     — 안녕하세요\n③ <b>하고 싶은 말</b> — 본문\n④ <b>끝인사</b>     — 건강하시길 바랍니다\n⑤ <b>날짜</b>      — 2026년 10월 5일\n⑥ <b>보내는 사람</b> — 손녀 은지 올림' },
         note: '이 여섯 가지만 지키면 <b>반듯한 편지</b>가 됩니다.<br>웃어른께는 <b>올림</b>, 또래나 아랫사람에게는 <b>드림 · 씀</b>을 씁니다.',
@@ -1385,7 +1455,7 @@ if ('speechSynthesis' in window) {
    화면 내용이 조금이라도 바뀌면 APP_BUILD 가 달라지므로, 휴대폰에 보이는 값과
    견주어 보면 새 화면을 받았는지 바로 알 수 있습니다. */
 const APP_VERSION = '1.4';
-const APP_BUILD = 'c0a4d8';
+const APP_BUILD = 'db914b';
 const APP_DATE = '2026-11-15';
 window.APP_VERSION = APP_VERSION;
 document.addEventListener('DOMContentLoaded', function () {
@@ -1602,6 +1672,113 @@ function go(id) {
   window.scrollTo(0, 0);
 }
 $('btnHome').addEventListener('click', function () { go('home'); renderHome(); });
+
+/* ===================== 직접 써 보기 (기능 5번, 2026-11-15) =====================
+   서식·문자·편지를 휴대폰 자판으로 직접 써 본다. 채점은 하지 않고, 빈 칸만 알려 준다.
+   쓴 글은 이 휴대폰(localStorage 'hangul3:writes')에만 남긴다.
+   소리: 녹음이 있는 말만 읽는다(canSay). 녹음 전에는 🔊 를 내보내지 않는다 — CLAUDE.md 규칙 2. */
+const WR_NOTE = '연습이에요. 쓰신 글은 이 휴대폰에만 남아요. 진짜 주민등록번호나 통장 번호는 쓰지 마세요.';
+const WR_EMPTY = '아직 비어 있는 칸이 있어요';
+const WR_DONE = '다 쓰셨습니다. 쓰신 글은 이 휴대폰에 남아요';
+const WSTORE = 'hangul3:writes';
+let wmine = {};
+try { wmine = JSON.parse(localStorage.getItem(WSTORE) || '{}') || {}; } catch (e) { wmine = {}; }
+let WR = { m: null, i: 0, told: false };
+function canSay(t) { return !!(window.AUDIO && window.AUDIO[sayKey(t)]); }
+function sayIf(list) { const ok = list.filter(canSay); if (ok.length) speak(ok); }
+function escHtml(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function startWrite(m) {
+  WR = { m: m, i: 0, told: WR.told };
+  go('write');
+  $('wrTitle').textContent = '✍️ ' + m.title + ' — 직접 써 보기';
+  $('wrBox').hidden = false; $('wrResult').hidden = true;
+  renderWrite(true);
+}
+function renderWrite(withSound) {
+  const w = WR.m.writes[WR.i], saved = (wmine[WR.m.id] || {})[WR.i];
+  $('wrProgress').textContent = (WR.i + 1) + ' / ' + WR.m.writes.length + ' · ' + w.tag;
+  $('wrAsk').textContent = w.say;
+  $('wrSpk').hidden = !canSay(w.say);
+  $('wrFeedback').className = 'feedback'; $('wrFeedback').textContent = '';
+  $('wrModelBox').hidden = true; $('wrModel').textContent = '📄 본보기 보기';
+  if (w.fields) {
+    $('wrFields').innerHTML = w.fields.map(function (f, k) {
+      const v = saved && saved[k] ? escHtml(saved[k]) : '';
+      return '<label class="wr-row"><span class="wr-label">' + escHtml(f[0]) + '</span>' +
+        '<input class="wr-input" type="text" autocomplete="off" data-k="' + k + '" value="' + v + '">' +
+        '<span class="wr-ex" hidden>본보기: ' + escHtml(f[1]) + '</span></label>';
+    }).join('');
+    $('wrBank').innerHTML = '';
+  } else {
+    $('wrFields').innerHTML = '<textarea class="wr-text" id="wrText" rows="4" autocomplete="off">' + (saved ? escHtml(saved) : '') + '</textarea>';
+    $('wrBank').innerHTML = (w.bank || []).map(function (b) { return '<button type="button" data-w="' + escHtml(b) + '">' + escHtml(b) + '</button>'; }).join('');
+    $('wrModelText').textContent = w.model || '';
+  }
+  if (withSound) {
+    const parts = WR.told ? [w.say] : [WR_NOTE, w.say];
+    WR.told = true;
+    sayIf(parts);
+  }
+}
+$('wrSpk').addEventListener('click', function () { sayIf([WR.m.writes[WR.i].say]); });
+$('wrBank').addEventListener('click', function (e) {
+  const b = e.target.closest && e.target.closest('button'); if (!b) return;
+  const ta = $('wrText'); if (!ta) return;
+  const v = ta.value.replace(/\s+$/, '');
+  ta.value = (v ? v + ' ' : '') + b.dataset.w;
+  ta.classList.remove('empty');
+});
+$('wrModel').addEventListener('click', function () {
+  const w = WR.m.writes[WR.i];
+  if (w.fields) {
+    const ex = $('wrFields').querySelectorAll('.wr-ex'); const show = ex.length && ex[0].hidden;
+    for (let i = 0; i < ex.length; i++) ex[i].hidden = !show;
+    this.textContent = show ? '📄 본보기 감추기' : '📄 본보기 보기';
+  } else {
+    const box = $('wrModelBox'); box.hidden = !box.hidden;
+    this.textContent = box.hidden ? '📄 본보기 보기' : '📄 본보기 감추기';
+  }
+});
+$('wrDone').addEventListener('click', function () {
+  const w = WR.m.writes[WR.i];
+  let val, empty = false;
+  if (w.fields) {
+    const ins = $('wrFields').querySelectorAll('.wr-input');
+    val = [];
+    for (let i = 0; i < ins.length; i++) { const t = ins[i].value.trim(); val.push(t); ins[i].classList.toggle('empty', !t); if (!t) empty = true; }
+  } else {
+    val = $('wrText').value.trim(); empty = !val; $('wrText').classList.toggle('empty', empty);
+  }
+  (wmine[WR.m.id] = wmine[WR.m.id] || {})[WR.i] = val;      // 빈 칸이 있어도 쓴 데까지는 남긴다
+  try { localStorage.setItem(WSTORE, JSON.stringify(wmine)); } catch (e) {}
+  if (empty) {
+    $('wrFeedback').className = 'feedback show ng';
+    $('wrFeedback').textContent = '⚠️ ' + WR_EMPTY + '. 빨갛게 보이는 칸을 채워 주세요.';
+    sayIf([WR_EMPTY]);
+    return;
+  }
+  if (WR.i < WR.m.writes.length - 1) { WR.i++; renderWrite(true); window.scrollTo(0, 0); return; }
+  finishWrite();
+});
+function finishWrite() {
+  $('wrBox').hidden = true; $('wrResult').hidden = false; $('wrProgress').textContent = '';
+  const mine = wmine[WR.m.id] || {};
+  $('wrMine').innerHTML = WR.m.writes.map(function (w, i) {
+    const v = mine[i];
+    const body = w.fields ? w.fields.map(function (f, k) { return '<b>' + escHtml(f[0]) + '</b> │ ' + escHtml((v && v[k]) || ''); }).join('\n') : escHtml(v || '');
+    return '<div class="doc wr-mine"><p class="doc-tag">' + escHtml(w.tag) + '</p><p class="doc-body">' + body + '</p></div>';
+  }).join('');
+  window.scrollTo(0, 0);
+  sayIf([WR_DONE]);
+}
+$('wrAgain').addEventListener('click', function () { startWrite(WR.m); });
+$('wrHome').addEventListener('click', function () { go('home'); renderHome(); });
+['rWrite', 'odWrite', 'slWrite'].forEach(function (id) {
+  $(id).addEventListener('click', function () {
+    const m = id === 'rWrite' ? QZ.m : id === 'odWrite' ? OD.m : SL.m;
+    if (m && m.writes) startWrite(m);
+  });
+});
 
 /* ===================== 첫 화면 ===================== */
 function renderHome() {
@@ -1858,6 +2035,7 @@ $('qNext').addEventListener('click', function () {
 function showResult() {
   const n = QZ.items.length, r = QZ.right;
   if (!QZ.retry) saveScore(QZ.m.id, r, n);
+  $('rWrite').hidden = !(QZ.m.writes && !QZ.m.exam);
   $('rRetry').hidden = QZ.wrong.length === 0;
   $('rRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + QZ.wrong.length + '문제)';
   $('quizBox').hidden = true;
@@ -1976,6 +2154,7 @@ $('odNext').addEventListener('click', function () {
   if (OD.i < OD.list.length - 1) { OD.i++; renderOrder(); return; }
   const n = OD.list.length, r = OD.right;
   if (!OD.retry) saveScore(OD.m.id, r, n);
+  $('odWrite').hidden = !OD.m.writes;
   $('odRetry').hidden = OD.wrong.length === 0;
   $('odRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + OD.wrong.length + '문장)';
   $('odLine').hidden = true;
@@ -2061,6 +2240,7 @@ $('slNext').addEventListener('click', function () {
   if (SL.i < SL.items.length - 1) { SL.i++; renderSlot(true); return; }
   const n = SL.items.length, r = SL.right;
   if (!SL.retry) saveScore(SL.m.id, r, n);
+  $('slWrite').hidden = !SL.m.writes;
   $('slRetry').hidden = SL.wrong.length === 0;
   $('slRetry').textContent = '🔁 틀린 것만 다시 풀기 (' + SL.wrong.length + '물음)';
   $('slSheet').hidden = true;
