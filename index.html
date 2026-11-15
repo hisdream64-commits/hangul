@@ -335,6 +335,15 @@
     font-size: 1.2rem; font-weight: 800; color: var(--accent);
     min-height: 1.9rem; margin: 0.9rem 0 0;
   }
+  .trace-box { margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+  .trace-box[hidden] { display: none; }
+  .trace-head { display: flex; align-items: flex-start; gap: 0.5rem; width: min(100%, 340px); }
+  .trace-head p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 1.05rem; color: var(--sub); word-break: keep-all; }
+  .trace-spk { flex: 0 0 auto; font: inherit; font-size: 1rem; font-weight: 800; padding: 0.35rem 0.7rem;
+    border-radius: 12px; border: 2px solid var(--accent); background: var(--card); color: var(--accent); cursor: pointer; }
+  /* 손가락으로 쓰는 동안 화면이 위아래로 움직이지 않게 touch-action: none */
+  #traceCanvas { width: min(100%, 340px); aspect-ratio: 1 / 1; max-width: 100%; display: block; touch-action: none;
+    background: var(--card); border: 3px solid var(--accent); border-radius: 18px; cursor: crosshair; }
   .stroke-gif {
     width: 210px; max-width: 46vw;
     border: 2px solid var(--line); border-radius: 16px;
@@ -652,6 +661,15 @@
       </span>
       <button class="speak-btn" id="wSpeak">🔊 소리 듣기</button>
     </div>
+    <!-- 손가락으로 따라 쓰는 칸 (기능 4번 · 11절 ⑨, 2026-11-15). 채점은 하지 않는 연습 칸 -->
+    <div class="trace-box" id="traceBox" hidden>
+      <div class="trace-head">
+        <p id="traceTip">회색 글자 위를 손가락으로 따라 써 보세요. 쓰는 순서는 위 그림의 번호를 보세요.</p>
+        <button class="trace-spk" id="traceSpk" aria-label="따라 쓰기 방법 듣기">🔊</button>
+      </div>
+      <canvas id="traceCanvas" aria-label="손가락으로 따라 쓰는 칸"></canvas>
+      <button class="nav-btn" id="traceClear">🧽 지우고 다시 쓰기</button>
+    </div>
   </section>
 
   <!-- 글자 한눈에 보기 -->
@@ -780,7 +798,8 @@
   "ui_step5_g4": "드물게 쓰는 모음이에요. 모양만 알아 두셔도 충분해요.",
   "ui_words_order": "새싹은 받침 없는 낱말, 잎은 받침 있는 낱말, 나무는 더 배우는 글자가 든 낱말이에요. 쉬운 낱말부터 차례로 놓았어요.",
   "ui_level_guide": "어느 반부터 할까요? 한글을 처음 배우시면, 새싹 그림의 기초 학습부터 하세요. 받침 있는 낱말을 읽으실 수 있으면, 중급에서 받아쓰기를 해 보세요. 문장을 읽고 쓰실 수 있으면, 고급에서 안내문과 서식 같은 생활 속 글을 익혀요.",
-  "ui_menu_go": "한글뚝딱 고급. 안내문, 약 봉투, 서식, 문자처럼 생활 속에서 만나는 글을 읽고 써 봐요."
+  "ui_menu_go": "한글뚝딱 고급. 안내문, 약 봉투, 서식, 문자처럼 생활 속에서 만나는 글을 읽고 써 봐요.",
+  "ui_trace_how": "회색 글자 위를 손가락으로 따라 써 보세요. 쓰는 순서는 위 그림의 번호를 보세요."
 };</script>
 <script>
   // ---------- 음성: 내장 성우 녹음 우선, 없으면 브라우저 음성 ----------
@@ -1579,10 +1598,67 @@
   const writeDetail = document.getElementById('writeDetail');
   let curWrite = null;
 
+  // ---------- 손가락으로 따라 쓰기 (기능 4번) ----------
+  // 연한 회색으로 글자를 깔아 두고, 그 위를 손가락으로 따라 쓰면 청록색 굵은 선이 남는다. 채점은 없다.
+  const traceBox = document.getElementById('traceBox');
+  const traceCanvas = document.getElementById('traceCanvas');
+  let traceCtx = null, traceGlyph = null, traceSize = 0, traceDrawing = false, traceLast = null, traceTold = false;
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function drawTraceGuide() {
+    const w = traceSize, c = traceCtx;
+    c.clearRect(0, 0, w, w);
+    c.save();
+    c.strokeStyle = cssVar('--line'); c.lineWidth = 1.5; c.setLineDash([6, 6]);
+    c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2, w); c.moveTo(0, w / 2); c.lineTo(w, w / 2); c.stroke();
+    c.restore();
+    c.fillStyle = cssVar('--line');
+    c.font = '700 ' + Math.round(w * 0.78) + 'px "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(traceGlyph, w / 2, w / 2 + w * 0.03);
+  }
+  function setupTrace(glyph) {
+    traceGlyph = glyph;
+    traceBox.hidden = false;
+    const w = traceCanvas.clientWidth || 300, dpr = window.devicePixelRatio || 1;
+    traceSize = w;
+    traceCanvas.width = Math.round(w * dpr); traceCanvas.height = Math.round(w * dpr);
+    traceCtx = traceCanvas.getContext('2d');
+    traceCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawTraceGuide();
+  }
+  function tracePos(e) {
+    const r = traceCanvas.getBoundingClientRect();
+    return [(e.clientX - r.left) * traceSize / r.width, (e.clientY - r.top) * traceSize / r.height];
+  }
+  function traceLine(a, b) {
+    const c = traceCtx;
+    c.strokeStyle = cssVar('--accent'); c.lineWidth = Math.max(8, traceSize * 0.055);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+  }
+  traceCanvas.addEventListener('pointerdown', e => {
+    if (!traceCtx) return;
+    e.preventDefault();
+    traceDrawing = true; traceLast = tracePos(e);
+    try { traceCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+    traceLine(traceLast, [traceLast[0] + 0.1, traceLast[1] + 0.1]);   // 콕 찍어도 점이 남게
+  });
+  traceCanvas.addEventListener('pointermove', e => {
+    if (!traceDrawing) return;
+    const p = tracePos(e); traceLine(traceLast, p); traceLast = p;
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t =>
+    traceCanvas.addEventListener(t, () => { traceDrawing = false; traceLast = null; }));
+  document.getElementById('traceClear').addEventListener('click', () => { if (traceCtx) drawTraceGuide(); });
+  document.getElementById('traceSpk').addEventListener('click', () => say(['ui_trace_how'], uiText('ui_trace_how')));
+  // 화면을 돌리거나 크기가 바뀌면 칸을 다시 그린다 (쓴 선은 지워짐)
+  window.addEventListener('resize', () => { if (traceGlyph && !traceBox.hidden) setupTrace(traceGlyph); });
+
   function renderWriting(kind) {
     const list = kind === 'ja' ? JAUM : MOUM;
     writeGrid.innerHTML = '';
     writeDetail.classList.remove('show');
+    traceBox.hidden = true;
     list.forEach(item => {
       const glyph = item[0], name = item[1];
       const b = document.createElement('button');
@@ -1600,7 +1676,18 @@
           '「' + name + '」' + (g ? ' · ' + g.n + '획' : '');
         document.getElementById('wInfo').textContent = '번호 차례대로 따라 써 보세요.';
         writeDetail.classList.add('show');
-        sayLetter(item[0], item[1], item[2], item[3]);
+        setupTrace(glyph);
+        // 따라 쓰는 칸이 화면 안에 다 들어오게 내려 준다. (쓰는 순서 그림 칸은 화면 아래에 붙어 따라다니는
+        // sticky 칸이라, 그 칸을 기준으로 내리면 움직이지 않고 따라 쓰는 칸이 화면 밖에 남는다)
+        // scrollIntoView 는 sticky 칸 때문에 중간에 멈춰서, 내릴 자리를 직접 계산한다
+        requestAnimationFrame(() => {
+          const r = traceBox.getBoundingClientRect();
+          const by = r.bottom - innerHeight + 16;
+          if (by > 0) window.scrollTo({ top: window.scrollY + by, behavior: 'smooth' });
+        });
+        // 처음 한 번은 따라 쓰는 방법을 먼저 알려 주고, 이어서 글자 소리
+        if (!traceTold) { traceTold = true; sayThen('ui_trace_how', () => sayLetter(item[0], item[1], item[2], item[3])); }
+        else sayLetter(item[0], item[1], item[2], item[3]);
       });
       writeGrid.appendChild(b);
     });
