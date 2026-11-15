@@ -157,6 +157,11 @@
   .section-title { font-size: 1.2rem; font-weight: 800; margin: 0.6rem 0 0.3rem; }
   .hint { font-size: 0.92rem; color: var(--sub); margin: 0.2rem 0 0.8rem; line-height: 1.55; }
   .progress { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 0 0 0.6rem; font-variant-numeric: tabular-nums; }
+  /* 이어 풀기 중에만 보이는 「처음부터 새로 풀기」 (2026-11-15). 잘못 눌러 기록을 잃지 않게 두 번 눌러야 합니다 */
+  .restart-btn { font: inherit; font-size: 0.95rem; font-weight: 800; min-height: 44px; padding: 0.4rem 0.95rem;
+                 margin: 0 0 0.7rem; border-radius: 999px; border: 2px solid var(--line); background: var(--card);
+                 color: var(--sub); cursor: pointer; word-break: keep-all; }
+  .restart-btn.confirm { border-color: var(--warm); color: var(--warm); background: var(--warm-soft); }
 
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
     padding: 1rem 0.85rem; box-shadow: var(--shadow); }
@@ -398,6 +403,7 @@
     <h2 class="section-title" id="wTitle"></h2>
     <div class="tip-row"><p class="hint" id="wTip"></p><button class="tip-spk" id="wTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="wProgress"></p>
+    <button class="restart-btn" id="wRestart" hidden></button>
     <div class="panel">
       <div class="mode-row">
         <button class="mode-btn on" id="mdBuild">🔡 글자 만들어 쓰기</button>
@@ -422,6 +428,7 @@
     <h2 class="section-title" id="sTitle"></h2>
     <div class="tip-row"><p class="hint" id="sTip"></p><button class="tip-spk" id="sTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="sProgress"></p>
+    <button class="restart-btn" id="sRestart" hidden></button>
     <div class="panel">
       <div class="listen-row" id="sListenRow">
         <button class="listen-btn" id="sListen">🔊 다시 듣기</button>
@@ -441,6 +448,7 @@
     <h2 class="section-title" id="rdTitle"></h2>
     <div class="tip-row"><p class="hint" id="rdTip"></p><button class="tip-spk" id="rdTipSpk" hidden aria-label="하는 방법 듣기">🔊</button></div>
     <p class="progress" id="rdProgress"></p>
+    <button class="restart-btn" id="rdRestart" hidden></button>
     <div class="panel">
       <div class="read-doc" id="rdDoc"></div>
       <p class="eye-note" id="rdEyeNote" hidden>이 단계는 숫자를 <b>눈으로</b> 읽어 보는 곳입니다. 물음과 보기는 들려 드립니다.</p>
@@ -909,6 +917,36 @@ function pick(arr, n) {
   return c.slice(0, Math.min(n, c.length));
 }
 
+
+/* ============ 처음부터 새로 풀기 (2026-11-15) ============
+   이어 풀기 중일 때만 보입니다. 한 번 누르면 「한 번 더 누르면…」으로 바뀌고, 5초 안에 한 번 더
+   누르면 적어 둔 자리를 지우고 처음부터 새로 시작합니다. 맞힌 기록(도장)은 그대로 둡니다. */
+var RESTART_TEXT = '🔄 처음부터 새로 풀기', RESTART_ASK = '한 번 더 누르면 처음부터 시작해요';
+function showRestart(btnId, X) {
+  var b = $(btnId);
+  b.hidden = !(X && X.resumed);
+  if (b.hidden) { b.classList.remove('confirm'); b.textContent = RESTART_TEXT; }
+}
+function bindRestart(btnId, idOf, again) {
+  var b = $(btnId), timer = null;
+  b.textContent = RESTART_TEXT;
+  b.addEventListener('click', function () {
+    if (!b.classList.contains('confirm')) {
+      b.classList.add('confirm'); b.textContent = RESTART_ASK;
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('confirm'); b.textContent = RESTART_TEXT; }, 5000);
+      return;
+    }
+    clearTimeout(timer);
+    b.classList.remove('confirm'); b.textContent = RESTART_TEXT;
+    midClear(idOf());
+    again();
+  });
+}
+bindRestart('wRestart', function () { return W.st.id; }, function () { startWord(DATA.W.indexOf(W.st)); });
+bindRestart('sRestart', function () { return S.st.id; }, function () { startSent(S.si); });
+bindRestart('rdRestart', function () { return R.st.id; }, function () { startRead(R.si); });
+
 /* ============ 1부 · 낱말 받아쓰기 ============ */
 var W = null;
 var paperMode = false;
@@ -945,6 +983,7 @@ function renderWord(playIt) {
   $('wTitle').textContent = W.st.icon + ' ' + W.st.title;
   $('wTip').textContent = W.st.tip;
   showTipSpk('wTipSpk', W.st.id);
+  showRestart('wRestart', W);
   $('wProgress').textContent = resumeMark(W) + (W.i + 1) + ' / ' + W.items.length + ' · 맞힌 낱말 ' + W.right + '개';
   var slots = '';
   for (var i = 0; i < it.length; i++) {
@@ -1138,6 +1177,7 @@ function renderSent(playIt) {
   $('sTitle').textContent = S.st.icon + ' ' + S.st.title;
   $('sTip').textContent = S.st.tip;
   showTipSpk('sTipSpk', S.st.id);
+  showRestart('sRestart', S);
   $('sProgress').textContent = resumeMark(S) + (S.i + 1) + ' / ' + S.items.length + ' · 맞힌 문장 ' + S.right + '개';
 
   var whole = fileOf(it.text);
@@ -1263,6 +1303,7 @@ function renderRead() {
   $('rdTitle').textContent = R.st.icon + ' ' + R.st.title;
   $('rdTip').textContent = R.st.tip;
   showTipSpk('rdTipSpk', R.st.id);
+  showRestart('rdRestart', R);
   $('rdProgress').textContent = resumeMark(R) + (R.i + 1) + ' / ' + R.items.length + ' · 맞힌 물음 ' + R.right + '개';
   $('rdDoc').innerHTML = it.text.lines.map(function (l) {
     /* 숫자만 또렷하게. 글자는 그대로 두고 보이기만 바꿉니다. */

@@ -79,6 +79,11 @@
   .section-title { font-size: 1.2rem; font-weight: 800; margin: 0.6rem 0 0.3rem; }
   .hint { font-size: 0.92rem; color: var(--sub); margin: 0.2rem 0 0.8rem; line-height: 1.55; }
   .progress { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 0 0 0.6rem; font-variant-numeric: tabular-nums; }
+  /* 이어 풀기 중에만 보이는 「처음부터 새로 풀기」 (2026-11-15). 잘못 눌러 기록을 잃지 않게 두 번 눌러야 합니다 */
+  .restart-btn { font: inherit; font-size: 0.95rem; font-weight: 800; min-height: 44px; padding: 0.4rem 0.95rem;
+                 margin: 0 0 0.7rem; border-radius: 999px; border: 2px solid var(--line); background: var(--card);
+                 color: var(--sub); cursor: pointer; word-break: keep-all; }
+  .restart-btn.confirm { border-color: var(--warm); color: var(--warm); background: var(--warm-soft); }
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
     padding: 1rem 0.85rem; box-shadow: var(--shadow); text-align: center; }
 
@@ -217,6 +222,7 @@
     <h2 class="section-title">✏️ 받침 채워 쓰기</h2>
     <p class="hint">빈 자리에 들어갈 <b>겹받침</b>을 고르세요.</p>
     <p class="progress" id="fProgress"></p>
+    <button class="restart-btn" id="fRestart" hidden></button>
     <div class="panel">
       <p class="q-ask" id="fAsk"></p>
       <p class="q-word" id="fWord"></p>
@@ -235,6 +241,7 @@
     <h2 class="section-title">🔊 듣고 쓰기</h2>
     <p class="hint">성우가 읽어 주는 낱말을 듣고, 글자를 하나씩 만들어 보세요.</p>
     <p class="progress" id="dProgress"></p>
+    <button class="restart-btn" id="dRestart" hidden></button>
     <div class="panel">
       <div class="listen-row">
         <button class="listen-btn" id="dListen">🔊 다시 듣기</button>
@@ -255,6 +262,7 @@
     <h2 class="section-title">🧠 어느 쪽이 소리 날까요</h2>
     <p class="hint">받침 두 글자 가운데 실제로 소리 나는 쪽을 고르세요.</p>
     <p class="progress" id="qProgress"></p>
+    <button class="restart-btn" id="qRestart" hidden></button>
     <div class="panel">
       <p class="q-ask" id="qAsk"></p>
       <p class="q-word" id="qWord"></p>
@@ -595,6 +603,36 @@ function renderHome() {
   for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function () { ACTS[+this.dataset.a].go(); });
 }
 
+
+/* ============ 처음부터 새로 풀기 (2026-11-15) ============
+   이어 풀기 중일 때만 보입니다. 한 번 누르면 「한 번 더 누르면…」으로 바뀌고, 5초 안에 한 번 더
+   누르면 적어 둔 자리를 지우고 처음부터 새로 시작합니다. 맞힌 기록(도장)은 그대로 둡니다. */
+var RESTART_TEXT = '🔄 처음부터 새로 풀기', RESTART_ASK = '한 번 더 누르면 처음부터 시작해요';
+function showRestart(btnId, X) {
+  var b = $(btnId);
+  b.hidden = !(X && X.resumed);
+  if (b.hidden) { b.classList.remove('confirm'); b.textContent = RESTART_TEXT; }
+}
+function bindRestart(btnId, idOf, again) {
+  var b = $(btnId), timer = null;
+  b.textContent = RESTART_TEXT;
+  b.addEventListener('click', function () {
+    if (!b.classList.contains('confirm')) {
+      b.classList.add('confirm'); b.textContent = RESTART_ASK;
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('confirm'); b.textContent = RESTART_TEXT; }, 5000);
+      return;
+    }
+    clearTimeout(timer);
+    b.classList.remove('confirm'); b.textContent = RESTART_TEXT;
+    midClear(idOf());
+    again();
+  });
+}
+bindRestart('fRestart', function () { return 'fill'; }, function () { startFill(); });
+bindRestart('dRestart', function () { return 'write'; }, function () { startWrite(); });
+bindRestart('qRestart', function () { return 'quiz'; }, function () { startQuiz(); });
+
 /* ============ 배우기 ============ */
 var L = 0;
 function startLearn() { L = 0; go('learn'); renderLearn(); }
@@ -640,6 +678,7 @@ function startFill(retry) {
 function renderFill() {
   var it = F.items[F.i];
   var p = parts(it.w[it.at]);
+  showRestart('fRestart', F);
   $('fProgress').textContent = resumeMark(F) + (F.i + 1) + ' / ' + F.items.length + ' · 맞힌 개수 ' + F.right + '개';
   $('fAsk').innerHTML = '[' + it.read + '] 라고 읽는 낱말입니다. 빈 받침 자리에 무엇이 들어갈까요?';
   var shown = '';
@@ -702,6 +741,7 @@ function startWrite(retry) {
 }
 function renderWrite(playIt) {
   var it = D.items[D.i], w = it.w;
+  showRestart('dRestart', D);
   $('dProgress').textContent = resumeMark(D) + (D.i + 1) + ' / ' + D.items.length + ' · 맞힌 낱말 ' + D.right + '개';
   var s = '';
   for (var i = 0; i < w.length; i++) {
@@ -795,6 +835,7 @@ function startQuiz(retry) {
 }
 function renderQuiz() {
   var it = Q.items[Q.i], g = it.g;
+  showRestart('qRestart', Q);
   $('qProgress').textContent = resumeMark(Q) + (Q.i + 1) + ' / ' + Q.items.length + ' · 맞힌 개수 ' + Q.right + '개';
   $('qAsk').innerHTML = '「' + it.w + '」의 받침 <b>' + g[1] + '</b> 에서는 어느 쪽 소리가 날까요?';
   $('qWord').textContent = it.w;
