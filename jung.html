@@ -119,6 +119,7 @@
   .menu-btn .mid { flex: 1; }
   .menu-btn .label { font-size: 1.15rem; font-weight: 800; display: block; }
   .menu-btn .desc { font-size: 0.85rem; color: var(--sub); display: block; margin-top: 0.15rem; line-height: 1.45; }
+  .menu-btn .resume-note { display: block; margin-top: 0.25rem; font-size: 0.85rem; font-weight: 800; color: var(--accent); }
   .stamp { font-size: 1.3rem; width: 2.2rem; text-align: center; line-height: 1.15; }
   .stamp .score { display: block; font-size: 0.65rem; font-weight: 800; color: var(--good); }
 
@@ -744,6 +745,29 @@ function saveScore(id, right, total) {
   if (!cur || right >= cur.best) prog[id] = { best: right, total: total };
   try { localStorage.setItem(STORE, JSON.stringify(prog)); } catch (e) {}
 }
+/* ============ 중간 진도 (2026-11-15) ============
+   단계를 풀다 나가도(전화, 화면 꺼짐) 다음에 같은 단계를 누르면 그 자리부터 이어 풉니다.
+   다음 문제로 넘어갈 때마다 적고, 단계를 끝까지 풀면 지웁니다. 틀린 것만 다시 풀기는 적지 않습니다.
+   이 휴대폰 안(localStorage)에만 둡니다. 자료가 바뀌어 맞지 않으면 버리고 처음부터 합니다. */
+var MID_KEY = 'hangul-dict:mid';
+var mid = {};
+try { mid = JSON.parse(localStorage.getItem(MID_KEY) || '{}') || {}; } catch (e) { mid = {}; }
+function midWrite() { try { localStorage.setItem(MID_KEY, JSON.stringify(mid)); } catch (e) {} }
+function midSave(id, o) { o.at = Date.now(); mid[id] = o; midWrite(); }
+function midClear(id) { if (mid[id]) { delete mid[id]; midWrite(); } }
+function midGet(id) {
+  var o = mid[id];
+  if (!o) return null;
+  if (!o.items || !o.items.length || typeof o.i !== 'number' || o.i < 1 || o.i >= o.items.length ||
+      typeof o.right !== 'number') { midClear(id); return null; }
+  return o;
+}
+function midNote(id) {
+  var o = midGet(id);
+  return o ? '<span class="resume-note">▶ ' + (o.i + 1) + '번째 문제부터 이어서 해요</span>' : '';
+}
+function resumeMark(x) { return x && x.resumed ? '이어서 · ' : ''; }
+
 function stampOf(id) {
   var p = prog[id];
   if (!p) return '<span class="stamp" style="color:var(--line)">○</span>';
@@ -811,13 +835,13 @@ function renderHome() {
     return menuRow(s, '<button class="menu-btn" data-w="' + i + '">' +
       '<span class="icon">' + s.icon + '</span><span class="mid">' +
       '<span class="label">' + (i + 1) + '단계 · ' + s.title + '</span>' +
-      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>', false);
+      '<span class="desc">' + s.tip + '</span>' + midNote(s.id) + '</span>' + stampOf(s.id) + '</button>', false);
   }).join('');
   $('menuSent').innerHTML = SENT_STAGES.map(function (s, i) {
     return menuRow(s, '<button class="menu-btn warm" data-s="' + i + '">' +
       '<span class="icon">' + s.icon + '</span><span class="mid">' +
       '<span class="label">' + s.title + '</span>' +
-      '<span class="desc">' + s.tip + '</span></span>' + stampOf(s.id) + '</button>', true);
+      '<span class="desc">' + s.tip + '</span>' + midNote(s.id) + '</span>' + stampOf(s.id) + '</button>', true);
   }).join('');
   var a = $('menuWord').querySelectorAll('.menu-btn');
   for (var i = 0; i < a.length; i++) a[i].addEventListener('click', function () { startWord(+this.dataset.w); });
@@ -828,7 +852,7 @@ function renderHome() {
     return menuRow(s, '<button class="menu-btn" data-r="' + i + '">' +
       '<span class="icon">' + s.icon + '</span><span class="mid">' +
       '<span class="label">' + s.title + '</span>' +
-      '<span class="desc">글 ' + s.texts.length + '편을 읽고 물음에 답합니다.</span></span>' +
+      '<span class="desc">글 ' + s.texts.length + '편을 읽고 물음에 답합니다.</span>' + midNote(s.id) + '</span>' +
       stampOf(s.id) + '</button>', false);
   }).join('');
   var r = $('menuRead').querySelectorAll('.menu-btn');
@@ -876,9 +900,13 @@ function startWord(si, retry) {
   var st = DATA.W[si];
   W = { st: st, items: retry ? pick(retry, retry.length) : pick(st.words, 10), retry: !!retry,
         i: 0, right: 0, wrong: [], slot: 0, step: 0, cur: [0, 0, 0], miss: false, done: false };
+  var o = retry ? null : midGet(st.id);
+  if (o && o.items.every(function (w) { return st.words.indexOf(w) !== -1; })) {
+    W.items = o.items; W.i = o.i; W.right = o.right; W.wrong = o.wrong || []; W.resumed = true;
+  } else if (o) midClear(st.id);
   go('word');
   renderWord(true);
-  tipThen(st.id, [W.items[0]]);
+  tipThen(st.id, [W.items[W.i]]);
 }
 
 function setMode(paper) {
@@ -898,7 +926,7 @@ function renderWord(playIt) {
   $('wTitle').textContent = W.st.icon + ' ' + W.st.title;
   $('wTip').textContent = W.st.tip;
   showTipSpk('wTipSpk', W.st.id);
-  $('wProgress').textContent = (W.i + 1) + ' / ' + W.items.length + ' · 맞힌 낱말 ' + W.right + '개';
+  $('wProgress').textContent = resumeMark(W) + (W.i + 1) + ' / ' + W.items.length + ' · 맞힌 낱말 ' + W.right + '개';
   var slots = '';
   for (var i = 0; i < it.length; i++) {
     var filled = W.done ? it[i] : (i < W.slot ? it[i] : (i === W.slot && !paperMode ? preview() : ''));
@@ -1014,6 +1042,7 @@ function nextWord() {
     return;
   }
   W.i++; W.slot = 0; W.step = 0; W.cur = [0, 0, 0]; W.miss = false; W.done = false;
+  if (!W.retry) midSave(W.st.id, { items: W.items, i: W.i, right: W.right, wrong: W.wrong });
   renderWord(true);
 }
 
@@ -1025,7 +1054,30 @@ var S = null;
 
 function startSent(si, retry) {
   var st = SENT_STAGES[si];
-  var items = retry ? pick(retry, retry.length) : pick(st.pool, 10).map(function (raw) {
+  var items = retry ? pick(retry, retry.length) : pick(st.pool, 10).map(function (raw) { return sentItem(st, raw); });
+  var o = retry ? null : midGet(st.id), back = null;
+  if (o) {
+    back = o.items.map(function (t) {
+      for (var k = 0; k < st.pool.length; k++) { var x = sentItem(st, st.pool[k]); if (x.text === t) return x; }
+      return null;
+    });
+    if (back.indexOf(null) !== -1) { back = null; midClear(st.id); }
+    else items = back;
+  }
+  var fillers = [];
+  items.forEach(function (x) { x.toks.forEach(function (t) { if (fillers.indexOf(t) === -1) fillers.push(t); }); });
+  S = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, filled: [], done: false, fillers: fillers };
+  if (back) {
+    S.i = o.i; S.right = o.right; S.wrong = (o.wrong || []).slice(); S.resumed = true;
+    S.wrongIt = S.wrong.map(function (t) { return items.filter(function (x) { return x.text === t; })[0]; }).filter(Boolean);
+  }
+  go('sent');
+  renderSent(true);
+  tipThen(st.id, [items[S.i].text]);
+}
+
+/* 문제 자료(raw) → 화면에 쓰는 한 문제. 이어 풀 때도 같은 모양으로 다시 만듭니다. */
+function sentItem(st, raw) {
     if (st.unit === 'given') {
       return { text: raw.map(function (p) { return p[0]; }).join(' '),
                toks: raw.map(function (p) { return p[0]; }),
@@ -1037,13 +1089,6 @@ function startSent(si, retry) {
       return { text: raw, toks: ws, words: [raw], bad: [] };
     }
     return { text: raw, toks: raw.split(''), words: [raw], bad: [] };
-  });
-  var fillers = [];
-  items.forEach(function (x) { x.toks.forEach(function (t) { if (fillers.indexOf(t) === -1) fillers.push(t); }); });
-  S = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, filled: [], done: false, fillers: fillers };
-  go('sent');
-  renderSent(true);
-  tipThen(st.id, [items[0].text]);
 }
 
 function sentTokens(it) {
@@ -1074,7 +1119,7 @@ function renderSent(playIt) {
   $('sTitle').textContent = S.st.icon + ' ' + S.st.title;
   $('sTip').textContent = S.st.tip;
   showTipSpk('sTipSpk', S.st.id);
-  $('sProgress').textContent = (S.i + 1) + ' / ' + S.items.length + ' · 맞힌 문장 ' + S.right + '개';
+  $('sProgress').textContent = resumeMark(S) + (S.i + 1) + ' / ' + S.items.length + ' · 맞힌 문장 ' + S.right + '개';
 
   var whole = fileOf(it.text);
   $('sListenRow').hidden = !whole;
@@ -1159,6 +1204,7 @@ function nextSent() {
     return;
   }
   S.i++; S.filled = []; S.done = false;
+  if (!S.retry) midSave(S.st.id, { items: S.items.map(function (x) { return x.text; }), i: S.i, right: S.right, wrong: S.wrong });
   renderSent(true);
 }
 
@@ -1179,6 +1225,13 @@ function startRead(si, retry) {
     t.q.forEach(function (q) { items.push({ ti: ti, text: t, ask: q[0], choices: q[1], answer: q[2] }); });
   });
   R = { st: st, si: si, items: items, i: 0, right: 0, wrong: [], wrongIt: [], retry: !!retry, done: false };
+  /* 글 읽기는 늘 같은 차례이므로 물음 수가 같을 때만 이어 풉니다 */
+  var o = retry ? null : midGet(st.id);
+  if (o && o.items.length === items.length && o.items.every(function (a, k) { return a === items[k].ask; })) {
+    R.i = o.i; R.right = o.right; R.resumed = true;
+    R.wrong = (o.wrong || []).slice();
+    R.wrongIt = items.filter(function (x) { return R.wrong.indexOf(x.ask) !== -1; });
+  } else if (o) midClear(st.id);
   go('read');
   renderRead();
   tipThen(st.id, []);
@@ -1191,7 +1244,7 @@ function renderRead() {
   $('rdTitle').textContent = R.st.icon + ' ' + R.st.title;
   $('rdTip').textContent = R.st.tip;
   showTipSpk('rdTipSpk', R.st.id);
-  $('rdProgress').textContent = (R.i + 1) + ' / ' + R.items.length + ' · 맞힌 물음 ' + R.right + '개';
+  $('rdProgress').textContent = resumeMark(R) + (R.i + 1) + ' / ' + R.items.length + ' · 맞힌 물음 ' + R.right + '개';
   $('rdDoc').innerHTML = it.text.lines.map(function (l) {
     /* 숫자만 또렷하게. 글자는 그대로 두고 보이기만 바꿉니다. */
     return '<p>' + l.replace(/[0-9][0-9,]*/g, function (m) { return '<span class="num">' + m + '</span>'; }) + '</p>';
@@ -1244,6 +1297,7 @@ function nextRead() {
     return;
   }
   R.i++; R.done = false;
+  if (!R.retry) midSave(R.st.id, { items: R.items.map(function (x) { return x.ask; }), i: R.i, right: R.right, wrong: R.wrong });
   renderRead();
 }
 
@@ -1371,7 +1425,7 @@ var againFn = null, retryFn = null;
 // retry: 틀린 것만 다시 풀기를 시작하는 함수. isRetry: 지금 끝난 판이 다시 풀기였는가.
 // 다시 풀기는 연습이라 최고 점수에 넣지 않는다. 「10문제 가운데」 점수 녹음도 틀지 않는다(문제 수가 다름).
 function finishStage(id, right, total, wrong, again, retry, isRetry) {
-  if (!isRetry) saveScore(id, right, total);
+  if (!isRetry) { saveScore(id, right, total); midClear(id); }
   againFn = again;
   retryFn = (wrong && wrong.length) ? retry : null;
   $('rRetry').hidden = !retryFn;
